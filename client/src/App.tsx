@@ -18,16 +18,54 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/pacientes" component={Pacientes} />
-      <Route path="/psicologos" component={Psicologos} />
-      <Route path="/agenda" component={Agenda} />
-      <Route path="/salas" component={Salas} />
-      <Route path="/financeiro" component={Financeiro} />
-      <Route path="/planos-saude" component={PlanosSaude} />
-      <Route path="/relatorios" component={Relatorios} />
-      <Route path="/configuracoes" component={Configuracoes} />
+      
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
+      
+      <ProtectedRoute 
+        path="/pacientes"
+        component={Pacientes} 
+        allowedRoles={["admin", "secretaria", "psicologo"]}
+      />
+      
+      <ProtectedRoute 
+        path="/psicologos" 
+        component={Psicologos}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      
+      <ProtectedRoute path="/agenda" component={Agenda} />
+      
+      <ProtectedRoute 
+        path="/salas" 
+        component={Salas}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      
+      <ProtectedRoute 
+        path="/financeiro" 
+        component={Financeiro}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      
+      <ProtectedRoute 
+        path="/planos-saude" 
+        component={PlanosSaude}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      
+      <ProtectedRoute 
+        path="/relatorios" 
+        component={Relatorios}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      
+      <ProtectedRoute 
+        path="/configuracoes" 
+        component={Configuracoes}
+        allowedRoles={["admin"]}
+      />
+      
       <Route component={NotFound} />
     </Switch>
   );

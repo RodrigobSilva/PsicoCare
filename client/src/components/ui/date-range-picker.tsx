@@ -1,17 +1,17 @@
-import * as React from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { DateRange } from "react-day-picker";
+import * as React from "react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { DateRange } from "react-day-picker"
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 
 interface DateRangePickerProps {
   value: DateRange | undefined;
@@ -40,11 +40,11 @@ export function DateRangePicker({
             {value?.from ? (
               value.to ? (
                 <>
-                  {format(value.from, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} -{" "}
-                  {format(value.to, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {format(value.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
+                  {format(value.to, "dd/MM/yyyy", { locale: ptBR })}
                 </>
               ) : (
-                format(value.from, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                format(value.from, "dd/MM/yyyy", { locale: ptBR })
               )
             ) : (
               <span>Selecione um período</span>
@@ -59,10 +59,9 @@ export function DateRangePicker({
             selected={value}
             onSelect={(range) => range && onChange(range)}
             numberOfMonths={2}
-            locale={ptBR}
           />
         </PopoverContent>
       </Popover>
     </div>
-  );
+  )
 }
