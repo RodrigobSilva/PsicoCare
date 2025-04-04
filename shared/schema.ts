@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, date, time, json, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Usuários (Base para todos os tipos de usuários)
 export const usuarios = pgTable("usuarios", {
@@ -217,3 +218,142 @@ export const loginSchema = z.object({
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
+
+// Definição das relações entre as tabelas
+export const usuariosRelations = relations(usuarios, ({ many, one }) => ({
+  paciente: one(pacientes, {
+    fields: [usuarios.id],
+    references: [pacientes.usuarioId],
+  }),
+  psicologo: one(psicologos, {
+    fields: [usuarios.id],
+    references: [psicologos.usuarioId],
+  }),
+}));
+
+export const pacientesRelations = relations(pacientes, ({ many, one }) => ({
+  usuario: one(usuarios, {
+    fields: [pacientes.usuarioId],
+    references: [usuarios.id],
+  }),
+  prontuarios: many(prontuarios),
+  agendamentos: many(agendamentos),
+  planosVinculados: many(pacientesPlanosSaude),
+  documentos: many(documentos),
+}));
+
+export const psicologosRelations = relations(psicologos, ({ many, one }) => ({
+  usuario: one(usuarios, {
+    fields: [psicologos.usuarioId],
+    references: [usuarios.id],
+  }),
+  disponibilidades: many(disponibilidadePsicologos),
+  bloqueios: many(bloqueiosHorarios),
+  agendamentos: many(agendamentos),
+  prontuarios: many(prontuarios),
+  documentos: many(documentos),
+}));
+
+export const filiaisRelations = relations(filiais, ({ many }) => ({
+  salas: many(salas),
+  agendamentos: many(agendamentos),
+}));
+
+export const salasRelations = relations(salas, ({ many, one }) => ({
+  filial: one(filiais, {
+    fields: [salas.filialId],
+    references: [filiais.id],
+  }),
+  agendamentos: many(agendamentos),
+}));
+
+export const disponibilidadePsicologosRelations = relations(disponibilidadePsicologos, ({ one }) => ({
+  psicologo: one(psicologos, {
+    fields: [disponibilidadePsicologos.psicologoId],
+    references: [psicologos.id],
+  }),
+}));
+
+export const bloqueiosHorariosRelations = relations(bloqueiosHorarios, ({ one }) => ({
+  psicologo: one(psicologos, {
+    fields: [bloqueiosHorarios.psicologoId],
+    references: [psicologos.id],
+  }),
+}));
+
+export const planosSaudeRelations = relations(planosSaude, ({ many }) => ({
+  pacientesVinculados: many(pacientesPlanosSaude),
+  agendamentos: many(agendamentos),
+}));
+
+export const pacientesPlanosSaudeRelations = relations(pacientesPlanosSaude, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [pacientesPlanosSaude.pacienteId],
+    references: [pacientes.id],
+  }),
+  planoSaude: one(planosSaude, {
+    fields: [pacientesPlanosSaude.planoSaudeId],
+    references: [planosSaude.id],
+  }),
+}));
+
+export const agendamentosRelations = relations(agendamentos, ({ one, many }) => ({
+  paciente: one(pacientes, {
+    fields: [agendamentos.pacienteId],
+    references: [pacientes.id],
+  }),
+  psicologo: one(psicologos, {
+    fields: [agendamentos.psicologoId],
+    references: [psicologos.id],
+  }),
+  sala: one(salas, {
+    fields: [agendamentos.salaId],
+    references: [salas.id],
+  }),
+  filial: one(filiais, {
+    fields: [agendamentos.filialId],
+    references: [filiais.id],
+  }),
+  planoSaude: one(planosSaude, {
+    fields: [agendamentos.planoSaudeId],
+    references: [planosSaude.id],
+  }),
+  atendimentos: many(atendimentos),
+}));
+
+export const atendimentosRelations = relations(atendimentos, ({ one, many }) => ({
+  agendamento: one(agendamentos, {
+    fields: [atendimentos.agendamentoId],
+    references: [agendamentos.id],
+  }),
+  pagamentos: many(pagamentos),
+}));
+
+export const pagamentosRelations = relations(pagamentos, ({ one }) => ({
+  atendimento: one(atendimentos, {
+    fields: [pagamentos.atendimentoId],
+    references: [atendimentos.id],
+  }),
+}));
+
+export const prontuariosRelations = relations(prontuarios, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [prontuarios.pacienteId],
+    references: [pacientes.id],
+  }),
+  psicologo: one(psicologos, {
+    fields: [prontuarios.psicologoId],
+    references: [psicologos.id],
+  }),
+}));
+
+export const documentosRelations = relations(documentos, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [documentos.pacienteId],
+    references: [pacientes.id],
+  }),
+  psicologo: one(psicologos, {
+    fields: [documentos.psicologoId],
+    references: [psicologos.id],
+  }),
+}));

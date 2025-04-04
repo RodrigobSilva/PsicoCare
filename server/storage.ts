@@ -127,7 +127,7 @@ export interface IStorage {
   deleteDocumento(id: number): Promise<boolean>;
 
   // Sessão
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -161,7 +161,7 @@ export class MemStorage implements IStorage {
     pacientePlanoSaude: number;
     documento: number;
   };
-  public sessionStore: session.SessionStore;
+  public sessionStore: session.Store;
 
   constructor() {
     this.usuarios = new Map();
@@ -695,4 +695,11 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Importa a implementação do banco de dados
+import { DatabaseStorage } from "./db-storage";
+
+// Escolhe entre armazenamento em memória ou banco de dados com base em uma variável de ambiente
+// Por padrão, usa o banco de dados
+export const storage = process.env.USE_MEMORY_STORAGE === "true" 
+  ? new MemStorage() 
+  : new DatabaseStorage();
