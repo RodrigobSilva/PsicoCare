@@ -95,18 +95,24 @@ export default function SalaForm({ salaId, onSuccess }: SalaFormProps) {
   // Configurar mutação para criar/atualizar sala
   const mutation = useMutation({
     mutationFn: async (data: SalaFormValues) => {
-      if (salaId) {
-        // Atualizar sala existente
-        await apiRequest("PUT", `/api/salas/${salaId}`, data);
-      } else {
-        // Criar nova sala
-        await apiRequest("POST", "/api/salas", data);
+      const response = await apiRequest(
+        salaId ? "PUT" : "POST",
+        salaId ? `/api/salas/${salaId}` : "/api/salas",
+        data
+      );
+      if (!response.ok) {
+        throw new Error("Erro ao salvar sala");
       }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/salas"] });
       onSuccess();
     },
+    onError: (error) => {
+      console.error("Erro ao salvar sala:", error);
+      throw error;
+    }
   });
 
   // Handler de submit
