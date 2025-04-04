@@ -27,7 +27,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import AtendimentoForm from "@/components/atendimento/atendimento-form"; // Import the new component
+import AtendimentoForm from "@/components/atendimentos/atendimento-form";
 
 
 // Função para criar um objeto URLSearchParams a partir da string de consulta
