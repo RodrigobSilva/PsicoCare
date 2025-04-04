@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/layout";
 import Calendar from "@/components/agenda/calendar";
-// Placeholder para o componente AgendamentoForm que será criado depois
-const AgendamentoForm = (props: any) => <div>Formulário de Agendamento</div>;
+import AgendamentoForm from "@/components/agenda/agendamento-form";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { 
