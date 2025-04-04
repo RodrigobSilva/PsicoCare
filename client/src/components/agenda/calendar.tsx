@@ -17,14 +17,68 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import { format, addDays, startOfWeek, addMonths, startOfMonth, subMonths, setDefaultOptions } from "date-fns";
+import { 
+  format, 
+  addDays, 
+  startOfWeek,
+  endOfWeek, 
+  addMonths, 
+  startOfMonth,
+  endOfMonth, 
+  subMonths, 
+  setDefaultOptions,
+  getDay,
+  getDate,
+  isToday,
+  isSameMonth,
+  isSameDay,
+  eachDayOfInterval,
+  parseISO
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Configurar locale padrão para pt-BR
 setDefaultOptions({ locale: ptBR });
 
+// Interface para tipar os agendamentos
+interface Agendamento {
+  id: number;
+  data: string;
+  horaInicio: string;
+  horaFim: string;
+  status: string;
+  tipoAtendimento?: string;
+  observacao?: string;
+  paciente?: {
+    id: number;
+    usuario?: {
+      id: number;
+      nome: string;
+    }
+  };
+  psicologo?: {
+    id: number;
+    usuario?: {
+      id: number;
+      nome: string;
+    }
+  };
+  filial?: {
+    id: number;
+    nome: string;
+  };
+  sala?: {
+    id: number;
+    nome: string;
+  };
+  planoSaude?: {
+    id: number;
+    nome: string;
+  };
+}
+
 interface CalendarProps {
-  onSelectAgendamento?: (agendamento: any) => void;
+  onSelectAgendamento?: (agendamento: Agendamento) => void;
   psicologoId?: number;
   filialId?: number;
   view?: "day" | "week" | "month";
@@ -64,8 +118,25 @@ export default function Calendar({
   const buildQueryParams = () => {
     const params = new URLSearchParams();
     
-    // Formato ISO para data
-    params.append("data", currentDate.toISOString().split('T')[0]);
+    // Obter o intervalo de datas baseado na visualização
+    if (currentView === "day") {
+      // Formato ISO para data
+      params.append("data", currentDate.toISOString().split('T')[0]);
+    } else if (currentView === "week") {
+      // Obter primeiro e último dia da semana
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      
+      params.append("dataInicio", start.toISOString().split('T')[0]);
+      params.append("dataFim", end.toISOString().split('T')[0]);
+    } else if (currentView === "month") {
+      // Obter primeiro e último dia do mês
+      const start = startOfMonth(currentDate);
+      const end = endOfMonth(currentDate);
+      
+      params.append("dataInicio", start.toISOString().split('T')[0]);
+      params.append("dataFim", end.toISOString().split('T')[0]);
+    }
     
     if (selectedPsicologo && selectedPsicologo !== "todos") {
       params.append("psicologoId", selectedPsicologo);
@@ -78,13 +149,39 @@ export default function Calendar({
     return params.toString();
   };
 
+  // Construir query key baseado na visualização atual
+  const buildQueryKey = () => {
+    let dateParams = {};
+
+    if (currentView === "day") {
+      dateParams = { data: currentDate.toISOString().split('T')[0] };
+    } else if (currentView === "week") {
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      dateParams = { 
+        dataInicio: start.toISOString().split('T')[0],
+        dataFim: end.toISOString().split('T')[0]
+      };
+    } else if (currentView === "month") {
+      const start = startOfMonth(currentDate);
+      const end = endOfMonth(currentDate);
+      dateParams = { 
+        dataInicio: start.toISOString().split('T')[0],
+        dataFim: end.toISOString().split('T')[0]
+      };
+    }
+
+    return {
+      ...dateParams,
+      psicologoId: selectedPsicologo,
+      filialId: selectedFilial,
+      view: currentView
+    };
+  };
+
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
-    queryKey: ["/api/agendamentos", { 
-      data: currentDate.toISOString().split('T')[0],
-      psicologoId: selectedPsicologo,
-      filialId: selectedFilial
-    }],
+    queryKey: ["/api/agendamentos", buildQueryKey()],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
       return res.json();
@@ -131,6 +228,49 @@ export default function Calendar({
     return "";
   };
 
+  // Função para formatar o horário
+  const formatHorario = (horario: string | undefined) => {
+    if (!horario) return "";
+    return horario.substring(0, 5);
+  };
+  
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "agendado":
+        return "bg-warning-light text-white";
+      case "confirmado":
+        return "bg-primary-light text-white";
+      case "cancelado":
+        return "bg-destructive-light text-white";
+      case "realizado":
+        return "bg-info-light text-white";
+      default:
+        return "bg-secondary-light text-white";
+    }
+  };
+  
+  // Renderizar cartão de agendamento
+  const renderAgendamentoCard = (agendamento: Agendamento) => {
+    return (
+      <div 
+        key={agendamento.id}
+        className={cn(
+          "p-2 rounded mb-1 cursor-pointer text-sm",
+          getStatusColor(agendamento.status)
+        )}
+        onClick={() => onSelectAgendamento?.(agendamento)}
+      >
+        <div className="font-medium">{agendamento.paciente?.usuario?.nome}</div>
+        <div className="text-xs">
+          {formatHorario(agendamento.horaInicio)} - {formatHorario(agendamento.horaFim)}
+          {agendamento.tipoAtendimento && ` • ${agendamento.tipoAtendimento}`}
+          {agendamento.psicologo?.usuario?.nome && ` • ${agendamento.psicologo?.usuario?.nome}`}
+        </div>
+      </div>
+    );
+  };
+
   // Gerar slots para visualização diária
   const generateDayView = () => {
     const horarios = [];
@@ -143,9 +283,9 @@ export default function Calendar({
       const [h, m] = horario.split(":");
       
       // Encontrar agendamentos neste horário
-      const agendamentosNoHorario = agendamentos?.filter((a: any) => {
+      const agendamentosNoHorario = agendamentos?.filter((a: Agendamento) => {
         const horaInicio = a.horaInicio?.substring(0, 5);
-        return horaInicio === horario;
+        return horaInicio === horario && isSameDay(parseISO(a.data), currentDate);
       });
 
       return (
@@ -155,24 +295,184 @@ export default function Calendar({
           </div>
           <div className="flex-1 p-2">
             {agendamentosNoHorario?.length > 0 ? (
-              agendamentosNoHorario.map((agendamento: any) => (
-                <div 
-                  key={agendamento.id}
-                  className={cn(
-                    "p-2 rounded mb-1 cursor-pointer text-sm",
-                    agendamento.status === "confirmado" ? "bg-primary-light text-white" : "bg-secondary-light text-white"
-                  )}
-                  onClick={() => onSelectAgendamento?.(agendamento)}
-                >
-                  <div className="font-medium">{agendamento.paciente?.usuario?.nome}</div>
-                  <div className="text-xs">{agendamento.tipoAtendimento} - {agendamento.psicologo?.usuario?.nome}</div>
-                </div>
-              ))
+              agendamentosNoHorario.map(renderAgendamentoCard)
             ) : null}
           </div>
         </div>
       );
     });
+  };
+  
+  // Gerar visualização semanal
+  const generateWeekView = () => {
+    // Obter dias da semana
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
+    
+    // Horários de trabalho
+    const horarios = [];
+    for (let hora = 8; hora < 20; hora++) {
+      horarios.push(`${hora}:00`);
+    }
+    
+    return (
+      <div className="w-full border-collapse">
+        {/* Cabeçalho com os dias da semana */}
+        <div className="flex border-b border-neutral-200">
+          <div className="w-20 p-2 font-medium text-neutral-500 text-sm"></div>
+          {weekDays.map((day) => (
+            <div 
+              key={day.toISOString()} 
+              className={cn(
+                "flex-1 p-2 text-center border-l border-neutral-200",
+                isToday(day) ? "bg-primary-light/10" : ""
+              )}
+            >
+              <div className="font-medium">{format(day, "EEE", { locale: ptBR })}</div>
+              <div className={cn(
+                "text-sm", 
+                isToday(day) ? "text-primary-light font-medium" : "text-neutral-500"
+              )}>
+                {format(day, "dd/MM")}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Linha para cada horário */}
+        {horarios.map((horario) => (
+          <div key={horario} className="flex border-b border-neutral-200 min-h-[100px]">
+            <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200">
+              {horario}
+            </div>
+            
+            {/* Coluna para cada dia */}
+            {weekDays.map((day) => {
+              // Encontrar agendamentos neste dia e horário
+              const agendamentosNaHora = agendamentos?.filter((a: Agendamento) => {
+                const horaInicio = a.horaInicio?.substring(0, 5);
+                return horaInicio === horario && 
+                       isSameDay(parseISO(a.data), day);
+              });
+              
+              return (
+                <div 
+                  key={day.toISOString()}
+                  className={cn(
+                    "flex-1 p-2 border-l border-neutral-200",
+                    isToday(day) ? "bg-primary-light/5" : ""
+                  )}
+                >
+                  {agendamentosNaHora?.length > 0 ? (
+                    agendamentosNaHora.map(renderAgendamentoCard)
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
+  // Gerar visualização mensal
+  const generateMonthView = () => {
+    // Obter primeiro dia do mês
+    const monthStart = startOfMonth(currentDate);
+    
+    // Obter primeiro dia a ser exibido (primeira segunda-feira antes ou igual ao início do mês)
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    
+    // Obter último dia do mês
+    const monthEnd = endOfMonth(currentDate);
+    
+    // Obter todos os dias que serão exibidos no calendário (incluindo os dias que transbordarem)
+    const calendarDays = eachDayOfInterval({ 
+      start: calendarStart, 
+      end: endOfWeek(monthEnd, { weekStartsOn: 1 }) 
+    });
+    
+    // Agrupar dias em semanas
+    const weeks: Date[][] = [];
+    let currentWeek: Date[] = [];
+    
+    calendarDays.forEach((day) => {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    });
+    
+    // Nomes dos dias da semana
+    const weekDayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    
+    return (
+      <div className="w-full border-collapse">
+        {/* Cabeçalho com os dias da semana */}
+        <div className="grid grid-cols-7 border-b border-neutral-200">
+          {weekDayNames.map((name) => (
+            <div key={name} className="p-2 text-center font-medium text-neutral-500">
+              {name}
+            </div>
+          ))}
+        </div>
+        
+        {/* Células do calendário */}
+        <div className="grid grid-cols-1">
+          {weeks.map((week, weekIndex) => (
+            <div key={weekIndex} className="grid grid-cols-7 border-b border-neutral-200">
+              {week.map((day) => {
+                // Encontrar agendamentos para este dia
+                const dayAgendamentos = agendamentos?.filter((a: Agendamento) => 
+                  isSameDay(parseISO(a.data), day)
+                );
+                
+                return (
+                  <div 
+                    key={day.toISOString()} 
+                    className={cn(
+                      "min-h-[120px] p-1 border-r border-neutral-200 last:border-r-0",
+                      !isSameMonth(day, currentDate) ? "bg-neutral-50" : "",
+                      isToday(day) ? "bg-primary-light/5" : ""
+                    )}
+                  >
+                    <div className={cn(
+                      "text-right p-1 mb-1",
+                      isSameMonth(day, currentDate) ? "font-medium" : "text-neutral-400",
+                      isToday(day) ? "bg-primary-light text-white rounded-full w-7 h-7 flex items-center justify-center ml-auto" : ""
+                    )}>
+                      {getDate(day)}
+                    </div>
+                    
+                    <div className="space-y-1 overflow-y-auto max-h-[80px]">
+                      {dayAgendamentos?.slice(0, 3).map((agendamento: Agendamento) => (
+                        <div
+                          key={agendamento.id}
+                          onClick={() => onSelectAgendamento?.(agendamento)}
+                          className={cn(
+                            "px-1 py-0.5 text-xs rounded cursor-pointer truncate",
+                            getStatusColor(agendamento.status)
+                          )}
+                        >
+                          {formatHorario(agendamento.horaInicio)} - {agendamento.paciente?.usuario?.nome}
+                        </div>
+                      ))}
+                      
+                      {dayAgendamentos && dayAgendamentos.length > 3 && (
+                        <div className="text-xs text-center text-neutral-500">
+                          +{dayAgendamentos.length - 3} mais
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Renderizar conteúdo baseado na visualização atual
@@ -187,15 +487,13 @@ export default function Calendar({
 
     if (currentView === "day") {
       return generateDayView();
+    } else if (currentView === "week") {
+      return generateWeekView();
+    } else if (currentView === "month") {
+      return generateMonthView();
     }
 
-    return (
-      <div className="p-4 text-center">
-        <CalendarIcon className="mx-auto h-12 w-12 text-neutral-300 mb-2" />
-        <p className="text-neutral-500">Visualização {currentView === "week" ? "semanal" : "mensal"} em desenvolvimento.</p>
-        <p className="text-neutral-500 text-sm">Por favor, utilize a visualização diária por enquanto.</p>
-      </div>
-    );
+    return null;
   };
 
   return (
