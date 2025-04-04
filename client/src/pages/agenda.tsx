@@ -27,12 +27,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import AtendimentoForm from "@/components/atendimento/atendimento-form"; // Import the new component
+
 
 // Função para criar um objeto URLSearchParams a partir da string de consulta
 function useSearchParams() {
   const [location] = useLocation();
   const searchParams = new URLSearchParams(location.split("?")[1] || "");
-  
+
   return {
     get: (param: string) => searchParams.get(param)
   };
@@ -43,14 +45,15 @@ export default function Agenda() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedAgendamento, setSelectedAgendamento] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showAtendimentoForm, setShowAtendimentoForm] = useState(false); // State for the new dialog
   const { user } = useAuth();
   const { toast } = useToast();
   const query = useSearchParams();
-  
+
   const psicologoId = query.get("psicologo");
   const filialId = query.get("filial");
   const showForm = query.get("new") === "true";
-  
+
   // Abrir formulário de agendamento se o parâmetro estiver presente
   useEffect(() => {
     if (showForm) {
@@ -90,11 +93,11 @@ export default function Agenda() {
   // Verificar se o usuário pode editar o agendamento
   const canEditAgendamento = () => {
     if (!user || !selectedAgendamento) return false;
-    
+
     if (user.tipo === "admin" || user.tipo === "secretaria") return true;
-    
+
     if (user.tipo === "psicologo" && selectedAgendamento.psicologo?.usuario?.id === user.id) return true;
-    
+
     return false;
   };
 
@@ -186,7 +189,7 @@ export default function Agenda() {
             <DialogHeader>
               <DialogTitle>Detalhes do Agendamento</DialogTitle>
             </DialogHeader>
-            
+
             {selectedAgendamento && (
               <Card>
                 <CardHeader className="pb-2">
@@ -202,7 +205,7 @@ export default function Agenda() {
                     </Badge>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="pt-4 pb-2 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -238,7 +241,7 @@ export default function Agenda() {
                       </div>
                     )}
                   </div>
-                  
+
                   {selectedAgendamento.observacao && (
                     <div>
                       <h4 className="text-sm font-medium text-neutral-500">Observação</h4>
@@ -246,19 +249,53 @@ export default function Agenda() {
                     </div>
                   )}
                 </CardContent>
-                
+
                 <CardFooter className="flex justify-between border-t pt-4">
                   <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
                     Fechar
                   </Button>
-                  
-                  {canEditAgendamento() && (
-                    <Button onClick={handleEditAgendamento}>
-                      Editar Agendamento
-                    </Button>
-                  )}
+
+                  <div className="flex gap-2">
+                    {canEditAgendamento() && (
+                      <>
+                        <Button onClick={handleEditAgendamento}>
+                          Editar Agendamento
+                        </Button>
+                        {selectedAgendamento?.status === "confirmado" && (
+                          <Button onClick={() => setShowAtendimentoForm(true)}>
+                            Registrar Atendimento
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </CardFooter>
               </Card>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Registro de Atendimento */}
+        <Dialog open={showAtendimentoForm} onOpenChange={setShowAtendimentoForm}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Registro de Atendimento</DialogTitle>
+              <DialogDescription>
+                Registre os dados do atendimento realizado
+              </DialogDescription>
+            </DialogHeader>
+            {selectedAgendamento && (
+              <AtendimentoForm
+                agendamentoId={selectedAgendamento.id}
+                onSuccess={() => {
+                  setShowAtendimentoForm(false);
+                  queryClient.invalidateQueries({ queryKey: ["/api/agendamentos"] });
+                  toast({
+                    title: "Atendimento registrado",
+                    description: "O atendimento foi registrado com sucesso.",
+                  });
+                }}
+              />
             )}
           </DialogContent>
         </Dialog>
