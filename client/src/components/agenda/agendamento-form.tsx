@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertAgendamentoSchema } from "@shared/schema";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -58,7 +59,7 @@ const statusAgendamento = [
 ];
 
 // Opções de horário para agendamento (de 30 em 30 minutos)
-const horariosDisponiveis = [];
+const horariosDisponiveis: string[] = [];
 for (let hours = 8; hours < 20; hours++) {
   for (let minutes = 0; minutes < 60; minutes += 30) {
     const hour = hours.toString().padStart(2, '0');
