@@ -379,10 +379,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Sala não encontrada" });
       }
       
-      const salaAtualizada = await storage.updateSala(id, req.body);
+      const validatedData = insertSalaSchema.parse({
+        ...req.body,
+        id: id
+      });
+      
+      const salaAtualizada = await storage.updateSala(id, validatedData);
       
       res.json(salaAtualizada);
     } catch (error) {
+      console.error("Erro ao atualizar sala:", error);
       res.status(400).json({ mensagem: "Erro ao atualizar sala", erro: error });
     }
   });
