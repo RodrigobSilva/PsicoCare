@@ -67,11 +67,11 @@ export default function Calendar({
     // Formato ISO para data
     params.append("data", currentDate.toISOString().split('T')[0]);
     
-    if (selectedPsicologo) {
+    if (selectedPsicologo && selectedPsicologo !== "todos") {
       params.append("psicologoId", selectedPsicologo);
     }
     
-    if (selectedFilial) {
+    if (selectedFilial && selectedFilial !== "todas") {
       params.append("filialId", selectedFilial);
     }
     
@@ -243,7 +243,7 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione um psicólogo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os psicólogos</SelectItem>
+                <SelectItem value="todos">Todos os psicólogos</SelectItem>
                 {psicologos?.map((psicologo: any) => (
                   <SelectItem key={psicologo.id} value={psicologo.id.toString()}>
                     {psicologo.usuario.nome}
@@ -263,7 +263,7 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as filiais</SelectItem>
+                <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>
                     {filial.nome}

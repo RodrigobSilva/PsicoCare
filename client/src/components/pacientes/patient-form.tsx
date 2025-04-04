@@ -157,7 +157,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
           cep: data.dadosPessoais.cep,
           observacoes: data.informacoesClinicas.observacoes
         },
-        planoSaude: data.planoSaude.planoSaudeId ? {
+        planoSaude: data.planoSaude.planoSaudeId && data.planoSaude.planoSaudeId !== "nenhum" ? {
           planoSaudeId: parseInt(data.planoSaude.planoSaudeId),
           numeroCarteirinha: data.planoSaude.numeroCarteirinha,
           dataValidade: data.planoSaude.dataValidade
@@ -470,7 +470,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="nenhum">Nenhum</SelectItem>
                       {planosSaude?.map((plano: any) => (
                         <SelectItem key={plano.id} value={plano.id.toString()}>
                           {plano.nome}
