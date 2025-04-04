@@ -1,6 +1,4 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -14,66 +12,22 @@ import PlanosSaude from "@/pages/planos-saude";
 import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
 import { ProtectedRoute } from "./lib/protected-route";
-import { useAuth } from "./hooks/use-auth";
+import { AuthProvider, useAuth } from "./hooks/use-auth";
 
 function Router() {
-  const { user } = useAuth();
-  const isAdmin = user?.tipo === "admin";
-  const isPsicologo = user?.tipo === "psicologo";
-  const isSecretaria = user?.tipo === "secretaria";
-  const isPaciente = user?.tipo === "paciente";
-
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      
-      <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/dashboard" component={Dashboard} />
-      
-      <ProtectedRoute 
-        path="/pacientes"
-        component={Pacientes} 
-        allowedRoles={["admin", "secretaria", "psicologo"]}
-      />
-      
-      <ProtectedRoute 
-        path="/psicologos" 
-        component={Psicologos}
-        allowedRoles={["admin", "secretaria"]}
-      />
-      
-      <ProtectedRoute path="/agenda" component={Agenda} />
-      
-      <ProtectedRoute 
-        path="/salas" 
-        component={Salas}
-        allowedRoles={["admin", "secretaria"]}
-      />
-      
-      <ProtectedRoute 
-        path="/financeiro" 
-        component={Financeiro}
-        allowedRoles={["admin", "secretaria"]}
-      />
-      
-      <ProtectedRoute 
-        path="/planos-saude" 
-        component={PlanosSaude}
-        allowedRoles={["admin", "secretaria"]}
-      />
-      
-      <ProtectedRoute 
-        path="/relatorios" 
-        component={Relatorios}
-        allowedRoles={["admin", "secretaria"]}
-      />
-      
-      <ProtectedRoute 
-        path="/configuracoes" 
-        component={Configuracoes}
-        allowedRoles={["admin"]}
-      />
-      
+      <Route path="/" component={Dashboard} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/pacientes" component={Pacientes} />
+      <Route path="/psicologos" component={Psicologos} />
+      <Route path="/agenda" component={Agenda} />
+      <Route path="/salas" component={Salas} />
+      <Route path="/financeiro" component={Financeiro} />
+      <Route path="/planos-saude" component={PlanosSaude} />
+      <Route path="/relatorios" component={Relatorios} />
+      <Route path="/configuracoes" component={Configuracoes} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -81,10 +35,10 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <AuthProvider>
       <Router />
       <Toaster />
-    </QueryClientProvider>
+    </AuthProvider>
   );
 }
 
