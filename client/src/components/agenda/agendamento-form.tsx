@@ -112,6 +112,22 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
   const [isSaving, setIsSaving] = useState(false);
   const [pacientePlanos, setPacientePlanos] = useState<any[]>([]);
   
+  // Configuração do formulário com valores padrão
+  const form = useForm<z.infer<typeof agendamentoFormSchema>>({
+    resolver: zodResolver(agendamentoFormSchema),
+    defaultValues: {
+      data: defaultDate || new Date(),
+      horaInicio: "09:00",
+      horaFim: "09:30",
+      status: "agendado",
+      tipoAtendimento: "retorno",
+      particular: false,
+      remoto: false,
+      sublocacao: false,
+      observacao: "",
+    },
+  });
+
   // Carregar dados do agendamento se estiver editando
   const { data: agendamentoAtual, isLoading: isLoadingAgendamento } = useQuery({
     queryKey: ["/api/agendamentos", agendamentoId],
@@ -168,22 +184,6 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/planos-saude");
       return res.json();
-    },
-  });
-
-  // Configuração do formulário com valores padrão
-  const form = useForm<z.infer<typeof agendamentoFormSchema>>({
-    resolver: zodResolver(agendamentoFormSchema),
-    defaultValues: {
-      data: defaultDate || new Date(),
-      horaInicio: "09:00",
-      horaFim: "09:30",
-      status: "agendado",
-      tipoAtendimento: "retorno",
-      particular: false,
-      remoto: false,
-      sublocacao: false,
-      observacao: "",
     },
   });
 
