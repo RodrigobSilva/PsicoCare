@@ -32,10 +32,20 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
 import { format, addMinutes, parse, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
   CalendarIcon, 
+  CheckIcon,
+  ChevronsUpDown,
   Clock, 
   Loader2 
 } from "lucide-react";
@@ -309,32 +319,78 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
               <FormField
                 control={form.control}
                 name="pacienteId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Paciente</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o paciente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {pacientes?.map((paciente: any) => (
-                          <SelectItem 
-                            key={paciente.id} 
-                            value={paciente.id.toString()}
-                          >
-                            {paciente.usuario?.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const [searchQuery, setSearchQuery] = useState("");
+                  
+                  // Filtrar pacientes com base na pesquisa
+                  const filteredPacientes = searchQuery === ""
+                    ? pacientes || []
+                    : pacientes?.filter((paciente: {id: number, usuario?: {nome: string}}) => 
+                        paciente.usuario?.nome?.toLowerCase().includes(searchQuery.toLowerCase())
+                      ) || [];
+                  
+                  return (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Paciente</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value && pacientes
+                                ? pacientes.find(
+                                    (paciente: {id: number, usuario?: {nome: string}}) => paciente.id.toString() === field.value.toString()
+                                  )?.usuario?.nome || "Selecione o paciente"
+                                : "Selecione o paciente"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-80">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Buscar paciente..." 
+                              value={searchQuery}
+                              onValueChange={setSearchQuery}
+                            />
+                            <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandList>
+                                {filteredPacientes.map((paciente: {id: number, usuario?: {nome: string}}) => (
+                                  <CommandItem
+                                    key={paciente.id}
+                                    value={paciente.usuario?.nome}
+                                    onSelect={() => {
+                                      form.setValue("pacienteId", paciente.id);
+                                      setSearchQuery("");
+                                    }}
+                                  >
+                                    <CheckIcon
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        paciente.id.toString() === field.value?.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {paciente.usuario?.nome}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               <FormField
