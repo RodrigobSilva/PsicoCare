@@ -91,18 +91,24 @@ export default function FilialForm({ filialId, onSuccess }: FilialFormProps) {
   // Configurar mutação para criar/atualizar filial
   const mutation = useMutation({
     mutationFn: async (data: FilialFormValues) => {
-      if (filialId) {
-        // Atualizar filial existente
-        await apiRequest("PUT", `/api/filiais/${filialId}`, data);
-      } else {
-        // Criar nova filial
-        await apiRequest("POST", "/api/filiais", data);
+      const response = await apiRequest(
+        filialId ? "PUT" : "POST",
+        filialId ? `/api/filiais/${filialId}` : "/api/filiais",
+        data
+      );
+      if (!response.ok) {
+        throw new Error("Erro ao salvar filial");
       }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/filiais"] });
       onSuccess();
     },
+    onError: (error) => {
+      console.error("Erro ao salvar filial:", error);
+      throw error;
+    }
   });
 
   // Handler de submit
