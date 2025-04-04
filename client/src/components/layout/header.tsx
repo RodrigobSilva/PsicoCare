@@ -42,7 +42,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <Menu size={20} />
         </button>
         <div className="ml-4 lg:ml-0">
-          <h2 className="text-lg font-medium text-primary">{getPageTitle()}</h2>
+          <h2 className="text-lg font-medium text-primary">Espaço Terapêutico JC - {getPageTitle()}</h2>
         </div>
       </div>
       <div className="flex items-center space-x-4">

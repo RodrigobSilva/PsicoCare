@@ -76,8 +76,8 @@ export default function AuthPage() {
       {/* Hero/Banner Section */}
       <div className="bg-primary md:w-1/2 p-8 flex items-center justify-center">
         <div className="max-w-md text-white">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">PsiSystem</h1>
-          <p className="text-lg md:text-xl mb-6">Sistema de Gestão para Clínicas de Psicologia</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Espaço Terapêutico JC</h1>
+          <p className="text-lg md:text-xl mb-6">Cuidando da sua saúde mental com excelência</p>
           <ul className="space-y-2">
             <li className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
