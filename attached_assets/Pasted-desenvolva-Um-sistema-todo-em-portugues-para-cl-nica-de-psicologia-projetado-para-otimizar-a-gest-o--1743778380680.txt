@@ -1,0 +1,63 @@
+desenvolva Um sistema todo em portugues para clínica de psicologia projetado para otimizar a gestão administrativa, clínica e financeira, além de garantir a segurança e confidencialidade dos dados dos pacientes. 
+Abaixo estão as principais funcionalidades:
+
+
+ 1. Gestão de pessoas  
+Pacientes
+- Cadastro completo: Dados pessoais, histórico médico, anamnese, laudos e evolução.  
+- Prontuário eletrônico: Registro de sessões, diagnósticos, tratamentos e observações.  
+- Histórico de atendimentos: Acompanhamento do progresso do paciente.  
+- Agendamento automático de retornos.  
+Psicologos
+- Cadastro completo: Dados pessoais, número do CRP, email, celular
+- Horários de atendimentos: dias da semana e horários.
+Secretária e administrador
+- Cadastro completo: Dados pessoais
+
+ 2.Gestão de perfis no sistema
+ - Paciente tem acesso a verificar o próprio agendamentos.
+ - Psicologo: consultar a própria agenda, consultar pacientes, cadastrar informações da sessão, consultar sessões realizadas.
+ - Secretária tem perfil de agendamento, cadastrar psicólogos, cadastrar pacientes, consultar relatórios,
+ - Administrador: tem todos os perfis acima, além da gestão financeira, cadastrar secrária, 
+
+ 3. Agendamento e Calendário  
+- agendamento de sessão com dia e hora, além da filial e sala
+- parte finaceira da sessão: se é plano de saúde e qual plano. sublocação ou particular.
+- Controle de horários: Visualização por profissional, sala ou dia/semana/mês. 
+- Lembretes automáticos: SMS/e-mail/whatsapp para confirmar consultas.  
+- Bloqueio de horários: Para férias, feriados ou indisponibilidades por parte do psicologo com aprovação do administrador.  
+
+ 4. Gestão de planos de saúde e sublocação
+- cadastros de plano de saúde
+- cadastro dos valores dos repases do plano para clinica e para o psicolgo
+- calculo de repasse do plano de saúde já com descontos 11% de INSS*
+
+5 - Gestão de salas
+-cadastro de filiais
+-cadastro de sala por filial
+-Cadastro de atendimento remoto*
+
+6. Gestão Financeira  
+- Controle de pagamentos: Registro de sessões realizadas, Sessões faturadas, qual plano e valores.  
+- Emissão de recibos e faturas.  
+- Relatórios financeiros: Faturamento, inadimplência, despesas.  
+
+7. Documentação e Laudos  
+- Modelos de documentos: Relatórios, atestados, declarações.  
+- Assinatura digital: Para envio eletrônico de documentos.  
+- Armazenamento em nuvem: Acesso seguro a arquivos.  
+
+8. Integrações e Automações  
+- WhatsApp/Email automatizado: Lembretes e confirmações através de um Agente IA com integração com N8N.
+- Sincronização com Google Calendar/Outlook.  
+
+
+9. Mobilidade (App ou Acesso Responsivo)  
+- Acesso remoto: Para psicólogos e pacientes.  
+- Notificações em tempo real no app
+
+10. Relatórios e Análises  
+- Dashboard de desempenho: Número de sessões, taxa de cancelamento.  
+- Dashboard com informações dos paciente por perfil do paciente.
+Estatísticas de pacientes: Progresso, frequência.  
+- Dados clínicos agregados (sem identificar pacientes).  
