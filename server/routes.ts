@@ -681,6 +681,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Avaliações clínicas
+  app.get("/api/avaliacoes", verificarAutenticacao, async (req, res) => {
+    try {
+      const pacienteId = parseInt(req.query.pacienteId as string);
+      const avaliacoes = await storage.getAvaliacoesByPaciente(pacienteId);
+      res.json(avaliacoes);
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao buscar avaliações", erro: error });
+    }
+  });
+
+  app.post("/api/avaliacoes", verificarAutenticacao, async (req, res) => {
+    try {
+      const novaAvaliacao = await storage.createAvaliacao(req.body);
+      res.status(201).json(novaAvaliacao);
+    } catch (error) {
+      res.status(400).json({ mensagem: "Erro ao criar avaliação", erro: error });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

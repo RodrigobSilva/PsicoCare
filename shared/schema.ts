@@ -357,3 +357,30 @@ export const documentosRelations = relations(documentos, ({ one }) => ({
     references: [psicologos.id],
   }),
 }));
+
+// Avaliações clínicas
+export const avaliacoes = pgTable("avaliacoes", {
+  id: serial("id").primaryKey(),
+  pacienteId: integer("paciente_id").references(() => pacientes.id).notNull(),
+  psicologoId: integer("psicologo_id").references(() => psicologos.id).notNull(),
+  tipo: text("tipo").notNull(), // ansiedade, depressao, qualidade_vida
+  respostas: json("respostas").notNull(),
+  pontuacao: integer("pontuacao").notNull(),
+  dataAvaliacao: timestamp("data_avaliacao").defaultNow(),
+  observacoes: text("observacoes"),
+});
+
+export const avaliacoesRelations = relations(avaliacoes, ({ one }) => ({
+  paciente: one(pacientes, {
+    fields: [avaliacoes.pacienteId],
+    references: [pacientes.id],
+  }),
+  psicologo: one(psicologos, {
+    fields: [avaliacoes.psicologoId],
+    references: [psicologos.id],
+  }),
+}));
+
+export const insertAvaliacaoSchema = createInsertSchema(avaliacoes).omit({ id: true });
+export type InsertAvaliacao = z.infer<typeof insertAvaliacaoSchema>;
+export type Avaliacao = typeof avaliacoes.$inferSelect;
