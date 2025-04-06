@@ -18,6 +18,7 @@ import {
   insertPacientePlanoSaudeSchema,
   insertDocumentoSchema
 } from "@shared/schema";
+import { whatsappService } from './services/whatsapp';
 
 // Middleware para verificar autenticação
 const verificarAutenticacao = (req: Request, res: Response, next: Function) => {
@@ -72,18 +73,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const paciente = await storage.getPaciente(id);
-      
+
       if (!paciente) {
         return res.status(404).json({ mensagem: "Paciente não encontrado" });
       }
-      
+
       const usuario = await storage.getUser(paciente.usuarioId);
       const planosDosPacientes = await storage.getPacientesPlanoSaudeByPaciente(id);
       const planos = await Promise.all(planosDosPacientes.map(async (pp) => {
         const plano = await storage.getPlanoSaude(pp.planoSaudeId);
         return { ...pp, plano };
       }));
-      
+
       res.json({ ...paciente, usuario, planos });
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar paciente", erro: error });
@@ -93,19 +94,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pacientes", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const { usuario, paciente } = req.body;
-      
+
       const novoUsuario = await storage.createUser({
         ...usuario,
         tipo: "paciente"
       });
-      
+
       const validatedData = insertPacienteSchema.parse({
         ...paciente,
         usuarioId: novoUsuario.id
       });
-      
+
       const novoPaciente = await storage.createPaciente(validatedData);
-      
+
       res.status(201).json({
         ...novoPaciente,
         usuario: novoUsuario
@@ -119,15 +120,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { usuario, paciente } = req.body;
-      
+
       const pacienteExistente = await storage.getPaciente(id);
       if (!pacienteExistente) {
         return res.status(404).json({ mensagem: "Paciente não encontrado" });
       }
-      
+
       await storage.updateUser(pacienteExistente.usuarioId, usuario);
       const pacienteAtualizado = await storage.updatePaciente(id, paciente);
-      
+
       res.json(pacienteAtualizado);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar paciente", erro: error });
@@ -137,15 +138,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/pacientes/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const paciente = await storage.getPaciente(id);
       if (!paciente) {
         return res.status(404).json({ mensagem: "Paciente não encontrado" });
       }
-      
+
       await storage.deletePaciente(id);
       await storage.deleteUser(paciente.usuarioId);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir paciente", erro: error });
@@ -170,14 +171,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const psicologo = await storage.getPsicologo(id);
-      
+
       if (!psicologo) {
         return res.status(404).json({ mensagem: "Psicólogo não encontrado" });
       }
-      
+
       const usuario = await storage.getUser(psicologo.usuarioId);
       const disponibilidades = await storage.getDisponibilidadesByPsicologo(id);
-      
+
       res.json({ ...psicologo, usuario, disponibilidades });
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar psicólogo", erro: error });
@@ -187,19 +188,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/psicologos", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const { usuario, psicologo, disponibilidades } = req.body;
-      
+
       const novoUsuario = await storage.createUser({
         ...usuario,
         tipo: "psicologo"
       });
-      
+
       const validatedData = insertPsicologoSchema.parse({
         ...psicologo,
         usuarioId: novoUsuario.id
       });
-      
+
       const novoPsicologo = await storage.createPsicologo(validatedData);
-      
+
       // Adicionar disponibilidades se fornecidas
       if (disponibilidades && Array.isArray(disponibilidades)) {
         for (const disp of disponibilidades) {
@@ -209,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.status(201).json({
         ...novoPsicologo,
         usuario: novoUsuario
@@ -223,15 +224,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { usuario, psicologo } = req.body;
-      
+
       const psicologoExistente = await storage.getPsicologo(id);
       if (!psicologoExistente) {
         return res.status(404).json({ mensagem: "Psicólogo não encontrado" });
       }
-      
+
       await storage.updateUser(psicologoExistente.usuarioId, usuario);
       const psicologoAtualizado = await storage.updatePsicologo(id, psicologo);
-      
+
       res.json(psicologoAtualizado);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar psicólogo", erro: error });
@@ -241,15 +242,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/psicologos/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const psicologo = await storage.getPsicologo(id);
       if (!psicologo) {
         return res.status(404).json({ mensagem: "Psicólogo não encontrado" });
       }
-      
+
       await storage.deletePsicologo(id);
       await storage.deleteUser(psicologo.usuarioId);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir psicólogo", erro: error });
@@ -270,13 +271,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const filial = await storage.getFilial(id);
-      
+
       if (!filial) {
         return res.status(404).json({ mensagem: "Filial não encontrada" });
       }
-      
+
       const salas = await storage.getSalasByFilial(id);
-      
+
       res.json({ ...filial, salas });
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar filial", erro: error });
@@ -287,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertFilialSchema.parse(req.body);
       const novaFilial = await storage.createFilial(validatedData);
-      
+
       res.status(201).json(novaFilial);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao criar filial", erro: error });
@@ -297,14 +298,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/filiais/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const filialExistente = await storage.getFilial(id);
       if (!filialExistente) {
         return res.status(404).json({ mensagem: "Filial não encontrada" });
       }
-      
+
       const filialAtualizada = await storage.updateFilial(id, req.body);
-      
+
       res.json(filialAtualizada);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar filial", erro: error });
@@ -314,14 +315,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/filiais/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const filial = await storage.getFilial(id);
       if (!filial) {
         return res.status(404).json({ mensagem: "Filial não encontrada" });
       }
-      
+
       await storage.deleteFilial(id);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir filial", erro: error });
@@ -346,13 +347,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const sala = await storage.getSala(id);
-      
+
       if (!sala) {
         return res.status(404).json({ mensagem: "Sala não encontrada" });
       }
-      
+
       const filial = await storage.getFilial(sala.filialId);
-      
+
       res.json({ ...sala, filial });
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar sala", erro: error });
@@ -363,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertSalaSchema.parse(req.body);
       const novaSala = await storage.createSala(validatedData);
-      
+
       res.status(201).json(novaSala);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao criar sala", erro: error });
@@ -373,19 +374,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/salas/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const salaExistente = await storage.getSala(id);
       if (!salaExistente) {
         return res.status(404).json({ mensagem: "Sala não encontrada" });
       }
-      
+
       const validatedData = insertSalaSchema.parse({
         ...req.body,
         id: id
       });
-      
+
       const salaAtualizada = await storage.updateSala(id, validatedData);
-      
+
       res.json(salaAtualizada);
     } catch (error) {
       console.error("Erro ao atualizar sala:", error);
@@ -396,14 +397,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/salas/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const sala = await storage.getSala(id);
       if (!sala) {
         return res.status(404).json({ mensagem: "Sala não encontrada" });
       }
-      
+
       await storage.deleteSala(id);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir sala", erro: error });
@@ -424,11 +425,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const plano = await storage.getPlanoSaude(id);
-      
+
       if (!plano) {
         return res.status(404).json({ mensagem: "Plano de saúde não encontrado" });
       }
-      
+
       res.json(plano);
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar plano de saúde", erro: error });
@@ -439,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertPlanoSaudeSchema.parse(req.body);
       const novoPlano = await storage.createPlanoSaude(validatedData);
-      
+
       res.status(201).json(novoPlano);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao criar plano de saúde", erro: error });
@@ -449,14 +450,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/planos-saude/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const planoExistente = await storage.getPlanoSaude(id);
       if (!planoExistente) {
         return res.status(404).json({ mensagem: "Plano de saúde não encontrado" });
       }
-      
+
       const planoAtualizado = await storage.updatePlanoSaude(id, req.body);
-      
+
       res.json(planoAtualizado);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar plano de saúde", erro: error });
@@ -466,14 +467,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/planos-saude/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const plano = await storage.getPlanoSaude(id);
       if (!plano) {
         return res.status(404).json({ mensagem: "Plano de saúde não encontrado" });
       }
-      
+
       await storage.deletePlanoSaude(id);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir plano de saúde", erro: error });
@@ -488,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pacienteId = req.query.pacienteId ? parseInt(req.query.pacienteId as string) : undefined;
       const psicologoId = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
-      
+
       if (data) {
         agendamentos = await storage.getAgendamentosByData(data);
       } else if (pacienteId) {
@@ -509,10 +510,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sala = agendamento.salaId ? await storage.getSala(agendamento.salaId) : null;
         const filial = await storage.getFilial(agendamento.filialId);
         const planoSaude = agendamento.planoSaudeId ? await storage.getPlanoSaude(agendamento.planoSaudeId) : null;
-        
+
         const pacienteUsuario = paciente ? await storage.getUser(paciente.usuarioId) : null;
         const psicologoUsuario = psicologo ? await storage.getUser(psicologo.usuarioId) : null;
-        
+
         return { 
           ...agendamento, 
           paciente: paciente ? { ...paciente, usuario: pacienteUsuario } : null,
@@ -522,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           planoSaude
         };
       }));
-      
+
       res.json(agendamentosCompletos);
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar agendamentos", erro: error });
@@ -533,20 +534,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const agendamento = await storage.getAgendamento(id);
-      
+
       if (!agendamento) {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
-      
+
       const paciente = await storage.getPaciente(agendamento.pacienteId);
       const psicologo = await storage.getPsicologo(agendamento.psicologoId);
       const sala = agendamento.salaId ? await storage.getSala(agendamento.salaId) : null;
       const filial = await storage.getFilial(agendamento.filialId);
       const planoSaude = agendamento.planoSaudeId ? await storage.getPlanoSaude(agendamento.planoSaudeId) : null;
-      
+
       const pacienteUsuario = paciente ? await storage.getUser(paciente.usuarioId) : null;
       const psicologoUsuario = psicologo ? await storage.getUser(psicologo.usuarioId) : null;
-      
+
       res.json({ 
         ...agendamento, 
         paciente: paciente ? { ...paciente, usuario: pacienteUsuario } : null,
@@ -564,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertAgendamentoSchema.parse(req.body);
       const novoAgendamento = await storage.createAgendamento(validatedData);
-      
+
       res.status(201).json(novoAgendamento);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao criar agendamento", erro: error });
@@ -574,14 +575,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/agendamentos/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria", "psicologo"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const agendamentoExistente = await storage.getAgendamento(id);
       if (!agendamentoExistente) {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
-      
+
       const agendamentoAtualizado = await storage.updateAgendamento(id, req.body);
-      
+
       res.json(agendamentoAtualizado);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar agendamento", erro: error });
@@ -591,14 +592,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/agendamentos/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const agendamento = await storage.getAgendamento(id);
       if (!agendamento) {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
-      
+
       await storage.deleteAgendamento(id);
-      
+
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao excluir agendamento", erro: error });
@@ -611,22 +612,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Estatísticas básicas
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const agendamentosHoje = await storage.getAgendamentosByData(today);
       const pacientes = await storage.getPacientes();
-      
+
       // Calcular novos pacientes (últimos 30 dias)
       const umMesAtras = new Date();
       umMesAtras.setDate(umMesAtras.getDate() - 30);
-      
+
       // Contar atendimentos realizados para faturamento (simplificado)
       const atendimentos = Array.from(await Promise.all(agendamentosHoje.map(async (agend) => {
         return await storage.getAtendimento(agend.id);
       }))).filter(a => a !== undefined);
-      
+
       // Calcular taxa de ocupação
       const psicologos = await storage.getPsicologos();
-      
+
       // Retornar estatísticas
       res.json({
         sessoesHoje: agendamentosHoje.length,
@@ -636,6 +637,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao obter estatísticas", erro: error });
+    }
+  });
+
+  // Enviar notificação via WhatsApp
+  app.post("/api/notificacoes/whatsapp", verificarAutenticacao, async (req, res) => {
+    try {
+      const { telefone, mensagem } = req.body;
+      await whatsappService.sendMessage(telefone, mensagem);
+      res.json({ mensagem: "Notificação enviada com sucesso" });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao enviar notificação", erro: error });
     }
   });
 

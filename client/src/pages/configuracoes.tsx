@@ -156,9 +156,38 @@ export default function Configuracoes() {
                   <CardDescription>Configuração da API do WhatsApp</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-neutral-600">
-                    Configure a integração com a API do WhatsApp para envio de mensagens.
-                  </p>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="whatsappToken"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Token de Acesso</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Token de acesso da API do WhatsApp Business
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="whatsappEnabled"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormLabel className="!mt-0">Ativar notificações via WhatsApp</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit">Salvar Configurações</Button>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
 
