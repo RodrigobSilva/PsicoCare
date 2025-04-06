@@ -24,7 +24,7 @@ interface ScheduleTodayProps {
 export default function ScheduleToday({ agendamentos, isLoading }: ScheduleTodayProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const updateAgendamentoMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number, status: string }) => {
       const res = await apiRequest("PUT", `/api/agendamentos/${id}`, { status });
@@ -52,21 +52,21 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
 
   const getPatientInitials = (paciente: any) => {
     if (!paciente?.usuario?.nome) return "??";
-    
+
     const names = paciente.usuario.nome.split(" ");
     if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
-    
+
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
   };
 
   const formatTime = (time: string) => {
     if (!time) return "";
-    
+
     // Verifica se time é uma string ISO 8601 completa
     if (time.includes('T') && time.includes('Z')) {
       return format(parseISO(time), 'HH:mm');
     }
-    
+
     // Se for apenas o horário em formato HH:MM:SS
     return time.substring(0, 5);
   };
@@ -83,18 +83,21 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
   const canConfirm = (agendamento: any) => {
     // Apenas admin, secretária e o próprio psicólogo podem confirmar
     if (!user) return false;
-    
+
     if (user.tipo === "admin" || user.tipo === "secretaria") return true;
-    
+
     if (user.tipo === "psicologo" && user.id === agendamento.psicologo?.usuario?.id) return true;
-    
+
     return false;
   };
 
   return (
-    <Card className="mb-6 lg:mb-0">
-      <CardHeader className="pb-4 border-b border-neutral-200 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium text-neutral-800">Agenda de Hoje</CardTitle>
+    <Card className="mb-6 lg:mb-0 border-primary/20 shadow-lg">
+      <CardHeader className="pb-4 border-b border-neutral-200 flex flex-row items-center justify-between bg-primary/5">
+        <CardTitle className="text-lg font-medium text-neutral-800 flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5 text-primary" />
+          Agenda de Hoje
+        </CardTitle>
         <Link href="/agenda">
           <Button variant="link" className="text-sm text-primary hover:text-primary-dark">
             Ver todos

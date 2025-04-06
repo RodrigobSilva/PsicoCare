@@ -54,7 +54,7 @@ export default function StatisticCards({ estatisticas, isLoading }: StatisticCar
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 animate-in fade-in duration-500">
       {cards.map((card, index) => (
         <Card key={index}>
           <CardContent className="p-6">
