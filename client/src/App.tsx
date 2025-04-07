@@ -11,6 +11,7 @@ import Financeiro from "@/pages/financeiro";
 import PlanosSaude from "@/pages/planos-saude";
 import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
+import Teleconsulta from "@/pages/teleconsulta";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
@@ -64,6 +65,11 @@ function Router() {
         path="/configuracoes" 
         component={Configuracoes}
         allowedRoles={["admin"]}
+      />
+      
+      <ProtectedRoute
+        path="/teleconsulta/:id"
+        component={Teleconsulta}
       />
       
       <Route component={NotFound} />

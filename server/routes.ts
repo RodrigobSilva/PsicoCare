@@ -701,6 +701,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rotas para Teleconsulta
+  app.get("/api/agendamentos/:id", verificarAutenticacao, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const agendamento = await storage.getAgendamento(id);
+      
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+
+      // Enriquecendo o agendamento com dados do paciente e psicólogo
+      const paciente = await storage.getPaciente(agendamento.pacienteId);
+      const psicologo = await storage.getPsicologo(agendamento.psicologoId);
+      
+      if (paciente) {
+        const usuarioPaciente = await storage.getUser(paciente.usuarioId);
+        paciente.usuario = usuarioPaciente;
+      }
+      
+      if (psicologo) {
+        const usuarioPsicologo = await storage.getUser(psicologo.usuarioId);
+        psicologo.usuario = usuarioPsicologo;
+      }
+      
+      const agendamentoCompleto = {
+        ...agendamento,
+        paciente,
+        psicologo
+      };
+      
+      res.json(agendamentoCompleto);
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao buscar detalhes do agendamento", erro: error });
+    }
+  });
+  
+  app.post("/api/teleconsultas/iniciar", verificarAutenticacao, async (req, res) => {
+    try {
+      const { agendamentoId, iniciadoPor, dataHoraInicio } = req.body;
+      
+      // Verificar se o agendamento existe
+      const agendamento = await storage.getAgendamento(parseInt(agendamentoId));
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      // Verificar se o usuário tem permissão para iniciar essa teleconsulta
+      const usuarioEhPsicologo = req.user.tipo === "psicologo";
+      const usuarioEhPaciente = req.user.tipo === "paciente";
+      const usuarioEhAdmin = req.user.tipo === "admin";
+      
+      if (!usuarioEhPsicologo && !usuarioEhPaciente && !usuarioEhAdmin) {
+        return res.status(403).json({ mensagem: "Sem permissão para iniciar esta teleconsulta" });
+      }
+      
+      // Em uma implementação real, aqui seria criado um registro de teleconsulta
+      // e potencialmente integraria com um serviço de videoconferência
+      
+      res.status(200).json({
+        mensagem: "Teleconsulta iniciada com sucesso",
+        agendamentoId,
+        dataHoraInicio,
+        iniciadoPor
+      });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao iniciar teleconsulta", erro: error });
+    }
+  });
+  
+  app.post("/api/teleconsultas/:sessionId/encerrar", verificarAutenticacao, async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { encerradoPor, dataHoraFim } = req.body;
+      
+      // Verificar se o agendamento existe
+      const agendamento = await storage.getAgendamento(parseInt(sessionId));
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      // Em uma implementação real, aqui seria atualizado o registro de teleconsulta
+      // e potencialmente integraria com um serviço de videoconferência para encerrar a sessão
+      
+      // Atualizar o status do agendamento para "realizado"
+      await storage.updateAgendamento(parseInt(sessionId), {
+        status: "realizado"
+      });
+      
+      // Registrar um atendimento
+      await storage.createAtendimento({
+        pacienteId: agendamento.pacienteId,
+        psicologoId: agendamento.psicologoId,
+        data: new Date().toISOString().split('T')[0],
+        horaInicio: agendamento.horaInicio,
+        horaFim: agendamento.horaFim,
+        tipo: "teleconsulta",
+        observacoes: "Teleconsulta realizada",
+        valorCobrado: agendamento.valorConsulta || 0,
+        valorPago: 0, // Será atualizado quando o pagamento for processado
+        status: "realizado"
+      });
+      
+      res.status(200).json({
+        mensagem: "Teleconsulta encerrada com sucesso",
+        agendamentoId: sessionId,
+        dataHoraFim,
+        encerradoPor
+      });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao encerrar teleconsulta", erro: error });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
