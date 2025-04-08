@@ -25,7 +25,7 @@ import { Loader2, Plus, X } from "lucide-react";
 const dadosPessoaisSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("Email inválido"),
-  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").optional(),
+  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   telefone: z.string().min(10, "Telefone inválido").optional().nullable(),
   cpf: z.string().min(11, "CPF inválido").optional().nullable(),
 });
@@ -291,21 +291,24 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                 )}
               />
 
-              {!psicologoId && (
-                <FormField
-                  control={form.control}
-                  name="dadosPessoais.senha"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="******" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              <FormField
+                control={form.control}
+                name="dadosPessoais.senha"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{psicologoId ? 'Nova Senha (opcional)' : 'Senha'}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder={psicologoId ? "Digite para alterar a senha" : "******"} 
+                        {...field} 
+                        required={!psicologoId}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </TabsContent>
 
