@@ -1,7 +1,7 @@
 
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_BASE_URL = "http://0.0.0.0:5000"; // URL base da API
+const API_BASE_URL = ""; // URL base da API - usando path relativo
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -45,6 +45,9 @@ export const getQueryFn: <T>(options: {
     try {
       const res = await fetch(fullUrl, {
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
