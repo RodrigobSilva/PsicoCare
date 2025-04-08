@@ -259,11 +259,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Psicólogo não encontrado" });
       }
 
+      // Deletar disponibilidades do psicólogo
+      const disponibilidades = await storage.getDisponibilidadesByPsicologo(id);
+      for (const disp of disponibilidades) {
+        await storage.deleteDisponibilidade(disp.id);
+      }
+
+      // Deletar atendimentos do psicólogo
+      const atendimentos = await storage.getAtendimentosByPsicologo(id);
+      for (const atend of atendimentos) {
+        await storage.deleteAtendimento(atend.id);
+      }
+
+      // Deletar agendamentos do psicólogo
+      const agendamentos = await storage.getAgendamentosByPsicologo(id);
+      for (const agend of agendamentos) {
+        await storage.deleteAgendamento(agend.id);
+      }
+
+      // Finalmente deletar o psicólogo e seu usuário
       await storage.deletePsicologo(id);
       await storage.deleteUser(psicologo.usuarioId);
 
       res.status(204).send();
     } catch (error) {
+      console.error("Erro ao excluir psicólogo:", error);
       res.status(500).json({ mensagem: "Erro ao excluir psicólogo", erro: error });
     }
   });
