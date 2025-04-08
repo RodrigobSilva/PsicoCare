@@ -137,32 +137,42 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
   // Mutation para criar ou atualizar psicólogo
   const mutation = useMutation({
     mutationFn: async (data: PsicologoFormValues) => {
-      // Preparar dados para API
-      const payload = {
-        usuario: {
+      // Primeiro criar o usuário
+      const usuarioResponse = await apiRequest(
+        "POST",
+        "/api/register",
+        {
           nome: data.dadosPessoais.nome,
           email: data.dadosPessoais.email,
           senha: data.dadosPessoais.senha,
+          tipo: "psicologo",
           telefone: data.dadosPessoais.telefone,
-          cpf: data.dadosPessoais.cpf,
-          tipo: "psicologo"
-        },
-        psicologo: {
-          crp: data.informacoesProfissionais.crp,
-          especialidade: data.informacoesProfissionais.especialidade,
-          formacao: data.informacoesProfissionais.formacao
-        },
-        disponibilidades: data.disponibilidade
-      };
+          cpf: data.dadosPessoais.cpf
+        }
+      );
 
-      // Criar ou atualizar psicólogo
-      if (psicologoId) {
-        const res = await apiRequest("PUT", `/api/psicologos/${psicologoId}`, payload);
-        return res.json();
-      } else {
-        const res = await apiRequest("POST", "/api/psicologos", payload);
-        return res.json();
+      if (!usuarioResponse.ok) {
+        throw new Error("Erro ao criar usuário");
       }
+
+      const usuario = await usuarioResponse.json();
+
+      // Depois criar o psicólogo
+      const psicologoResponse = await apiRequest(
+        "POST",
+        "/api/psicologos",
+        {
+          dadosPessoais: data.dadosPessoais,
+          informacoesProfissionais: data.informacoesProfissionais,
+          disponibilidade: data.disponibilidade,
+          usuarioId: usuario.id
+        }
+      );
+
+      if (!psicologoResponse.ok) {
+        throw new Error("Erro ao salvar psicólogo");
+      }
+      return psicologoResponse.json();
     },
     onSuccess: () => {
       onSuccess();
