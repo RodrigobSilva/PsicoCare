@@ -464,7 +464,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Salas
   app.get("/api/salas", verificarAutenticacao, async (req, res) => {
     try {
-      const salas = await storage.getAllSalas();
+      const { filialId } = req.query;
+      let salas = await storage.getAllSalas();
+      
+      // Filtrar por filial se o parâmetro for fornecido
+      if (filialId) {
+        salas = salas.filter(sala => sala.filialId === parseInt(filialId as string));
+      }
+      
       const salasCompletas = await Promise.all(salas.map(async (sala) => {
         const filial = await storage.getFilial(sala.filialId);
         return { ...sala, filial };
