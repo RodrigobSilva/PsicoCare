@@ -1,9 +1,34 @@
+
 import Layout from "@/components/layout/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Server, Lock, BellRing, Mail } from "lucide-react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const formSchema = z.object({
+  whatsappToken: z.string(),
+  whatsappEnabled: z.boolean()
+});
 
 export default function Configuracoes() {
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      whatsappToken: "",
+      whatsappEnabled: false
+    }
+  });
+
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log(data);
+  };
+
   return (
     <Layout>
       <div className="container mx-auto p-4">
