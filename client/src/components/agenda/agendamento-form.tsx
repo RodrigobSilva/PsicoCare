@@ -183,8 +183,10 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
     queryFn: async () => {
       const filialId = form.watch("filialId");
       if (!filialId) return [];
-      const res = await apiRequest("GET", `/api/salas?filialId=${filialId}`);
-      return res.json();
+      const res = await apiRequest("GET", `/api/salas`);
+      const allSalas = await res.json();
+      // Filtrar apenas salas da filial selecionada
+      return allSalas.filter((sala: any) => sala.filialId === filialId);
     },
     enabled: !!form.watch("filialId"),
   });
