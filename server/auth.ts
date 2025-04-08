@@ -23,16 +23,21 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  if (!stored || !stored.includes(".")) {
+  try {
+    if (!stored || !stored.includes(".")) {
+      return false;
+    }
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      return false;
+    }
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Erro na comparação de senhas:", error);
     return false;
   }
-  const [hashed, salt] = stored.split(".");
-  if (!hashed || !salt) {
-    return false;
-  }
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -60,13 +65,24 @@ export function setupAuth(app: Express) {
       },
       async (email, senha, done) => {
         try {
+          console.log("Tentativa de login para:", email);
           const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(senha, user.senha))) {
+          
+          if (!user) {
+            console.log("Usuário não encontrado");
             return done(null, false, { message: "Email ou senha incorretos" });
-          } else {
-            return done(null, user);
           }
+          
+          const senhaCorreta = await comparePasswords(senha, user.senha);
+          console.log("Senha está correta:", senhaCorreta);
+          
+          if (!senhaCorreta) {
+            return done(null, false, { message: "Email ou senha incorretos" });
+          }
+          
+          return done(null, user);
         } catch (error) {
+          console.error("Erro no login:", error);
           return done(error);
         }
       }
