@@ -54,15 +54,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Rotas de acesso a usuários
+  // Rotas de gerenciamento de usuários
   app.get("/api/usuarios", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
-      const usuarios = await Promise.all((await storage.getUsersByTipo("paciente")).map(async (usuario) => {
-        const paciente = await storage.getPacienteByUserId(usuario.id);
-        return { ...usuario, paciente };
-      }));
+      // Se houver query param tipo, filtramos por tipo
+      const tipo = req.query.tipo as string;
+      
+      let usuarios;
+      if (tipo) {
+        usuarios = await storage.getUsersByTipo(tipo);
+      } else {
+        // Buscar todos os usuários
+        usuarios = await storage.getAllUsers();
+      }
+      
       res.json(usuarios);
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar usuários", erro: error });
+    }
+  });
+  
+  app.get("/api/usuarios/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const usuario = await storage.getUser(id);
+      
+      if (!usuario) {
+        return res.status(404).json({ mensagem: "Usuário não encontrado" });
+      }
+      
+      res.json(usuario);
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao buscar usuário", erro: error });
+    }
+  });
+  
+  app.post("/api/usuarios", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      // Verificar se já existe um usuário com o mesmo email
+      const existeEmail = await storage.getUserByEmail(req.body.email);
+      if (existeEmail) {
+        return res.status(400).json({ mensagem: "Já existe um usuário com este email" });
+      }
+      
+      // Criar o usuário
+      const novoUsuario = await storage.createUser(req.body);
+      
+      // Não retornamos a senha na resposta
+      const { senha, ...usuarioSemSenha } = novoUsuario;
+      
+      res.status(201).json(usuarioSemSenha);
+    } catch (error) {
+      res.status(400).json({ mensagem: "Erro ao criar usuário", erro: error });
+    }
+  });
+  
+  app.patch("/api/usuarios/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Verificar se o usuário existe
+      const usuario = await storage.getUser(id);
+      if (!usuario) {
+        return res.status(404).json({ mensagem: "Usuário não encontrado" });
+      }
+      
+      // Verificar se o email está sendo alterado e se já existe
+      if (req.body.email && req.body.email !== usuario.email) {
+        const existeEmail = await storage.getUserByEmail(req.body.email);
+        if (existeEmail && existeEmail.id !== id) {
+          return res.status(400).json({ mensagem: "Já existe um usuário com este email" });
+        }
+      }
+      
+      // Atualizar o usuário
+      const usuarioAtualizado = await storage.updateUser(id, req.body);
+      
+      if (!usuarioAtualizado) {
+        return res.status(404).json({ mensagem: "Usuário não encontrado" });
+      }
+      
+      // Não retornamos a senha na resposta
+      const { senha, ...usuarioSemSenha } = usuarioAtualizado;
+      
+      res.json(usuarioSemSenha);
+    } catch (error) {
+      res.status(400).json({ mensagem: "Erro ao atualizar usuário", erro: error });
+    }
+  });
+  
+  app.delete("/api/usuarios/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Verificar se o usuário existe
+      const usuario = await storage.getUser(id);
+      if (!usuario) {
+        return res.status(404).json({ mensagem: "Usuário não encontrado" });
+      }
+      
+      // Verificar se é o próprio usuário tentando se excluir
+      if (req.user?.id === id) {
+        return res.status(400).json({ mensagem: "Você não pode excluir sua própria conta" });
+      }
+      
+      // Excluir o usuário
+      await storage.deleteUser(id);
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao excluir usuário", erro: error });
     }
   });
 

@@ -27,6 +27,7 @@ export interface IStorage {
   updateUser(id: number, user: Partial<InsertUsuario>): Promise<Usuario | undefined>;
   deleteUser(id: number): Promise<boolean>;
   getUsersByTipo(tipo: string): Promise<Usuario[]>;
+  getAllUsers(): Promise<Usuario[]>;
 
   // Pacientes
   getPaciente(id: number): Promise<Paciente | undefined>;
@@ -243,6 +244,10 @@ export class MemStorage implements IStorage {
 
   async getUsersByTipo(tipo: string): Promise<Usuario[]> {
     return Array.from(this.usuarios.values()).filter(user => user.tipo === tipo);
+  }
+  
+  async getAllUsers(): Promise<Usuario[]> {
+    return Array.from(this.usuarios.values());
   }
 
   // Pacientes

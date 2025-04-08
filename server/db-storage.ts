@@ -82,6 +82,10 @@ export class DatabaseStorage implements IStorage {
   async getUsersByTipo(tipo: string): Promise<Usuario[]> {
     return await db.select().from(usuarios).where(eq(usuarios.tipo, tipo));
   }
+  
+  async getAllUsers(): Promise<Usuario[]> {
+    return await db.select().from(usuarios);
+  }
 
   // PACIENTES
   async getPaciente(id: number): Promise<Paciente | undefined> {

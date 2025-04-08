@@ -145,16 +145,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               canAccess(item.roles) && (
                 <li key={item.href}>
                   <Link href={item.href}>
-                    <a
+                    <div
                       className={cn(
-                        "flex items-center px-4 py-3 text-white",
+                        "flex items-center px-4 py-3 text-white cursor-pointer",
                         location === item.href ? "bg-primary-dark" : "hover:bg-primary-dark"
                       )}
                       onClick={location === item.href ? undefined : onClose}
                     >
                       {item.icon}
                       <span className="ml-3">{item.label}</span>
-                    </a>
+                    </div>
                   </Link>
                 </li>
               )
