@@ -1,35 +1,39 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/layout/layout";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Loader2, Plus, Search, Edit, Trash2, PhoneCall, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import PsicologoForm from "@/components/psicologos/psicologo-form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useMutation } from "@tanstack/react-query";
+import type { PsicologoFormValues } from "@/components/psicologos/psicologo-form";
+
 
 export default function Psicologos() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editing, setEditing] = useState<number | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: psicologos, isLoading } = useQuery({
     queryKey: ["/api/psicologos"],
@@ -39,7 +43,7 @@ export default function Psicologos() {
     },
   });
 
-  const filteredPsicologos = psicologos?.filter((psicologo: any) => 
+  const filteredPsicologos = psicologos?.filter((psicologo: any) =>
     psicologo.usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     psicologo.usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     psicologo.crp.includes(searchTerm)
@@ -64,7 +68,7 @@ export default function Psicologos() {
             <Plus className="mr-2 h-4 w-4" /> Novo Psicólogo
           </Button>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
           <div className="p-4 border-b border-neutral-200">
             <div className="relative">
@@ -77,7 +81,7 @@ export default function Psicologos() {
               />
             </div>
           </div>
-          
+
           {isLoading ? (
             <div className="flex justify-center items-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -148,19 +152,19 @@ export default function Psicologos() {
             </div>
           )}
         </div>
-        
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>{editing ? "Editar Psicólogo" : "Novo Psicólogo"}</DialogTitle>
               <DialogDescription>
-                {editing 
-                  ? "Atualize as informações do psicólogo no formulário abaixo." 
+                {editing
+                  ? "Atualize as informações do psicólogo no formulário abaixo."
                   : "Preencha o formulário para cadastrar um novo psicólogo no sistema."}
               </DialogDescription>
             </DialogHeader>
-            <PsicologoForm 
-              psicologoId={editing} 
+            <PsicologoForm
+              psicologoId={editing}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ["/api/psicologos"] });
                 handleCloseDialog();
