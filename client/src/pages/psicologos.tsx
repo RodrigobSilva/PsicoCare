@@ -134,7 +134,27 @@ export default function Psicologos() {
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(psicologo.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-500"
+                            onClick={async () => {
+                              try {
+                                await apiRequest("DELETE", `/api/psicologos/${psicologo.id}`);
+                                queryClient.invalidateQueries({ queryKey: ["/api/psicologos"] });
+                                toast({
+                                  title: "Psicólogo removido",
+                                  description: "O psicólogo foi removido com sucesso.",
+                                });
+                              } catch (error) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Erro ao remover psicólogo",
+                                  description: "Não foi possível remover o psicólogo.",
+                                });
+                              }
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
