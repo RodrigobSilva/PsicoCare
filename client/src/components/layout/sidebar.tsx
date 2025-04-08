@@ -47,6 +47,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       roles: ["admin", "secretaria", "psicologo", "paciente"]
     },
     { 
+      href: "/atendimentos", 
+      label: "Atendimentos", 
+      icon: <FileText className="w-5 text-center" />,
+      roles: ["admin", "secretaria", "psicologo"]
+    },
+    { 
       href: "/pacientes", 
       label: "Pacientes", 
       icon: <User className="w-5 text-center" />,
