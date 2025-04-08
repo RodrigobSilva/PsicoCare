@@ -12,6 +12,7 @@ import PlanosSaude from "@/pages/planos-saude";
 import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
 import Teleconsulta from "@/pages/teleconsulta";
+import Atendimentos from "@/pages/atendimentos";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
