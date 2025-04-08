@@ -1,73 +1,65 @@
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import Layout from "@/components/layout/layout";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AtendimentoForm from "@/components/atendimentos/atendimento-form";
 import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { VideoIcon } from "lucide-react";
 
 export default function Atendimentos() {
-  const { user } = useAuth();
-  const [, navigate] = useLocation();
-
   const { data: atendimentos, isLoading } = useQuery({
     queryKey: ["/api/atendimentos"],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/atendimentos?psicologoId=${user?.id}`);
+      const res = await apiRequest("GET", "/api/atendimentos");
       return res.json();
     },
   });
 
-  const iniciarTeleconsulta = (agendamentoId: number) => {
-    navigate(`/teleconsulta/${agendamentoId}`);
-  };
-
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Atendimentos</h1>
-        
-        <div className="grid gap-4">
-          {isLoading ? (
-            <p>Carregando atendimentos...</p>
-          ) : atendimentos?.length === 0 ? (
-            <p>Nenhum atendimento encontrado.</p>
-          ) : (
-            atendimentos?.map((atendimento: any) => (
-              <Card key={atendimento.id}>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>
-                      Atendimento - {format(new Date(atendimento.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </span>
-                    {atendimento.tipo === "teleconsulta" && (
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => iniciarTeleconsulta(atendimento.agendamentoId)}
-                      >
-                        <VideoIcon className="w-4 h-4 mr-2" />
-                        Iniciar Teleconsulta
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p><strong>Paciente:</strong> {atendimento.paciente?.usuario?.nome}</p>
-                    <p><strong>Horário:</strong> {atendimento.horaInicio} - {atendimento.horaFim}</p>
-                    <p><strong>Tipo:</strong> {atendimento.tipo}</p>
-                    <p><strong>Observações:</strong> {atendimento.observacoes}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+        <h1 className="text-2xl font-semibold mb-6">Atendimentos</h1>
+
+        {isLoading ? (
+          <div>Carregando...</div>
+        ) : (
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Paciente</TableHead>
+                  <TableHead>Psicólogo</TableHead>
+                  <TableHead>Duração</TableHead>
+                  <TableHead>Observações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {atendimentos?.map((atendimento: any) => (
+                  <TableRow key={atendimento.id}>
+                    <TableCell>
+                      {format(new Date(atendimento.data), "dd/MM/yyyy", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>{atendimento.paciente?.usuario?.nome}</TableCell>
+                    <TableCell>{atendimento.psicologo?.usuario?.nome}</TableCell>
+                    <TableCell>{atendimento.duracao} min</TableCell>
+                    <TableCell>{atendimento.observacoes}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </Layout>
   );
