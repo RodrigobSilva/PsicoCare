@@ -321,6 +321,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                 name="pacienteId"
                 render={({ field }) => {
                   const [searchQuery, setSearchQuery] = useState("");
+                  const [open, setOpen] = useState(false);
                   
                   // Filtrar pacientes com base na pesquisa
                   const filteredPacientes = searchQuery === ""
@@ -332,12 +333,13 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                   return (
                     <FormItem className="flex flex-col">
                       <FormLabel>Paciente</FormLabel>
-                      <Popover>
+                      <Popover open={open} onOpenChange={setOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
                               variant="outline"
                               role="combobox"
+                              aria-expanded={open}
                               className={cn(
                                 "w-full justify-between",
                                 !field.value && "text-muted-foreground"
@@ -369,6 +371,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                                     onSelect={() => {
                                       form.setValue("pacienteId", paciente.id);
                                       setSearchQuery("");
+                                      setOpen(false);
                                     }}
                                   >
                                     <CheckIcon
