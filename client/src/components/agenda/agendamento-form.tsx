@@ -189,6 +189,11 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
     enabled: !!form.watch("filialId"),
   });
 
+  // Resetar sala quando filial muda
+  useEffect(() => {
+    form.setValue("salaId", undefined);
+  }, [form.watch("filialId")]);
+
   // Buscar planos de saúde
   const { data: planosSaude, isLoading: isLoadingPlanosSaude } = useQuery({
     queryKey: ["/api/planos-saude"],
@@ -569,6 +574,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                       onValueChange={field.onChange}
                       value={field.value?.toString()}
                       disabled={!form.watch("filialId") || form.watch("remoto")}
+                    value={form.watch("filialId") ? field.value?.toString() : undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
