@@ -122,7 +122,7 @@ interface AgendamentoFormProps {
 export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess }: AgendamentoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [pacientePlanos, setPacientePlanos] = useState<any[]>([]);
-  
+
   // Configuração do formulário com valores padrão
   const form = useForm<z.infer<typeof agendamentoFormSchema>>({
     resolver: zodResolver(agendamentoFormSchema),
@@ -208,13 +208,13 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
     mutationFn: async (values: z.infer<typeof agendamentoFormSchema>) => {
       // Formatar data ISO 8601
       const dataFormatada = format(values.data, "yyyy-MM-dd");
-      
+
       // Criar objeto de agendamento para enviar ao servidor
       const agendamentoData = {
         ...values,
         data: dataFormatada,
       };
-      
+
       if (agendamentoId) {
         // Editar existente
         const res = await apiRequest("PUT", `/api/agendamentos/${agendamentoId}`, agendamentoData);
@@ -288,10 +288,10 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
         const [hours, minutes] = horaInicio.split(":").map(Number);
         const dataBase = new Date();
         dataBase.setHours(hours, minutes, 0, 0);
-        
+
         const novaHoraFim = addMinutes(dataBase, 30);
         const horaFimFormatada = format(novaHoraFim, "HH:mm");
-        
+
         form.setValue("horaFim", horaFimFormatada);
       } catch (error) {
         console.error("Erro ao calcular hora fim:", error);
@@ -327,14 +327,14 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                 render={({ field }) => {
                   const [searchQuery, setSearchQuery] = useState("");
                   const [open, setOpen] = useState(false);
-                  
+
                   // Filtrar pacientes com base na pesquisa
                   const filteredPacientes = searchQuery === ""
                     ? pacientes || []
                     : pacientes?.filter((paciente: {id: number, usuario?: {nome: string}}) => 
                         paciente.usuario?.nome?.toLowerCase().includes(searchQuery.toLowerCase())
                       ) || [];
-                  
+
                   return (
                     <FormItem className="flex flex-col">
                       <FormLabel>Paciente</FormLabel>
@@ -375,7 +375,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                                     value={paciente.usuario?.nome}
                                     onSelect={() => {
                                       form.setValue("pacienteId", paciente.id);
-                                      setSearchQuery("");
+                                      setSearchQuery(paciente.usuario?.nome || "");
                                       setOpen(false);
                                     }}
                                   >
