@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Erro ao fazer login");
+      }
       return await res.json();
     },
     onSuccess: (user: Usuario) => {
@@ -41,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login realizado com sucesso",
         description: `Bem-vindo(a), ${user.nome}!`,
       });
-      window.location.href = "/";
+      // Redireciona baseado no tipo de usuário
+      const redirectPath = user.tipo === "psicologo" ? "/agenda" : "/";
+      window.location.href = redirectPath;
     },
     onError: (error: Error) => {
       toast({
