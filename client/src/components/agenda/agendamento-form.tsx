@@ -529,7 +529,6 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                       onValueChange={field.onChange}
                       value={field.value?.toString()}
                       disabled={!form.watch("filialId") || form.watch("remoto")}
-                    value={form.watch("filialId") ? field.value?.toString() : undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
