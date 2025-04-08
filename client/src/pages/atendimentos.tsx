@@ -1,14 +1,18 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Layout from "@/components/layout/layout";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { VideoIcon } from "lucide-react";
 
 export default function Atendimentos() {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
 
   const { data: atendimentos, isLoading } = useQuery({
     queryKey: ["/api/atendimentos"],
@@ -17,6 +21,10 @@ export default function Atendimentos() {
       return res.json();
     },
   });
+
+  const iniciarTeleconsulta = (agendamentoId: number) => {
+    navigate(`/teleconsulta/${agendamentoId}`);
+  };
 
   return (
     <Layout>
@@ -32,8 +40,20 @@ export default function Atendimentos() {
             atendimentos?.map((atendimento: any) => (
               <Card key={atendimento.id}>
                 <CardHeader>
-                  <CardTitle>
-                    Atendimento - {format(new Date(atendimento.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  <CardTitle className="flex justify-between items-center">
+                    <span>
+                      Atendimento - {format(new Date(atendimento.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </span>
+                    {atendimento.tipo === "teleconsulta" && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => iniciarTeleconsulta(atendimento.agendamentoId)}
+                      >
+                        <VideoIcon className="w-4 h-4 mr-2" />
+                        Iniciar Teleconsulta
+                      </Button>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

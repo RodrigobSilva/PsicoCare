@@ -62,6 +62,12 @@ function Router() {
       />
       
       <ProtectedRoute 
+        path="/atendimentos" 
+        component={Atendimentos}
+        allowedRoles={["admin", "secretaria", "psicologo"]}
+      />
+      
+      <ProtectedRoute 
         path="/configuracoes" 
         component={Configuracoes}
         allowedRoles={["admin"]}
