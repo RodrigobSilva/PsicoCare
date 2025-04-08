@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logout realizado com sucesso",
         description: "Você foi desconectado do sistema.",
       });
+      window.location.href = "/auth";
     },
     onError: (error: Error) => {
       toast({
