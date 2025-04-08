@@ -10,8 +10,9 @@ async function hashPassword(password) {
 }
 
 async function main() {
-  const password = 'sua_nova_senha';
+  const password = 'nova123';
   const hashed = await hashPassword(password);
+  console.log(`Email: psicorodrigo@rodrigo.com`);
   console.log(`Password: ${password}`);
   console.log(`Hashed: ${hashed}`);
 }
