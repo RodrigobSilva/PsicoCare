@@ -464,7 +464,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
           >
             Voltar
           </Button>
-          
+
           {activeTab === "disponibilidade" ? (
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? (
