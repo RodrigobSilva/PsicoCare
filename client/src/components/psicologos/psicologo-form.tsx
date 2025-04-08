@@ -137,28 +137,21 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
   // Mutation para criar ou atualizar psicólogo
   const mutation = useMutation({
     mutationFn: async (data: PsicologoFormValues) => {
-      // Registrar usuário primeiro
-      const userResponse = await apiRequest("POST", "/api/register", {
-        nome: data.dadosPessoais.nome,
-        email: data.dadosPessoais.email,
-        senha: data.dadosPessoais.senha,
-        telefone: data.dadosPessoais.telefone,
-        cpf: data.dadosPessoais.cpf,
-        tipo: "psicologo"
-      });
-
-      if (!userResponse.ok) {
-        throw new Error("Erro ao cadastrar usuário");
-      }
-
-      const usuario = await userResponse.json();
-
-      // Depois criar o psicólogo
       const payload = {
-        dadosPessoais: data.dadosPessoais,
-        informacoesProfissionais: data.informacoesProfissionais,
-        disponibilidade: data.disponibilidade,
-        usuarioId: usuario.id
+        usuario: {
+          nome: data.dadosPessoais.nome,
+          email: data.dadosPessoais.email,
+          senha: data.dadosPessoais.senha,
+          telefone: data.dadosPessoais.telefone,
+          cpf: data.dadosPessoais.cpf,
+          tipo: "psicologo"
+        },
+        psicologo: {
+          crp: data.informacoesProfissionais.crp,
+          especialidade: data.informacoesProfissionais.especialidade,
+          formacao: data.informacoesProfissionais.formacao
+        },
+        disponibilidades: data.disponibilidade
       };
 
       const psicologoResponse = await apiRequest(
