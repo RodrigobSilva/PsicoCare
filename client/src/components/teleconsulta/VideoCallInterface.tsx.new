@@ -1,0 +1,798 @@
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { 
+  Video, 
+  VideoOff, 
+  Mic, 
+  MicOff, 
+  PhoneOff, 
+  MessageSquare, 
+  Users, 
+  Monitor, 
+  ScreenShare,
+  FileText,
+  Save,
+  Download,
+  CircleDot
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+interface VideoCallProps {
+  sessionId?: string;
+  pacienteId?: number;
+  psicologoId?: number;
+  onEndCall?: () => void;
+  isHost?: boolean;
+}
+
+interface Transcricao {
+  id?: number;
+  texto: string;
+  timestamp: string;
+  duracao: number;
+}
+
+export default function VideoCallInterface({
+  sessionId,
+  pacienteId,
+  psicologoId,
+  onEndCall,
+  isHost = false,
+}: VideoCallProps) {
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("video");
+  const [participants, setParticipants] = useState<string[]>(["Terapeuta", "Paciente"]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [callError, setCallError] = useState<string | null>(null);
+  const [isGravando, setIsGravando] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [gravacaoURL, setGravacaoURL] = useState<string | null>(null);
+  const [tempoGravacao, setTempoGravacao] = useState(0);
+  const [transcricaoAtiva, setTranscricaoAtiva] = useState(false);
+  const [transcricoes, setTranscricoes] = useState<Transcricao[]>([]);
+  const [resumoConsulta, setResumoConsulta] = useState("");
+  const [showResumoDialog, setShowResumoDialog] = useState(false);
+  const [salvandoResumo, setSalvandoResumo] = useState(false);
+  
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const gravarStreamRef = useRef<MediaStream | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  // Simular a inicialização da videochamada
+  useEffect(() => {
+    const initializeCall = async () => {
+      try {
+        setIsLoading(true);
+        // Aqui seria a integração real com uma API de videochamada
+        // como WebRTC, Twilio, Daily.co, etc.
+        
+        // Simulando o atraso de inicialização
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          // Solicitar acesso à câmera e microfone
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: true, 
+            audio: true 
+          });
+          
+          // Exibir o vídeo local
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+          
+          // Em uma implementação real, aqui seria a conexão com o outro participante
+          // e a configuração do vídeo remoto
+          
+          // Salvamos a stream para uso na gravação
+          gravarStreamRef.current = stream;
+          
+          setIsCallActive(true);
+          setIsLoading(false);
+        } else {
+          throw new Error("Seu navegador não suporta acesso à câmera e microfone");
+        }
+      } catch (error) {
+        console.error("Erro ao inicializar chamada:", error);
+        setCallError(error instanceof Error ? error.message : "Erro ao inicializar chamada");
+        setIsLoading(false);
+      }
+    };
+    
+    initializeCall();
+    
+    // Cleanup ao desmontar o componente
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      
+      // Parar a gravação se estiver ativa
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      
+      // Liberar recursos de mídia
+      if (gravarStreamRef.current) {
+        gravarStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+  
+  // Auto-scroll para novos mensagens de chat
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+  
+  // Função para enviar mensagens no chat
+  const sendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    setChatMessages(prev => [
+      ...prev, 
+      { 
+        sender: user?.nome || "Terapeuta", 
+        text: newMessage.trim(), 
+        time: timeStr 
+      }
+    ]);
+    
+    setNewMessage("");
+  };
+  
+  // Lidar com tecla Enter no chat
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+  
+  // Toggle do microfone
+  const toggleMic = () => {
+    if (gravarStreamRef.current) {
+      const audioTracks = gravarStreamRef.current.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsMicMuted(!isMicMuted);
+    }
+  };
+  
+  // Toggle da câmera
+  const toggleVideo = () => {
+    if (gravarStreamRef.current) {
+      const videoTracks = gravarStreamRef.current.getVideoTracks();
+      videoTracks.forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsVideoEnabled(!isVideoEnabled);
+    }
+  };
+  
+  // Toggle do compartilhamento de tela (simulado)
+  const toggleScreenShare = () => {
+    // Em uma implementação real, aqui seria o código para iniciar
+    // ou parar o compartilhamento de tela
+    setIsScreenSharing(!isScreenSharing);
+  };
+  
+  // Iniciar/parar gravação
+  const toggleGravacao = async () => {
+    if (isGravando) {
+      // Parar a gravação
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    } else {
+      // Iniciar gravação
+      try {
+        // Garantir que temos uma stream válida
+        if (!gravarStreamRef.current) {
+          toast({
+            title: "Erro ao iniciar gravação",
+            description: "Não foi possível acessar o fluxo de mídia",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Criação do MediaRecorder
+        const options = { mimeType: 'audio/webm' };
+        const recorder = new MediaRecorder(gravarStreamRef.current, options);
+        
+        // Coletar os dados
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+        
+        // Ao finalizar a gravação
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          setGravacaoURL(url);
+          
+          // Se a transcrição estiver ativa, processar o áudio
+          if (transcricaoAtiva) {
+            solicitarTranscricao(blob);
+          }
+        };
+        
+        // Iniciar timer e gravação
+        setTempoGravacao(0);
+        timerIntervalRef.current = setInterval(() => {
+          setTempoGravacao(prev => prev + 1);
+        }, 1000);
+        
+        recordedChunksRef.current = [];
+        recorder.start();
+        setMediaRecorder(recorder);
+      } catch (error) {
+        console.error("Erro ao iniciar gravação:", error);
+        toast({
+          title: "Erro ao iniciar gravação",
+          description: error instanceof Error ? error.message : "Ocorreu um erro ao iniciar a gravação",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    setIsGravando(!isGravando);
+  };
+  
+  // Função para baixar a gravação
+  const downloadGravacao = () => {
+    if (gravacaoURL) {
+      const a = document.createElement('a');
+      a.href = gravacaoURL;
+      a.download = `consulta_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+  
+  // Formatar tempo de gravação
+  const formatarTempoGravacao = (segundos: number) => {
+    const minutos = Math.floor(segundos / 60);
+    const segs = segundos % 60;
+    return `${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+  };
+  
+  // Solicitação de transcrição ao servidor
+  const solicitarTranscricao = async (blob: Blob) => {
+    try {
+      // Criar um FormData para enviar o arquivo
+      const formData = new FormData();
+      formData.append('file', blob, 'audio.webm');
+      
+      if (pacienteId) {
+        formData.append('pacienteId', pacienteId.toString());
+      }
+      if (psicologoId) {
+        formData.append('psicologoId', psicologoId.toString());
+      }
+      
+      // Enviar para o servidor
+      const response = await fetch('/api/transcricao', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao solicitar transcrição: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Atualizar lista de transcrições
+      if (data.texto) {
+        const novaTranscricao: Transcricao = {
+          texto: data.texto,
+          timestamp: new Date().toISOString(),
+          duracao: tempoGravacao,
+        };
+        
+        setTranscricoes(prev => [...prev, novaTranscricao]);
+        
+        toast({
+          title: "Transcrição concluída",
+          description: "O áudio foi transcrito com sucesso.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao transcrever áudio:", error);
+      toast({
+        title: "Erro na transcrição",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao transcrever o áudio",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Gera um resumo automático das transcrições
+  const gerarResumoAutomatico = async () => {
+    try {
+      if (transcricoes.length === 0) {
+        toast({
+          title: "Sem transcrições",
+          description: "É necessário ter pelo menos uma transcrição para gerar um resumo.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSalvandoResumo(true);
+      
+      // Preparar os dados para enviar
+      const dadosResumo = {
+        transcricoes: transcricoes.map(t => t.texto).join("\n\n"),
+        pacienteId,
+        psicologoId,
+      };
+      
+      // Enviar para o servidor
+      const response = await apiRequest("POST", "/api/resumo-consulta", dadosResumo);
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao gerar resumo: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Atualizar o resumo
+      if (data.resumo) {
+        setResumoConsulta(data.resumo);
+        
+        toast({
+          title: "Resumo gerado",
+          description: "O resumo foi gerado com sucesso.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao gerar resumo:", error);
+      toast({
+        title: "Erro ao gerar resumo",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao gerar o resumo da consulta",
+        variant: "destructive",
+      });
+    } finally {
+      setSalvandoResumo(false);
+    }
+  };
+  
+  // Salvar o resumo no prontuário
+  const salvarResumoConsulta = async () => {
+    try {
+      if (!resumoConsulta.trim()) {
+        toast({
+          title: "Resumo vazio",
+          description: "Por favor, adicione um resumo antes de salvar.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSalvandoResumo(true);
+      
+      // Preparar os dados para enviar
+      const dadosProntuario = {
+        resumoConsulta,
+        pacienteId,
+        psicologoId,
+        data: new Date().toISOString(),
+      };
+      
+      // Enviar para o servidor
+      const response = await apiRequest("POST", "/api/salvar-prontuario", dadosProntuario);
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao salvar no prontuário: ${response.status}`);
+      }
+      
+      toast({
+        title: "Resumo salvo",
+        description: "O resumo foi salvo no prontuário do paciente com sucesso.",
+      });
+      
+      // Fechar o diálogo
+      setShowResumoDialog(false);
+    } catch (error) {
+      console.error("Erro ao salvar resumo:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao salvar o resumo no prontuário",
+        variant: "destructive",
+      });
+    } finally {
+      setSalvandoResumo(false);
+    }
+  };
+  
+  // Lidar com o encerramento da chamada
+  const handleEndCall = () => {
+    // Parar gravação se estiver ativa
+    if (isGravando && mediaRecorder) {
+      mediaRecorder.stop();
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+    
+    // Liberar recursos de mídia
+    if (gravarStreamRef.current) {
+      gravarStreamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
+    // Se houver transcrições, mostrar diálogo de resumo
+    if (transcricoes.length > 0) {
+      setShowResumoDialog(true);
+    } else if (onEndCall) {
+      onEndCall();
+    } else {
+      setLocation("/agenda");
+    }
+  };
+  
+  // Renderização condicional para estado de carregamento
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto p-8 flex flex-col items-center justify-center min-h-[500px]">
+        <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mb-4" />
+        <p className="text-lg font-medium text-center">Inicializando consulta virtual...</p>
+        <p className="text-sm text-muted-foreground mt-2 text-center">Aguarde enquanto estabelecemos a conexão segura.</p>
+      </Card>
+    );
+  }
+  
+  // Renderização condicional para erro
+  if (callError) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto p-8">
+        <CardHeader>
+          <CardTitle className="text-destructive">Erro ao iniciar consulta</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">{callError}</p>
+          <p className="text-sm text-muted-foreground">
+            Verifique se você concedeu permissões de câmera e microfone para este site.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Teleconsulta em andamento</span>
+          <div className="flex items-center space-x-2">
+            {isGravando && (
+              <div className="flex items-center text-sm text-destructive font-medium">
+                <CircleDot className="h-3 w-3 mr-1 animate-pulse" />
+                {formatarTempoGravacao(tempoGravacao)}
+              </div>
+            )}
+            <div className="flex items-center">
+              <Switch
+                id="transcricao"
+                checked={transcricaoAtiva}
+                onCheckedChange={setTranscricaoAtiva}
+                className="mr-2"
+              />
+              <Label htmlFor="transcricao" className="text-sm font-normal">
+                Transcrição automática
+              </Label>
+            </div>
+            <Button 
+              variant={isGravando ? "destructive" : "outline"}
+              size="sm"
+              onClick={toggleGravacao}
+              className="gap-1"
+            >
+              {isGravando ? "Parar gravação" : "Gravar áudio"}
+            </Button>
+            
+            {gravacaoURL && !isGravando && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={downloadGravacao}
+                className="gap-1"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Baixar
+              </Button>
+            )}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="video" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="video">Vídeo</TabsTrigger>
+            <TabsTrigger value="chat">
+              Chat
+              {activeTab !== "chat" && chatMessages.length > 0 && (
+                <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                  {chatMessages.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="participants">Participantes</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="video" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2 relative bg-muted rounded-lg overflow-hidden">
+                {/* Vídeo remoto (paciente) */}
+                <video 
+                  ref={remoteVideoRef}
+                  autoPlay 
+                  playsInline 
+                  muted={false} 
+                  className="w-full h-[400px] object-cover"
+                />
+                
+                {/* Indicador de compartilhamento de tela */}
+                {isScreenSharing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                    <div className="text-center">
+                      <Monitor className="h-16 w-16 mx-auto mb-2 text-primary" />
+                      <p className="font-medium">Compartilhando sua tela</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="relative bg-muted rounded-lg overflow-hidden">
+                {/* Vídeo local (terapeuta) */}
+                <video 
+                  ref={localVideoRef}
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className={cn(
+                    "w-full h-[200px] object-cover", 
+                    !isVideoEnabled && "opacity-0"
+                  )}
+                />
+                
+                {!isVideoEnabled && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                    <VideoOff className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                )}
+                
+                {/* Lista de transcrições */}
+                {transcricoes.length > 0 && (
+                  <div className="mt-4 max-h-[180px] overflow-y-auto p-3 bg-muted rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">Transcrições</h4>
+                    <div className="space-y-3">
+                      {transcricoes.map((t, i) => (
+                        <div key={i} className="text-xs p-2 bg-background rounded">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-primary-foreground font-medium">
+                              {new Date(t.timestamp).toLocaleTimeString()}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {formatarTempoGravacao(t.duracao)}
+                            </span>
+                          </div>
+                          <p>{t.texto}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="chat" className="h-[400px] flex flex-col">
+            <div 
+              ref={chatContainerRef}
+              className="flex-1 overflow-y-auto mb-4 p-3 border rounded-lg space-y-3"
+            >
+              {chatMessages.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">
+                  Nenhuma mensagem ainda. Comece a conversa!
+                </p>
+              ) : (
+                chatMessages.map((msg, i) => (
+                  <div 
+                    key={i} 
+                    className={cn(
+                      "max-w-[80%] p-3 rounded-lg",
+                      msg.sender === (user?.nome || "Terapeuta")
+                        ? "ml-auto bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    )}
+                  >
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium">{msg.sender}</span>
+                      <span className="opacity-70">{msg.time}</span>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Digite sua mensagem..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="min-h-[60px] resize-none"
+              />
+              <Button onClick={sendMessage} size="icon" className="h-[60px]">
+                <MessageSquare className="h-5 w-5" />
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="participants" className="h-[400px]">
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-medium mb-4">Participantes ({participants.length})</h3>
+              <div className="space-y-3">
+                {participants.map((name, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
+                    <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+                      {name[0]}
+                    </div>
+                    <div>
+                      <p className="font-medium">{name}</p>
+                      {i === 0 && <p className="text-xs text-muted-foreground">Anfitrião</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      
+      <CardFooter className="justify-between flex-wrap gap-y-4">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleMic}
+            className={isMicMuted ? "border-destructive text-destructive" : ""}
+          >
+            {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleVideo}
+            className={!isVideoEnabled ? "border-destructive text-destructive" : ""}
+          >
+            {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+          </Button>
+          
+          <Button
+            variant={isScreenSharing ? "secondary" : "outline"}
+            size="icon"
+            onClick={toggleScreenShare}
+          >
+            {isScreenSharing ? <Monitor className="h-5 w-5" /> : <ScreenShare className="h-5 w-5" />}
+          </Button>
+        </div>
+        
+        <Button
+          variant="destructive"
+          onClick={handleEndCall}
+          className="px-4"
+        >
+          <PhoneOff className="h-5 w-5 mr-2" />
+          Encerrar Chamada
+        </Button>
+      </CardFooter>
+    </Card>
+    
+    {/* Diálogo de resumo após encerrar a consulta */}
+    <Dialog open={showResumoDialog} onOpenChange={setShowResumoDialog}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Resumo da Consulta</DialogTitle>
+          <DialogDescription>
+            Revise e adicione informações ao resumo da consulta para o prontuário do paciente.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="my-4 space-y-3">
+          <Textarea
+            placeholder="Digite ou adicione automaticamente um resumo da consulta aqui..."
+            className="min-h-[150px]"
+            value={resumoConsulta}
+            onChange={(e) => setResumoConsulta(e.target.value)}
+          />
+          
+          {transcricoes.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={gerarResumoAutomatico}
+              disabled={salvandoResumo}
+              className="gap-1"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Gerar Resumo Automático
+            </Button>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setShowResumoDialog(false)}
+          >
+            Fechar
+          </Button>
+          <Button
+            onClick={salvarResumoConsulta}
+            disabled={salvandoResumo || !resumoConsulta.trim()}
+          >
+            {salvandoResumo ? (
+              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar no Prontuário
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

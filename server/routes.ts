@@ -3,6 +3,17 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import { WebSocketServer } from "ws";
+import { logger } from "./logger";
+import OpenAI from "openai";
+
+// Inicializar cliente OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+import * as fs from 'fs';
 import {
   insertPacienteSchema,
   insertPsicologoSchema,
@@ -770,6 +781,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para transcrição de áudio da consulta
+  const upload = multer({ 
+    dest: 'uploads/teleconsultas/', 
+    limits: { fileSize: 50 * 1024 * 1024 } // 50 MB
+  });
+  
+  app.post('/api/teleconsultas/transcrever', verificarAutenticacao, upload.single('arquivo'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ mensagem: "Nenhum arquivo enviado" });
+      }
+      
+      // Verificar se OPENAI_API_KEY está configurada
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ mensagem: "API key da OpenAI não configurada" });
+      }
+      
+      const filePath = req.file.path;
+      
+      // Transcrever áudio usando OpenAI Whisper
+      const transcricao = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(filePath),
+        model: "whisper-1",
+        language: "pt"
+      });
+      
+      // Remover arquivo temporário após processamento
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Erro ao remover arquivo temporário: ${filePath}`, err);
+        }
+      });
+      
+      res.json({
+        texto: transcricao.text,
+        duracao: req.file.size / 10000 // Estimativa aproximada da duração em segundos
+      });
+      
+    } catch (error) {
+      console.error("Erro na transcrição de áudio:", error);
+      res.status(500).json({ mensagem: "Erro ao processar transcrição", erro: error });
+    }
+  });
+  
+  // Endpoint para gerar resumo da consulta
+  app.post('/api/resumo-consulta', verificarAutenticacao, async (req, res) => {
+    try {
+      const { transcricoes } = req.body;
+      
+      if (!transcricoes || !Array.isArray(transcricoes) || transcricoes.length === 0) {
+        return res.status(400).json({ mensagem: "Nenhuma transcrição fornecida" });
+      }
+      
+      // Verificar se OPENAI_API_KEY está configurada
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ mensagem: "API key da OpenAI não configurada" });
+      }
+      
+      // Preparar texto para envio à API
+      const textoCompleto = transcricoes.map((t: any) => t.texto).join("\n\n");
+      
+      // Usar modelo GPT-4 para gerar resumo
+      const prompt = `
+        Você é um assistente especializado em psicologia clínica. 
+        Analise a transcrição a seguir de uma consulta psicológica e crie um resumo bem estruturado
+        para o prontuário do paciente. O resumo deve incluir:
+        
+        1. Principais temas e questões abordadas
+        2. Estado emocional do paciente
+        3. Progresso em relação a consultas anteriores (se mencionado)
+        4. Observações clínicas relevantes
+        5. Pontos para acompanhamento em próximas sessões
+        
+        Use linguagem técnica apropriada para um prontuário psicológico, mas mantenha clareza e objetividade.
+        Preserve a confidencialidade, usando apenas informações presentes na transcrição.
+        
+        Transcrição da consulta:
+        ${textoCompleto}
+      `;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // Use o modelo mais recente disponível
+        messages: [
+          { role: "system", content: "Você é um assistente especializado em psicologia clínica, auxiliando na elaboração de prontuários." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7
+      });
+      
+      // Enviar resposta
+      res.json({
+        resumo: completion.choices[0].message.content
+      });
+      
+    } catch (error) {
+      console.error("Erro ao gerar resumo da consulta:", error);
+      res.status(500).json({ mensagem: "Erro ao gerar resumo", erro: error });
+    }
+  });
+  
   app.post("/api/teleconsultas/:sessionId/encerrar", verificarAutenticacao, async (req, res) => {
     try {
       const { sessionId } = req.params;
@@ -814,6 +925,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Configuração para pastas de upload
+  // Verifica se a pasta uploads/teleconsultas existe, se não, cria
+  if (!fs.existsSync('./uploads/teleconsultas')){
+    fs.mkdirSync('./uploads/teleconsultas', { recursive: true });
+  }
+  
+  // Inicializar o servidor HTTP
   const httpServer = createServer(app);
   return httpServer;
 }
