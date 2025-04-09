@@ -196,14 +196,16 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
   // Avançar para próxima aba
   const goToNextTab = async () => {
-    const isValid = await form.trigger(activeTab === "dadosPessoais" ? "dadosPessoais" : activeTab === "informacoesClinicas" ? "informacoesClinicas" : "planoSaude");
-    
-    if (!isValid) return;
-
     if (activeTab === "dadosPessoais") {
-      setActiveTab("informacoesClinicas");
+      const isValid = await form.trigger("dadosPessoais");
+      if (isValid) {
+        setActiveTab("informacoesClinicas");
+      }
     } else if (activeTab === "informacoesClinicas") {
-      setActiveTab("planoSaude");
+      const isValid = await form.trigger("informacoesClinicas");
+      if (isValid) {
+        setActiveTab("planoSaude");
+      }
     }
   };
 
