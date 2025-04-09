@@ -256,11 +256,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Paciente não encontrado" });
       }
 
+      // Deletar planos de saúde associados primeiro
+      const planosDosPacientes = await storage.getPacientesPlanoSaudeByPaciente(id);
+      for (const plano of planosDosPacientes) {
+        await storage.deletePacientePlanoSaude(plano.id);
+      }
+
+      // Depois deletar o paciente e seu usuário
       await storage.deletePaciente(id);
       await storage.deleteUser(paciente.usuarioId);
 
       res.status(204).send();
     } catch (error) {
+      console.error("Erro ao excluir paciente:", error);
       res.status(500).json({ mensagem: "Erro ao excluir paciente", erro: error });
     }
   });
