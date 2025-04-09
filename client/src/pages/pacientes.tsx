@@ -24,6 +24,18 @@ import { Loader2, Plus, Search, Edit, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import PatientForm from "@/components/pacientes/patient-form";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
 
 export default function Pacientes() {
   const [open, setOpen] = useState(false);
@@ -55,6 +67,16 @@ export default function Pacientes() {
     setOpen(false);
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      await apiRequest("DELETE", `/api/pacientes/${id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/pacientes"] });
+      toast({ title: "Paciente excluído", description: "O paciente foi excluído com sucesso." });
+    } catch (error) {
+      toast({ title: "Erro ao excluir paciente", description: "Ocorreu um erro ao excluir o paciente. Tente novamente mais tarde." });
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto p-4">
@@ -64,7 +86,7 @@ export default function Pacientes() {
             <Plus className="mr-2 h-4 w-4" /> Novo Paciente
           </Button>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
           <div className="p-4 border-b border-neutral-200">
             <div className="relative">
@@ -77,7 +99,7 @@ export default function Pacientes() {
               />
             </div>
           </div>
-          
+
           {isLoading ? (
             <div className="flex justify-center items-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -107,9 +129,27 @@ export default function Pacientes() {
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(paciente.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="hover:bg-destructive/10">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir paciente</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(paciente.id)}>
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))
@@ -125,7 +165,7 @@ export default function Pacientes() {
             </div>
           )}
         </div>
-        
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
