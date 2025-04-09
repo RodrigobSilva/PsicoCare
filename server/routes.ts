@@ -258,12 +258,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Deletar agendamentos do paciente
       const agendamentos = await storage.getAgendamentosByPaciente(id);
-      for (const agendamento of agendamentos) {
-        // Deletar atendimentos associados ao agendamento
-        const atendimentos = await storage.getAtendimentosByPaciente(id);
-        for (const atendimento of atendimentos) {
-          await storage.deleteAtendimento(atendimento.id);
+      
+      // Primeiro, deleta todos os atendimentos (e pagamentos associados)
+      const atendimentos = await storage.getAtendimentosByPaciente(id);
+      for (const atendimento of atendimentos) {
+        // Primeiro deletar pagamentos associados a cada atendimento
+        const pagamentosAtendimento = await storage.getPagamentosByAtendimento(atendimento.id);
+        for (const pagamento of pagamentosAtendimento) {
+          await storage.deletePagamento(pagamento.id);
         }
+        // Depois deleta o atendimento
+        await storage.deleteAtendimento(atendimento.id);
+      }
+      
+      // Agora deleta os agendamentos
+      for (const agendamento of agendamentos) {
         await storage.deleteAgendamento(agendamento.id);
       }
 
@@ -394,6 +403,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deletar atendimentos do psicólogo
       const atendimentos = await storage.getAtendimentosByPsicologo(id);
       for (const atend of atendimentos) {
+        // Primeiro deletar pagamentos associados a cada atendimento
+        const pagamentosAtendimento = await storage.getPagamentosByAtendimento(atend.id);
+        for (const pagamento of pagamentosAtendimento) {
+          await storage.deletePagamento(pagamento.id);
+        }
+        // Depois deleta o atendimento
         await storage.deleteAtendimento(atend.id);
       }
 
@@ -763,6 +778,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
 
+      // Verificar e deletar atendimentos associados ao agendamento
+      const atendimentosDoAgendamento = await storage.getAtendimentosByAgendamento(id);
+      for (const atendimento of atendimentosDoAgendamento) {
+        // Primeiro deletar pagamentos associados a cada atendimento
+        const pagamentosAtendimento = await storage.getPagamentosByAtendimento(atendimento.id);
+        for (const pagamento of pagamentosAtendimento) {
+          await storage.deletePagamento(pagamento.id);
+        }
+        // Depois deleta o atendimento
+        await storage.deleteAtendimento(atendimento.id);
+      }
+      
+      // Agora podemos deletar o agendamento com segurança
       await storage.deleteAgendamento(id);
 
       res.status(204).send();

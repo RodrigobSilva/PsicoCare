@@ -290,6 +290,10 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => row.atendimentos);
   }
 
+  async getAtendimentosByAgendamento(agendamentoId: number): Promise<Atendimento[]> {
+    return await db.select().from(atendimentos).where(eq(atendimentos.agendamentoId, agendamentoId));
+  }
+
   async createAtendimento(atendimento: InsertAtendimento): Promise<Atendimento> {
     const [createdAtendimento] = await db.insert(atendimentos).values(atendimento).returning();
     return createdAtendimento;

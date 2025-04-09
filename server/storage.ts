@@ -81,6 +81,7 @@ export interface IStorage {
   getAtendimento(id: number): Promise<Atendimento | undefined>;
   getAtendimentosByPaciente(pacienteId: number): Promise<Atendimento[]>;
   getAtendimentosByPsicologo(psicologoId: number): Promise<Atendimento[]>;
+  getAtendimentosByAgendamento(agendamentoId: number): Promise<Atendimento[]>;
   createAtendimento(atendimento: InsertAtendimento): Promise<Atendimento>;
   updateAtendimento(id: number, atendimento: Partial<InsertAtendimento>): Promise<Atendimento | undefined>;
   deleteAtendimento(id: number): Promise<boolean>;
@@ -491,6 +492,12 @@ export class MemStorage implements IStorage {
     
     return Array.from(this.atendimentos.values()).filter(
       (atendimento) => agendamentoIds.includes(atendimento.agendamentoId)
+    );
+  }
+
+  async getAtendimentosByAgendamento(agendamentoId: number): Promise<Atendimento[]> {
+    return Array.from(this.atendimentos.values()).filter(
+      (atendimento) => atendimento.agendamentoId === agendamentoId
     );
   }
 
