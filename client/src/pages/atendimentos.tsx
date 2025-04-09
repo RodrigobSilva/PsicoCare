@@ -65,10 +65,17 @@ export default function Atendimentos() {
   // Filtra agendamentos para mostrar apenas os que ainda não foram atendidos
   const proximasConsultas = agendamentos?.filter((agendamento: any) => {
     const dataAgendamento = new Date(agendamento.data);
-    dataAgendamento.setHours(0, 0, 0, 0);
-    const isHoje = dataAgendamento.getTime() === hoje.getTime();
-    const isFuture = dataAgendamento > hoje;
-    return (isHoje || isFuture) && agendamento.status !== 'cancelado' && agendamento.status !== 'realizado';
+    const [hora, minuto] = agendamento.horaInicio.split(':');
+    dataAgendamento.setHours(parseInt(hora), parseInt(minuto), 0, 0);
+    const agora = new Date();
+    return (dataAgendamento >= agora) && agendamento.status !== 'cancelado' && agendamento.status !== 'realizado';
+  }).sort((a: any, b: any) => {
+    const dataA = new Date(a.data);
+    const dataB = new Date(b.data);
+    if (dataA.getTime() !== dataB.getTime()) {
+      return dataA.getTime() - dataB.getTime();
+    }
+    return a.horaInicio.localeCompare(b.horaInicio);
   }) || [];
 
   // Ordenar próximas consultas por data/hora
