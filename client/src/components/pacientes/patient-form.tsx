@@ -190,7 +190,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
     try {
       const isValid = await form.trigger();
       if (!isValid) return;
-      
+
       await mutation.mutateAsync(data);
       onSuccess();
     } catch (error) {
@@ -546,6 +546,10 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
             <Button 
               type="submit"
               disabled={mutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                form.handleSubmit(onSubmit)();
+              }}
             >
               {mutation.isPending ? (
                 <>
