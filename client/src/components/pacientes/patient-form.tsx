@@ -19,6 +19,7 @@ const dadosPessoaisSchema = z.object({
   senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").optional(),
   telefone: z.string().min(10, "Telefone inválido").optional().nullable(),
   cpf: z.string().min(11, "CPF inválido").optional().nullable(),
+  ativo: z.boolean().default(true),
   dataNascimento: z.string().optional().nullable(),
   genero: z.string().optional().nullable(),
   endereco: z.string().optional().nullable(),
@@ -127,6 +128,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
           senha: "", // Não exiba a senha atual
           telefone: paciente.usuario?.telefone || "",
           cpf: paciente.usuario?.cpf || "",
+          ativo: paciente.usuario?.ativo ?? true, // Se não houver valor, assume ativo
           dataNascimento: paciente.dataNascimento || "",
           genero: paciente.genero || "",
           endereco: paciente.endereco || "",
@@ -157,6 +159,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
           senha: data.dadosPessoais.senha || undefined,
           telefone: data.dadosPessoais.telefone,
           cpf: data.dadosPessoais.cpf,
+          ativo: data.dadosPessoais.ativo,
           tipo: "paciente"
         },
         paciente: {
@@ -347,6 +350,35 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                       <Input placeholder="(00) 00000-0000" {...field} />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dadosPessoais.ativo"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="mr-2 h-4 w-4"
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                          <FormLabel className="m-0">
+                            Paciente Ativo
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            {field.value
+                              ? "O paciente está ativo e pode agendar consultas"
+                              : "O paciente está inativo e não pode agendar consultas"}
+                          </p>
+                        </div>
+                      </div>
+                    </FormControl>
                   </FormItem>
                 )}
               />

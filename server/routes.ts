@@ -180,6 +180,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ mensagem: "Erro ao buscar pacientes", erro: error });
     }
   });
+  
+  // Alternar status do paciente (ativo/inativo)
+  app.patch("/api/pacientes/:id/status", verificarAutenticacao, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { ativo } = req.body;
+      
+      // Buscar o paciente para obter o ID do usuário associado
+      const paciente = await storage.getPaciente(id);
+      if (!paciente) {
+        return res.status(404).json({ mensagem: "Paciente não encontrado" });
+      }
+      
+      // Atualizar o status no registro do usuário
+      await storage.updateUser(paciente.usuarioId, { ativo });
+      
+      res.json({ mensagem: "Status atualizado com sucesso" });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao atualizar status do paciente", erro: error });
+    }
+  });
 
   app.get("/api/pacientes/:id", verificarAutenticacao, async (req, res) => {
     try {
@@ -597,6 +618,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(planos);
     } catch (error) {
       res.status(500).json({ mensagem: "Erro ao buscar planos de saúde", erro: error });
+    }
+  });
+  
+  // Alternar status do plano de saúde (ativo/inativo)
+  app.patch("/api/planos-saude/:id/status", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { ativo } = req.body;
+      
+      const plano = await storage.getPlanoSaude(id);
+      if (!plano) {
+        return res.status(404).json({ mensagem: "Plano de saúde não encontrado" });
+      }
+      
+      // Atualizar o status no plano de saúde
+      await storage.updatePlanoSaude(id, { ativo });
+      
+      res.json({ mensagem: "Status atualizado com sucesso" });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao atualizar status do plano de saúde", erro: error });
     }
   });
 

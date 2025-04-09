@@ -27,7 +27,7 @@ import {
   CardTitle, 
   CardDescription 
 } from "@/components/ui/card";
-import { Loader2, Plus, Search, Edit, Trash2, FileText, ChartBarStacked } from "lucide-react";
+import { Loader2, Plus, Search, Edit, Trash2, FileText, ChartBarStacked, Power as PowerIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -61,6 +61,27 @@ export default function PlanosSaude() {
       });
     },
   });
+  
+  // Mutation para alternar status ativo/inativo
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, ativo }: { id: number, ativo: boolean }) => {
+      await apiRequest("PATCH", `/api/planos-saude/${id}/status`, { ativo });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/planos-saude"] });
+      toast({
+        title: "Status atualizado",
+        description: "O status do plano foi atualizado com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status do plano.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Carregar lista de planos de saúde
   const { data: planos, isLoading } = useQuery({
@@ -82,12 +103,10 @@ export default function PlanosSaude() {
     enabled: !!selectedPlano?.id,
   });
 
-  // Filtrar planos baseado na busca e status ativo
+  // Filtrar planos baseado na busca
   const filteredPlanos = planos?.filter((plano: any) => 
-    plano.ativo && (
-      plano.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (plano.codigo && plano.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    plano.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (plano.codigo && plano.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Handler para abrir formulário de edição
@@ -187,6 +206,16 @@ export default function PlanosSaude() {
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEditPlano(plano.id)}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => toggleStatusMutation.mutate({
+                              id: plano.id,
+                              ativo: !plano.ativo
+                            })}
+                          >
+                            <PowerIcon className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
