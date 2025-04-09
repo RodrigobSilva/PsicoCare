@@ -711,18 +711,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const psicologoId = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
 
+      let queryData = new Date();
       if (data) {
-        agendamentos = await storage.getAgendamentosByData(data);
-      } else if (pacienteId) {
+        queryData = new Date(data);
+      }
+      queryData.setHours(0, 0, 0, 0);
+
+      if (pacienteId) {
         agendamentos = await storage.getAgendamentosByPaciente(pacienteId);
       } else if (psicologoId) {
         agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
       } else if (filialId) {
         agendamentos = await storage.getAgendamentosByFilial(filialId);
       } else {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        agendamentos = await storage.getAgendamentosByData(today);
+        agendamentos = await storage.getAgendamentosByData(queryData);
       }
 
       const agendamentosCompletos = await Promise.all(agendamentos.map(async (agendamento) => {
