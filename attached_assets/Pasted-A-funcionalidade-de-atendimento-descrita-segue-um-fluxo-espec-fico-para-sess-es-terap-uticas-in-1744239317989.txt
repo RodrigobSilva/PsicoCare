@@ -1,0 +1,44 @@
+A funcionalidade de atendimento descrita segue um **fluxo específico para sessões terapêuticas**, integrando agendamento, automação e registro de dados. Abaixo, o detalhamento conforme o cenário fornecido:  
+
+---
+A tela tela de atendimento fica disponível o perfil de administrador e psicólogo.
+### **1. Acesso ao Sistema e Verificação do Agendamento**  
+- **Passo 1**: O psicólogo ou administrador acessa o sistema de atendimento com credenciais pessoais.  
+- **Passo 2**: O sistema exibe a agenda do profissional que está conectado. Se for o administrador, o sistema exibe opção de selecionar um psicologo.  O sistema destaca  a **próxima sessão agendada** (data, horário, paciente e modalidade: presencial ou remota).  Para o profissional logado ou informar do pelo administrador.
+
+---
+
+### **2. Início da Sessão Remota (se aplicável)**  
+- **Passo 3**: Se a sessão for **remota**, o profissional clica em **"Iniciar Sessão"**.  
+  - O sistema **gera automaticamente um link seguro** (ex: via plataforma de videoconferência integrada) e disponibiliza opções para:  
+    - **Enviar o link diretamente ao paciente** (por e-mail, SMS ou mensagem no sistema).  
+    - **Acessar a sala virtual** para iniciar a conversa usando a funcionalidade de tele consulta 
+---
+
+### **3. Captura e Resumo Automático da Sessão**  
+- **Passo 4**: Durante a sessão:  
+  - **Se a gravação/transcrição for permitida**:  
+    - Um **agente de IA** integrado ao sistema captura o áudio (com consentimento prévio do paciente) e gera um **resumo automático** da conversa.  
+    - O resumo é salvo no campo **"Resumo da Sessão"**, com palavras-chave, temas abordados e observações relevantes.  
+  - **Se não houver transcrição automática**:  
+    - O psicólogo pode **cadastrar manualmente** o resumo no sistema após a sessão.  
+
+---
+
+### **4. Finalização e Registro**  
+- **Passo 5**: Ao concluir a sessão:  
+  - O psicólogo clica em **"Finalizar Sessão"**.  
+  - O sistema atualiza automaticamente o status do agendamento para **"Concluído"** na agenda.  
+  - O registro da sessão (resumo automático ou manual) fica disponível no **histórico do paciente**, com opção de edição posterior pelo psicólogo.  
+
+---
+
+### **Funcionalidades Chave do Sistema**  
+- **Integração com IA**: Processamento de linguagem natural para resumos precisos e contextualizados.  
+- **Segurança**: Criptografia de dados e compliance com regulamentações (ex: LGPD).  
+- **Flexibilidade**: Opções para sessões presenciais ou remotas, com suporte a múltiplas plataformas.  
+- **Armazenamento Centralizado**: Histórico de sessões acessível para acompanhamento contínuo do paciente.  
+
+---
+
+Este fluxo otimiza a gestão do psicólogo, garantindo **eficiência**, **organização** e **registro detalhado** das interações, essenciais para um atendimento terapêutico de qualidade.

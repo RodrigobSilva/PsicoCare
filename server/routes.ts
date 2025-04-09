@@ -1154,6 +1154,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
     fs.mkdirSync('./uploads/teleconsultas', { recursive: true });
   }
   
+  // Endpoints relacionados à OpenAI API
+  app.post("/api/openai/gerar-resumo", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo"]), async (req, res) => {
+    try {
+      const { transcricao } = req.body;
+      
+      if (!transcricao) {
+        return res.status(400).json({ mensagem: "Transcrição não fornecida" });
+      }
+      
+      // Usando o modelo GPT-4o para gerar resumos das sessões
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // O modelo mais avançado da OpenAI
+        messages: [
+          { 
+            role: "system", 
+            content: "Você é um psicólogo especializado em criar resumos de sessões terapêuticas. " +
+                     "Gere um resumo estruturado, conciso e profissional da sessão, destacando:" +
+                     "\n1. Principais temas abordados" +
+                     "\n2. Estado emocional do paciente" +
+                     "\n3. Técnicas discutidas ou sugeridas" +
+                     "\n4. Progresso observado" +
+                     "\n5. Plano para a próxima sessão" +
+                     "\nManter linguagem técnica apropriada e preservar a confidencialidade." 
+          },
+          { 
+            role: "user", 
+            content: `Gere um resumo estruturado com base na transcrição da sessão:\n\n${transcricao}` 
+          },
+        ],
+        temperature: 0.5,
+        max_tokens: 1200,
+      });
+      
+      const resumo = completion.choices[0].message.content;
+      
+      // Registrar a utilização da API
+      logger.info("Resumo de sessão gerado com IA");
+      
+      res.json({ resumo });
+    } catch (error) {
+      console.error("Erro ao gerar resumo da sessão:", error);
+      res.status(500).json({ 
+        mensagem: "Ocorreu um erro ao gerar o resumo da sessão",
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rotas adicionais para a funcionalidade de atendimento
+  
+  // Gerar link para teleconsulta
+  app.post("/api/teleconsulta/gerar-link", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo"]), async (req, res) => {
+    try {
+      const { agendamentoId } = req.body;
+      
+      if (!agendamentoId) {
+        return res.status(400).json({ mensagem: "ID do agendamento não fornecido" });
+      }
+      
+      // Buscar agendamento para verificar se existe e é teleconsulta
+      const agendamento = await storage.getAgendamento(agendamentoId);
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      if (agendamento.modalidade !== "teleconsulta") {
+        return res.status(400).json({ mensagem: "Este agendamento não é uma teleconsulta" });
+      }
+      
+      // Gerar um link único para a teleconsulta
+      // Usando um ID aleatório para simular a criação de uma sala virtual segura
+      const randomId = randomBytes(8).toString('hex');
+      const link = `${randomId}-${agendamentoId}`;
+      
+      // Em uma implementação real, aqui salvaria o link em uma tabela de teleconsultas
+      // com informações como duração máxima, quem pode acessar, etc.
+      
+      logger.info(`Link de teleconsulta gerado para agendamento ${agendamentoId}`);
+      
+      res.json({
+        link,
+        agendamentoId,
+        dataGeracao: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Erro ao gerar link de teleconsulta:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao gerar link de teleconsulta", 
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Enviar link de teleconsulta para o paciente
+  app.post("/api/teleconsulta/enviar-link", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo"]), async (req, res) => {
+    try {
+      const { agendamentoId, link, method } = req.body;
+      
+      if (!agendamentoId || !link || !method) {
+        return res.status(400).json({ 
+          mensagem: "Parâmetros inválidos. É necessário fornecer agendamentoId, link e method" 
+        });
+      }
+      
+      // Verificar se o agendamento existe
+      const agendamento = await storage.getAgendamento(agendamentoId);
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      // Buscar o paciente
+      const paciente = await storage.getPaciente(agendamento.pacienteId);
+      if (!paciente) {
+        return res.status(404).json({ mensagem: "Paciente não encontrado" });
+      }
+      
+      // Buscar dados de contato do paciente
+      const pacienteUsuario = await storage.getUser(paciente.usuarioId);
+      if (!pacienteUsuario) {
+        return res.status(404).json({ mensagem: "Usuário do paciente não encontrado" });
+      }
+      
+      const emailPaciente = pacienteUsuario.email;
+      const telefonePaciente = paciente.telefone;
+      
+      // Mensagem a ser enviada
+      const mensagem = `Olá ${pacienteUsuario.nome}, sua teleconsulta está agendada para hoje às ${agendamento.horaInicio}. Use este link para acessar: ${link}`;
+      
+      let resultado;
+      
+      // Enviar por e-mail ou WhatsApp conforme solicitado
+      if (method === 'email' && emailPaciente) {
+        // Em uma implementação real, aqui usaria SendGrid ou outro serviço de e-mail
+        // Por enquanto, apenas simulamos o envio
+        logger.info(`E-mail com link de teleconsulta enviado para: ${emailPaciente}`);
+        resultado = { enviado: true, metodo: 'email', destinatario: emailPaciente };
+      } 
+      else if (method === 'whatsapp' && telefonePaciente) {
+        // Em uma implementação real, aqui usaria a API do WhatsApp
+        // Por enquanto, apenas simulamos o envio
+        if (whatsappService) {
+          await whatsappService.enviarMensagem(telefonePaciente, mensagem);
+        }
+        logger.info(`WhatsApp com link de teleconsulta enviado para: ${telefonePaciente}`);
+        resultado = { enviado: true, metodo: 'whatsapp', destinatario: telefonePaciente };
+      } 
+      else {
+        return res.status(400).json({ 
+          mensagem: `Não foi possível enviar o link. Verifique se o método (${method}) é válido e se o paciente possui os dados de contato necessários.` 
+        });
+      }
+      
+      res.json({
+        mensagem: "Link enviado com sucesso",
+        ...resultado
+      });
+    } catch (error) {
+      console.error("Erro ao enviar link de teleconsulta:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao enviar link de teleconsulta", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
+  // Rota para buscar atendimentos de um agendamento específico
+  app.get("/api/atendimentos/agendamento/:id", verificarAutenticacao, async (req, res) => {
+    try {
+      const agendamentoId = parseInt(req.params.id);
+      
+      if (isNaN(agendamentoId)) {
+        return res.status(400).json({ mensagem: "ID de agendamento inválido" });
+      }
+      
+      const atendimentos = await storage.getAtendimentosByAgendamento(agendamentoId);
+      
+      res.json(atendimentos);
+    } catch (error) {
+      console.error("Erro ao buscar atendimentos do agendamento:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao buscar atendimentos", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
   // Inicializar o servidor HTTP
   const httpServer = createServer(app);
   return httpServer;

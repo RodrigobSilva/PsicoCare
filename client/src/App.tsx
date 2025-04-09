@@ -13,6 +13,7 @@ import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
 import Teleconsulta from "@/pages/teleconsulta";
 import Atendimentos from "@/pages/atendimentos";
+import Atendimento from "@/pages/atendimento";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
@@ -77,6 +78,12 @@ function Router() {
       <ProtectedRoute
         path="/teleconsulta/:id"
         component={Teleconsulta}
+      />
+
+      <ProtectedRoute
+        path="/atendimento/:id"
+        component={Atendimento}
+        allowedRoles={["admin", "psicologo"]}
       />
       
       <Route component={NotFound} />
