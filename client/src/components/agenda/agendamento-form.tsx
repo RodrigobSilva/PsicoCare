@@ -327,28 +327,56 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Paciente</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(parseInt(value));
-                      }}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o paciente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {pacientes?.map((paciente: any) => (
-                          <SelectItem 
-                            key={paciente.id} 
-                            value={paciente.id.toString()}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
                           >
-                            {paciente.usuario?.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            {field.value
+                              ? pacientes?.find(
+                                  (paciente) => paciente.id === field.value
+                                )?.usuario?.nome || "Selecione o paciente"
+                              : "Pesquise um paciente"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar paciente..." />
+                          <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandList>
+                              {pacientes?.map((paciente) => (
+                                <CommandItem
+                                  key={paciente.id}
+                                  value={paciente.usuario?.nome}
+                                  onSelect={() => {
+                                    field.onChange(paciente.id);
+                                  }}
+                                >
+                                  <CheckIcon
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      paciente.id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {paciente.usuario?.nome}
+                                </CommandItem>
+                              ))}
+                            </CommandList>
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -493,8 +521,17 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                   <FormItem>
                     <FormLabel>Filial</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value?.toString()}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Se selecionou "remoto", marcar a opção remoto como true e limpar sala
+                        if (value === "remoto") {
+                          form.setValue("remoto", true);
+                          form.setValue("salaId", undefined);
+                        } else {
+                          form.setValue("remoto", false);
+                        }
+                      }}
+                      value={form.watch("remoto") ? "remoto" : field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -502,6 +539,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="remoto">Remoto</SelectItem>
                         {filiais?.map((filial: any) => (
                           <SelectItem 
                             key={filial.id} 
@@ -552,36 +590,8 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
 
             <Separator />
 
-            {/* Seção de tipo e status */}
+            {/* Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="tipoAtendimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Atendimento</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tiposAtendimento.map((tipo) => (
-                          <SelectItem key={tipo.value} value={tipo.value}>
-                            {tipo.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="status"
@@ -616,76 +626,87 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
             {/* Opções de pagamento */}
             <div>
               <h3 className="text-lg font-medium mb-2">Informações de Pagamento</h3>
+              
+              <div className="grid grid-cols-1 gap-4 mb-4">
+                <FormField
+                  control={form.control}
+                  name="tipoAtendimento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Pagamento</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Resetar outras opções com base na seleção
+                          if (value === "particular") {
+                            form.setValue("particular", true);
+                            form.setValue("sublocacao", false);
+                            form.setValue("planoSaudeId", undefined);
+                          } else if (value === "plano_saude") {
+                            form.setValue("particular", false);
+                            form.setValue("sublocacao", false);
+                          } else if (value === "sublocacao") {
+                            form.setValue("particular", false);
+                            form.setValue("sublocacao", true);
+                          }
+                        }}
+                        value={
+                          form.watch("particular") 
+                            ? "particular" 
+                            : form.watch("sublocacao") 
+                              ? "sublocacao" 
+                              : "plano_saude"
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de pagamento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="particular">Particular</SelectItem>
+                          <SelectItem value="plano_saude">Plano de Saúde</SelectItem>
+                          <SelectItem value="sublocacao">Sublocação</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
+                {/* Campo de valor da consulta (visível apenas se for particular) */}
+                {form.watch("particular") && (
                   <FormField
                     control={form.control}
-                    name="particular"
+                    name="valorConsulta"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem>
+                        <FormLabel>Valor da Consulta (R$)</FormLabel>
                         <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              // Se particular for marcado, limpar plano de saúde
-                              if (checked) {
-                                form.setValue("planoSaudeId", undefined);
-                              }
+                          <Input
+                            type="number"
+                            placeholder="0,00"
+                            {...field}
+                            onChange={(e) => {
+                              // Converter para centavos se houver valor
+                              const value = e.target.value 
+                                ? parseInt(e.target.value) * 100
+                                : undefined;
+                              field.onChange(value);
                             }}
+                            value={field.value ? (field.value / 100).toString() : ""}
                           />
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Particular</FormLabel>
-                        </div>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="remoto"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              // Se remoto for marcado, limpar sala
-                              if (checked) {
-                                form.setValue("salaId", undefined);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Atendimento Remoto</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="sublocacao"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Sublocação</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4">
+                )}
+                
+                {/* Campo de plano de saúde (visível se não for particular) */}
+                {!form.watch("particular") && (
                   <FormField
                     control={form.control}
                     name="planoSaudeId"
@@ -695,7 +716,6 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                         <Select
                           onValueChange={field.onChange}
                           value={field.value?.toString()}
-                          disabled={form.watch("particular")}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -733,33 +753,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="valorConsulta"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Valor da Consulta (R$)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0,00"
-                            {...field}
-                            onChange={(e) => {
-                              // Converter para centavos se houver valor
-                              const value = e.target.value 
-                                ? parseInt(e.target.value) * 100
-                                : undefined;
-                              field.onChange(value);
-                            }}
-                            value={field.value ? (field.value / 100).toString() : ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                )}
               </div>
             </div>
 
