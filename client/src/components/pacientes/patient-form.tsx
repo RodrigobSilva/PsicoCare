@@ -552,7 +552,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
             <Button 
               type="button"
               disabled={mutation.isPending}
-              onClick={() => form.handleSubmit(handleSubmit)()}
+              onClick={() => form.handleSubmit(onSubmit)()}
             >
               {mutation.isPending ? (
                 <>
