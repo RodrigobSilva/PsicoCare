@@ -256,13 +256,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Paciente não encontrado" });
       }
 
-      // Deletar planos de saúde associados primeiro
+      // Deletar agendamentos do paciente
+      const agendamentos = await storage.getAgendamentosByPaciente(id);
+      for (const agendamento of agendamentos) {
+        // Deletar atendimentos associados ao agendamento
+        const atendimentos = await storage.getAtendimentosByPaciente(id);
+        for (const atendimento of atendimentos) {
+          await storage.deleteAtendimento(atendimento.id);
+        }
+        await storage.deleteAgendamento(agendamento.id);
+      }
+
+      // Deletar planos de saúde associados
       const planosDosPacientes = await storage.getPacientesPlanoSaudeByPaciente(id);
       for (const plano of planosDosPacientes) {
         await storage.deletePacientePlanoSaude(plano.id);
       }
 
-      // Depois deletar o paciente e seu usuário
+      // Deletar documentos do paciente
+      const documentos = await storage.getDocumentosByPaciente(id);
+      for (const documento of documentos) {
+        await storage.deleteDocumento(documento.id);
+      }
+
+      // Finalmente deletar o paciente e seu usuário
       await storage.deletePaciente(id);
       await storage.deleteUser(paciente.usuarioId);
 
