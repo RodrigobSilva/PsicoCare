@@ -8,6 +8,7 @@ import { insertAgendamentoSchema } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Form, 
   FormControl, 
@@ -371,66 +372,75 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Seção de informações principais */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="pacienteId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Paciente</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? pacientes?.find(
-                                  (paciente) => paciente.id === field.value
-                                )?.usuario?.nome || "Selecione o paciente"
-                              : "Pesquise um paciente"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Pesquisar paciente..." />
-                          <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandList>
-                              {pacientes?.map((paciente) => (
-                                <CommandItem
-                                  key={paciente.id}
-                                  value={paciente.usuario?.nome}
-                                  onSelect={() => {
-                                    field.onChange(paciente.id);
-                                  }}
-                                >
-                                  <CheckIcon
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      paciente.id === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {paciente.usuario?.nome}
-                                </CommandItem>
-                              ))}
-                            </CommandList>
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Campo de Paciente - esconder para psicólogos */}
+              {useAuth().user?.tipo !== 'psicologo' ? (
+                <FormField
+                  control={form.control}
+                  name="pacienteId"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Paciente</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? pacientes?.find(
+                                    (paciente: any) => paciente.id === field.value
+                                  )?.usuario?.nome || "Selecione o paciente"
+                                : "Pesquise um paciente"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Pesquisar paciente..." />
+                            <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandList>
+                                {pacientes?.map((paciente: any) => (
+                                  <CommandItem
+                                    key={paciente.id}
+                                    value={paciente.usuario?.nome}
+                                    onSelect={() => {
+                                      field.onChange(paciente.id);
+                                    }}
+                                  >
+                                    <CheckIcon
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        paciente.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {paciente.usuario?.nome}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                // Para psicólogos, usar um campo hidden com valor fixo
+                <input 
+                  type="hidden" 
+                  {...form.register("pacienteId")} 
+                />
+              )}
 
               <FormField
                 control={form.control}

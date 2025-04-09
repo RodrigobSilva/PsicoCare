@@ -19,13 +19,33 @@ export default function Dashboard() {
     },
   });
   
+  // Buscar agendamentos com parâmetros específicos baseados no tipo de usuário
   const { data: agendamentosHoje, isLoading: isLoadingAgendamentos } = useQuery({
-    queryKey: ["/api/agendamentos", { data: new Date().toISOString().split('T')[0] }],
+    queryKey: ["/api/agendamentos", { 
+      data: new Date().toISOString().split('T')[0],
+      userId: user?.id,
+      tipo: user?.tipo 
+    }],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      const res = await apiRequest("GET", `/api/agendamentos?data=${today}`);
+      let url = `/api/agendamentos?data=${today}`;
+      
+      // Se for paciente, buscar apenas os agendamentos do próprio paciente
+      if (user?.tipo === 'paciente') {
+        const pacienteId = user.id; // Assumindo que o id do usuário é o mesmo do paciente
+        url += `&pacienteId=${pacienteId}`;
+      }
+      
+      // Se for psicólogo, buscar apenas os agendamentos do próprio psicólogo
+      if (user?.tipo === 'psicologo') {
+        const psicologoId = user.id; // Assumindo que o id do usuário é o mesmo do psicólogo
+        url += `&psicologoId=${psicologoId}`;
+      }
+      
+      const res = await apiRequest("GET", url);
       return res.json();
     },
+    enabled: !!user, // Só executa a query se o usuário estiver disponível
   });
   
   const { data: notificacoes, isLoading: isLoadingNotificacoes } = useQuery({
@@ -42,8 +62,12 @@ export default function Dashboard() {
         {/* Animated hero welcome */}
         <WelcomeHero userName={user?.nome?.split(' ')[0] || 'Usuário'} />
 
-        {/* Dashboard summary cards */}
-        <StatisticCards estatisticas={estatisticas} isLoading={isLoadingEstatisticas} />
+        {/* Dashboard summary cards - esconder o card de faturamento para psicólogos */}
+        <StatisticCards 
+          estatisticas={estatisticas} 
+          isLoading={isLoadingEstatisticas}
+          userType={user?.tipo} 
+        />
 
         {/* Main content area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -10,9 +10,10 @@ interface StatisticCardsProps {
     taxaOcupacao: number;
   };
   isLoading: boolean;
+  userType?: string;
 }
 
-export default function StatisticCards({ estatisticas, isLoading }: StatisticCardsProps) {
+export default function StatisticCards({ estatisticas, isLoading, userType }: StatisticCardsProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -20,38 +21,55 @@ export default function StatisticCards({ estatisticas, isLoading }: StatisticCar
     }).format(value);
   };
 
-  const cards = [
-    {
-      title: "Sessões Hoje",
-      value: estatisticas?.sessoesHoje || 0,
-      icon: <Calendar className="text-primary" />,
-      bgColor: "bg-primary bg-opacity-10",
-      trend: { value: 12, label: "em relação à semana passada", positive: true }
-    },
-    {
-      title: "Novos Pacientes",
-      value: estatisticas?.novosPacientes || 0,
-      icon: <UserPlus className="text-secondary" />,
-      bgColor: "bg-secondary bg-opacity-10",
-      trend: { value: 5, label: "em relação ao mês passado", positive: true }
-    },
-    {
-      title: "Faturamento Mensal",
-      value: estatisticas?.faturamentoMensal || 0,
-      valueFormatter: formatCurrency,
-      icon: <DollarSign className="text-accent" />,
-      bgColor: "bg-accent bg-opacity-10",
-      trend: { value: 18, label: "em relação ao mês passado", positive: true }
-    },
-    {
-      title: "Taxa de ocupação",
-      value: estatisticas?.taxaOcupacao || 0,
-      valueFormatter: (value: number) => `${value}%`,
-      icon: <TrendingUp className="text-info" />,
-      bgColor: "bg-info bg-opacity-10",
-      trend: { value: 3, label: "em relação à semana passada", positive: false }
+  // Função para filtrar cards baseado no tipo de usuário
+  const getCardsByUserType = () => {
+    const baseCards = [
+      {
+        title: "Sessões Hoje",
+        value: estatisticas?.sessoesHoje || 0,
+        icon: <Calendar className="text-primary" />,
+        bgColor: "bg-primary bg-opacity-10",
+        trend: { value: 12, label: "em relação à semana passada", positive: true }
+      },
+      {
+        title: "Novos Pacientes",
+        value: estatisticas?.novosPacientes || 0,
+        icon: <UserPlus className="text-secondary" />,
+        bgColor: "bg-secondary bg-opacity-10",
+        trend: { value: 5, label: "em relação ao mês passado", positive: true }
+      },
+      {
+        title: "Faturamento Mensal",
+        value: estatisticas?.faturamentoMensal || 0,
+        valueFormatter: formatCurrency,
+        icon: <DollarSign className="text-accent" />,
+        bgColor: "bg-accent bg-opacity-10",
+        trend: { value: 18, label: "em relação ao mês passado", positive: true }
+      },
+      {
+        title: "Taxa de ocupação",
+        value: estatisticas?.taxaOcupacao || 0,
+        valueFormatter: (value: number) => `${value}%`,
+        icon: <TrendingUp className="text-info" />,
+        bgColor: "bg-info bg-opacity-10",
+        trend: { value: 3, label: "em relação à semana passada", positive: false }
+      }
+    ];
+    
+    // Filtragem dos cards de acordo com o tipo de usuário
+    if (userType === 'psicologo') {
+      // Psicólogos não veem informações de faturamento
+      return baseCards.filter(card => card.title !== "Faturamento Mensal");
+    } else if (userType === 'paciente') {
+      // Pacientes veem apenas suas próprias consultas agendadas
+      return [baseCards[0]]; // Apenas o card de "Sessões Hoje"
     }
-  ];
+    
+    // Admin e secretaria veem todos os cards
+    return baseCards;
+  };
+  
+  const cards = getCardsByUserType();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 animate-in fade-in duration-500">
