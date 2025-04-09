@@ -433,15 +433,19 @@ export class MemStorage implements IStorage {
   }
 
   async getAgendamentosByData(data: Date): Promise<Agendamento[]> {
-    const dataStr = data.toISOString().split('T')[0];
+    const dataInicio = new Date(data);
+    dataInicio.setHours(0, 0, 0, 0);
+    
+    const dataFim = new Date(data);
+    dataFim.setHours(23, 59, 59, 999);
+
     return Array.from(this.agendamentos.values()).filter(
       (agendamento) => {
-        if (typeof agendamento.data === 'string') {
-          return agendamento.data.split('T')[0] === dataStr;
-        } else if (agendamento.data instanceof Date) {
-          return agendamento.data.toISOString().split('T')[0] === dataStr;
-        }
-        return false;
+        const dataAgendamento = typeof agendamento.data === 'string' 
+          ? new Date(agendamento.data)
+          : agendamento.data;
+
+        return dataAgendamento >= dataInicio && dataAgendamento <= dataFim;
       }
     );
   }
