@@ -612,10 +612,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Plano de saúde não encontrado" });
       }
 
-      await storage.deletePlanoSaude(id);
+      // Verificar se existem pacientes usando este plano
+      const pacientesComPlano = await storage.getPacientesPlanoSaudeByPlano(id);
+      if (pacientesComPlano && pacientesComPlano.length > 0) {
+        return res.status(400).json({ 
+          mensagem: "Não é possível excluir o plano pois existem pacientes vinculados a ele" 
+        });
+      }
+
+      // Verificar se existem agendamentos usando este plano
+      const agendamentosComPlano = await storage.getAgendamentosByPlanoSaude(id);
+      if (agendamentosComPlano && agendamentosComPlano.length > 0) {
+        return res.status(400).json({ 
+          mensagem: "Não é possível excluir o plano pois existem agendamentos vinculados a ele" 
+        });
+      }
+
+      const deleted = await storage.deletePlanoSaude(id);
+      if (!deleted) {
+        return res.status(400).json({ mensagem: "Não foi possível excluir o plano" });
+      }
 
       res.status(204).send();
     } catch (error) {
+      console.error("Erro ao excluir plano:", error);
       res.status(500).json({ mensagem: "Erro ao excluir plano de saúde", erro: error });
     }
   });
