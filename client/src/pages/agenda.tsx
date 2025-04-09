@@ -211,8 +211,8 @@ export default function Agenda() {
                 queryClient.invalidateQueries({
                   queryKey: ["/api/agendamentos"],
                 });
-                // Só mostrar o toast se o status for "confirmado"
-                if (data && data.status === "confirmado") {
+                // Mostrar o toast para qualquer status exceto "cancelado"
+                if (data && data.status !== "cancelado") {
                   toast({
                     title: selectedAgendamento
                       ? "Agendamento atualizado"

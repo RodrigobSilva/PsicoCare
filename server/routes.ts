@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -8,6 +8,9 @@ import path from "path";
 import { WebSocketServer } from "ws";
 import { logger } from "./logger";
 import OpenAI from "openai";
+import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
+import { db } from "./db";
+import * as schema from "@shared/schema";
 
 // Inicializar cliente OpenAI
 const openai = new OpenAI({
@@ -707,6 +710,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let agendamentos;
       const data = req.query.data ? new Date(req.query.data as string) : undefined;
+      const dataInicio = req.query.dataInicio ? new Date(req.query.dataInicio as string) : undefined;
+      const dataFim = req.query.dataFim ? new Date(req.query.dataFim as string) : undefined;
       const pacienteId = req.query.pacienteId ? parseInt(req.query.pacienteId as string) : undefined;
       const psicologoId = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
@@ -717,7 +722,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       queryData.setHours(0, 0, 0, 0);
 
-      if (pacienteId) {
+      // Buscar por intervalo de datas se dataInicio e dataFim estiverem presentes
+      if (dataInicio && dataFim) {
+        // Buscar todos os agendamentos e filtrar por data no lado do servidor
+        const todosAgendamentos = await storage.getAllAgendamentos();
+        const dataInicioStr = dataInicio.toISOString().split('T')[0];
+        const dataFimStr = dataFim.toISOString().split('T')[0];
+        
+        agendamentos = todosAgendamentos.filter(ag => {
+          const dataAg = ag.data;
+          return dataAg >= dataInicioStr && dataAg <= dataFimStr;
+        });
+      } else if (pacienteId) {
         agendamentos = await storage.getAgendamentosByPaciente(pacienteId);
       } else if (psicologoId) {
         agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
