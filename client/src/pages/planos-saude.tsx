@@ -82,10 +82,12 @@ export default function PlanosSaude() {
     enabled: !!selectedPlano?.id,
   });
 
-  // Filtrar planos baseado na busca
+  // Filtrar planos baseado na busca e status ativo
   const filteredPlanos = planos?.filter((plano: any) => 
-    plano.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (plano.codigo && plano.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
+    plano.ativo && (
+      plano.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (plano.codigo && plano.codigo.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
   );
 
   // Handler para abrir formulário de edição
