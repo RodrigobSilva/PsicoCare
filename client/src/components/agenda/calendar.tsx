@@ -117,7 +117,7 @@ export default function Calendar({
   // Construir query params baseado nos filtros
   const buildQueryParams = () => {
     const params = new URLSearchParams();
-    
+
     // Obter o intervalo de datas baseado na visualização
     if (currentView === "day") {
       // Formato ISO para data
@@ -126,26 +126,26 @@ export default function Calendar({
       // Obter primeiro e último dia da semana
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = endOfWeek(currentDate, { weekStartsOn: 1 });
-      
+
       params.append("dataInicio", start.toISOString().split('T')[0]);
       params.append("dataFim", end.toISOString().split('T')[0]);
     } else if (currentView === "month") {
       // Obter primeiro e último dia do mês
       const start = startOfMonth(currentDate);
       const end = endOfMonth(currentDate);
-      
+
       params.append("dataInicio", start.toISOString().split('T')[0]);
       params.append("dataFim", end.toISOString().split('T')[0]);
     }
-    
+
     if (selectedPsicologo && selectedPsicologo !== "todos") {
       params.append("psicologoId", selectedPsicologo);
     }
-    
+
     if (selectedFilial && selectedFilial !== "todas") {
       params.append("filialId", selectedFilial);
     }
-    
+
     return params.toString();
   };
 
@@ -233,23 +233,23 @@ export default function Calendar({
     if (!horario) return "";
     return horario.substring(0, 5);
   };
-  
-  // Função para obter a cor do status
+
+  // Obter a cor do status do agendamento
   const getStatusColor = (status: string) => {
     switch (status) {
       case "agendado":
-        return "bg-warning-light text-white";
+        return "bg-orange-500 text-white hover:bg-orange-600";
       case "confirmado":
-        return "bg-primary-light text-white";
+        return "bg-blue-500 text-white hover:bg-blue-600";
       case "cancelado":
-        return "bg-destructive-light text-white";
+        return "bg-red-500 text-white hover:bg-red-600";
       case "realizado":
-        return "bg-info-light text-white";
+        return "bg-green-500 text-white hover:bg-green-600";
       default:
-        return "bg-secondary-light text-white";
+        return "bg-gray-500 text-white hover:bg-gray-600";
     }
   };
-  
+
   // Renderizar cartão de agendamento
   const renderAgendamentoCard = (agendamento: Agendamento) => {
     return (
@@ -281,7 +281,7 @@ export default function Calendar({
 
     return horarios.map((horario) => {
       const [h, m] = horario.split(":");
-      
+
       // Encontrar agendamentos neste horário
       const agendamentosNoHorario = agendamentos?.filter((a: Agendamento) => {
         const horaInicio = a.horaInicio?.substring(0, 5);
@@ -302,19 +302,19 @@ export default function Calendar({
       );
     });
   };
-  
+
   // Gerar visualização semanal
   const generateWeekView = () => {
     // Obter dias da semana
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
-    
+
     // Horários de trabalho
     const horarios = [];
     for (let hora = 8; hora < 20; hora++) {
       horarios.push(`${hora}:00`);
     }
-    
+
     return (
       <div className="w-full border-collapse">
         {/* Cabeçalho com os dias da semana */}
@@ -338,14 +338,14 @@ export default function Calendar({
             </div>
           ))}
         </div>
-        
+
         {/* Linha para cada horário */}
         {horarios.map((horario) => (
           <div key={horario} className="flex border-b border-neutral-200 min-h-[100px]">
             <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200">
               {horario}
             </div>
-            
+
             {/* Coluna para cada dia */}
             {weekDays.map((day) => {
               // Encontrar agendamentos neste dia e horário
@@ -354,7 +354,7 @@ export default function Calendar({
                 return horaInicio === horario && 
                        isSameDay(parseISO(a.data), day);
               });
-              
+
               return (
                 <div 
                   key={day.toISOString()}
@@ -374,28 +374,28 @@ export default function Calendar({
       </div>
     );
   };
-  
+
   // Gerar visualização mensal
   const generateMonthView = () => {
     // Obter primeiro dia do mês
     const monthStart = startOfMonth(currentDate);
-    
+
     // Obter primeiro dia a ser exibido (primeira segunda-feira antes ou igual ao início do mês)
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    
+
     // Obter último dia do mês
     const monthEnd = endOfMonth(currentDate);
-    
+
     // Obter todos os dias que serão exibidos no calendário (incluindo os dias que transbordarem)
     const calendarDays = eachDayOfInterval({ 
       start: calendarStart, 
       end: endOfWeek(monthEnd, { weekStartsOn: 1 }) 
     });
-    
+
     // Agrupar dias em semanas
     const weeks: Date[][] = [];
     let currentWeek: Date[] = [];
-    
+
     calendarDays.forEach((day) => {
       currentWeek.push(day);
       if (currentWeek.length === 7) {
@@ -403,10 +403,10 @@ export default function Calendar({
         currentWeek = [];
       }
     });
-    
+
     // Nomes dos dias da semana
     const weekDayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    
+
     return (
       <div className="w-full border-collapse">
         {/* Cabeçalho com os dias da semana */}
@@ -417,7 +417,7 @@ export default function Calendar({
             </div>
           ))}
         </div>
-        
+
         {/* Células do calendário */}
         <div className="grid grid-cols-1">
           {weeks.map((week, weekIndex) => (
@@ -427,7 +427,7 @@ export default function Calendar({
                 const dayAgendamentos = agendamentos?.filter((a: Agendamento) => 
                   isSameDay(parseISO(a.data), day)
                 );
-                
+
                 return (
                   <div 
                     key={day.toISOString()} 
@@ -444,7 +444,7 @@ export default function Calendar({
                     )}>
                       {getDate(day)}
                     </div>
-                    
+
                     <div className="space-y-1 overflow-y-auto max-h-[80px]">
                       {dayAgendamentos?.slice(0, 3).map((agendamento: Agendamento) => (
                         <div
@@ -458,7 +458,7 @@ export default function Calendar({
                           {formatHorario(agendamento.horaInicio)} - {agendamento.paciente?.usuario?.nome}
                         </div>
                       ))}
-                      
+
                       {dayAgendamentos && dayAgendamentos.length > 3 && (
                         <div className="text-xs text-center text-neutral-500">
                           +{dayAgendamentos.length - 3} mais
@@ -513,7 +513,7 @@ export default function Calendar({
             </Button>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Select 
@@ -530,7 +530,7 @@ export default function Calendar({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Select 
               value={selectedPsicologo} 
@@ -550,7 +550,7 @@ export default function Calendar({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Select 
               value={selectedFilial} 
@@ -572,7 +572,7 @@ export default function Calendar({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-0 overflow-y-auto max-h-[calc(100vh-320px)]">
         {renderCalendarContent()}
       </CardContent>
