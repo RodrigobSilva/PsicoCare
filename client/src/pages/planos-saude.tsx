@@ -41,6 +41,27 @@ export default function PlanosSaude() {
   const [selectedPlano, setSelectedPlano] = useState<any>(null);
   const { toast } = useToast();
 
+  // Mutation para deletar plano
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/planos-saude/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/planos-saude"] });
+      toast({
+        title: "Plano excluído",
+        description: "O plano foi excluído com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o plano.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Carregar lista de planos de saúde
   const { data: planos, isLoading } = useQuery({
     queryKey: ["/api/planos-saude"],
@@ -165,7 +186,16 @@ export default function PlanosSaude() {
                           <Button variant="ghost" size="icon" onClick={() => handleEditPlano(plano.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-500"
+                            onClick={() => {
+                              if (confirm('Tem certeza que deseja excluir este plano?')) {
+                                deleteMutation.mutate(plano.id);
+                              }
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
