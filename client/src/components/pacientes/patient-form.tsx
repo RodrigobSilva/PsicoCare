@@ -196,15 +196,23 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
   // Avançar para próxima aba
   const goToNextTab = async () => {
-    const isValid = await form.trigger();
+    const isValid = await form.trigger(activeTab === "dadosPessoais" ? "dadosPessoais" : activeTab === "informacoesClinicas" ? "informacoesClinicas" : "planoSaude");
+    
     if (!isValid) return;
 
     if (activeTab === "dadosPessoais") {
       setActiveTab("informacoesClinicas");
     } else if (activeTab === "informacoesClinicas") {
       setActiveTab("planoSaude");
-    } else if (activeTab === "planoSaude") {
-      form.handleSubmit(onSubmit)();
+    }
+  };
+
+  const handleSubmit = async (data: PatientFormValues) => {
+    try {
+      await mutation.mutateAsync(data);
+      onSuccess();
+    } catch (error) {
+      console.error("Erro ao salvar paciente:", error);
     }
   };
 
@@ -538,14 +546,21 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
           </Button>
 
           {activeTab === "planoSaude" ? (
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button 
+              type="submit" 
+              disabled={mutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                form.handleSubmit(handleSubmit)();
+              }}
+            >
               {mutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Salvando...
                 </>
               ) : (
-                <>Salvar</>
+                "Salvar"
               )}
             </Button>
           ) : (
