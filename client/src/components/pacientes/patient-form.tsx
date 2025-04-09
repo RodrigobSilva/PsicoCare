@@ -209,6 +209,9 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
   const handleSubmit = async (data: PatientFormValues) => {
     try {
+      const isValid = await form.trigger();
+      if (!isValid) return;
+      
       await mutation.mutateAsync(data);
       onSuccess();
     } catch (error) {
@@ -547,12 +550,9 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
           {activeTab === "planoSaude" ? (
             <Button 
-              type="submit" 
+              type="button"
               disabled={mutation.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                form.handleSubmit(handleSubmit)();
-              }}
+              onClick={() => form.handleSubmit(handleSubmit)()}
             >
               {mutation.isPending ? (
                 <>
