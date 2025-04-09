@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/pacientes/:id", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+  app.delete("/api/pacientes/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
 

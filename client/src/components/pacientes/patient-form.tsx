@@ -37,6 +37,17 @@ const planoSaudeSchema = z.object({
   planoSaudeId: z.string().optional().nullable(),
   numeroCarteirinha: z.string().optional().nullable(),
   dataValidade: z.string().optional().nullable(),
+}).refine(data => {
+  // Se um campo do plano está preenchido, todos devem estar preenchidos
+  const { planoSaudeId, numeroCarteirinha, dataValidade } = data;
+  
+  if (planoSaudeId && planoSaudeId !== "nenhum") {
+    return !!numeroCarteirinha && !!dataValidade;
+  }
+  
+  return true;
+}, {
+  message: "Preencha todos os campos do plano de saúde"
 });
 
 // Combine os esquemas

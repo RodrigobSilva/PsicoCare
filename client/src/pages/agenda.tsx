@@ -220,6 +220,13 @@ export default function Agenda() {
                     : "O agendamento foi criado com sucesso.",
                 });
               }}
+              onCanceled={() => {
+                setIsFormOpen(false);
+                queryClient.invalidateQueries({
+                  queryKey: ["/api/agendamentos"],
+                });
+                // Não mostra toast quando cancelar
+              }}
             />
           </DialogContent>
         </Dialog>

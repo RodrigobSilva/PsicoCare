@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -117,9 +117,10 @@ interface AgendamentoFormProps {
   agendamentoId?: number;
   defaultDate?: Date;
   onSuccess: () => void;
+  onCanceled?: () => void;
 }
 
-export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess }: AgendamentoFormProps) {
+export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess, onCanceled }: AgendamentoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [pacientePlanos, setPacientePlanos] = useState<any[]>([]);
 
@@ -302,7 +303,40 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof agendamentoFormSchema>) => {
     setIsSaving(true);
-    mutation.mutate(values);
+    
+    // Se o status for "cancelado", não mostrar popup de sucesso
+    if (values.status === "cancelado") {
+      // Chamar a função de mutação diretamente
+      try {
+        // Formatar data ISO 8601
+        const dataFormatada = format(values.data, "yyyy-MM-dd");
+
+        // Criar objeto de agendamento para enviar ao servidor
+        const agendamentoData = {
+          ...values,
+          data: dataFormatada,
+        };
+
+        if (agendamentoId) {
+          // Editar existente
+          await apiRequest("PUT", `/api/agendamentos/${agendamentoId}`, agendamentoData);
+        } else {
+          // Criar novo
+          await apiRequest("POST", "/api/agendamentos", agendamentoData);
+        }
+        
+        // Invalidar consultas e fechar o modal sem mostrar toast
+        queryClient.invalidateQueries({ queryKey: ["/api/agendamentos"] });
+        setIsSaving(false);
+        onCanceled ? onCanceled() : onSuccess();
+      } catch (error) {
+        console.error("Erro ao salvar agendamento:", error);
+        setIsSaving(false);
+      }
+    } else {
+      // Para outros status, usar o fluxo normal com toast
+      mutation.mutate(values);
+    }
   };
 
   // Verificar se está carregando
