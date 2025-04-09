@@ -188,7 +188,11 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
   // Lidar com envio do formulário
   const onSubmit = async (data: PatientFormValues) => {
     try {
+      const isValid = await form.trigger();
+      if (!isValid) return;
+      
       await mutation.mutateAsync(data);
+      onSuccess();
     } catch (error) {
       console.error("Erro ao salvar paciente:", error);
     }
@@ -206,18 +210,6 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
       if (isValid) {
         setActiveTab("planoSaude");
       }
-    }
-  };
-
-  const handleSubmit = async (data: PatientFormValues) => {
-    try {
-      const isValid = await form.trigger();
-      if (!isValid) return;
-      
-      await mutation.mutateAsync(data);
-      onSuccess();
-    } catch (error) {
-      console.error("Erro ao salvar paciente:", error);
     }
   };
 
@@ -554,7 +546,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
             <Button 
               type="submit"
               disabled={mutation.isPending}
-              onClick={() => form.handleSubmit(handleSubmit)()}
+              onClick={() => form.handleSubmit(onSubmit)()}
             >
               {mutation.isPending ? (
                 <>
