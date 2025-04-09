@@ -620,18 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Verificar se existem agendamentos usando este plano
-      const agendamentosComPlano = await storage.getAgendamentosByPlanoSaude(id);
-      if (agendamentosComPlano && agendamentosComPlano.length > 0) {
-        return res.status(400).json({ 
-          mensagem: "Não é possível excluir o plano pois existem agendamentos vinculados a ele" 
-        });
-      }
-
-      const deleted = await storage.deletePlanoSaude(id);
-      if (!deleted) {
-        return res.status(400).json({ mensagem: "Não foi possível excluir o plano" });
-      }
+      await storage.deletePlanoSaude(id);
 
       res.status(204).send();
     } catch (error) {
