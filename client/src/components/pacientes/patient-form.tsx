@@ -108,7 +108,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
   React.useEffect(() => {
     if (paciente && pacienteId) {
       const pacientePlano = paciente.planos && paciente.planos.length > 0 ? paciente.planos[0] : null;
-      
+
       form.reset({
         dadosPessoais: {
           nome: paciente.usuario?.nome || "",
@@ -135,7 +135,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
     }
   }, [paciente, pacienteId, form]);
 
-  // Mutation para criar ou atualizar paciente
+  // Handler para abrir formulário de edição
   const mutation = useMutation({
     mutationFn: async (data: PatientFormValues) => {
       // Preparar dados para API
@@ -143,7 +143,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
         usuario: {
           nome: data.dadosPessoais.nome,
           email: data.dadosPessoais.email,
-          senha: data.dadosPessoais.senha,
+          senha: data.dadosPessoais.senha || undefined,
           telefone: data.dadosPessoais.telefone,
           cpf: data.dadosPessoais.cpf,
           tipo: "paciente"
@@ -164,13 +164,20 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
         } : null
       };
 
-      // Criar ou atualizar paciente
-      if (pacienteId) {
-        const res = await apiRequest("PUT", `/api/pacientes/${pacienteId}`, payload);
-        return res.json();
-      } else {
-        const res = await apiRequest("POST", "/api/pacientes", payload);
-        return res.json();
+      try {
+        // Criar ou atualizar paciente
+        if (pacienteId) {
+          const res = await apiRequest("PUT", `/api/pacientes/${pacienteId}`, payload);
+          if (!res.ok) throw new Error("Falha ao atualizar paciente");
+          return await res.json();
+        } else {
+          const res = await apiRequest("POST", "/api/pacientes", payload);
+          if (!res.ok) throw new Error("Falha ao criar paciente");
+          return await res.json();
+        }
+      } catch (error) {
+        console.error("Erro ao salvar paciente:", error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -522,7 +529,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
           >
             Voltar
           </Button>
-          
+
           {activeTab === "planoSaude" ? (
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? (
