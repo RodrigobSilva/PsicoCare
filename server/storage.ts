@@ -116,6 +116,7 @@ export interface IStorage {
   // Pacientes Planos de Saúde
   getPacientePlanoSaude(id: number): Promise<PacientePlanoSaude | undefined>;
   getPacientesPlanoSaudeByPaciente(pacienteId: number): Promise<PacientePlanoSaude[]>;
+  getPacientesPlanoSaudeByPlano(planoId: number): Promise<PacientePlanoSaude[]>;
   createPacientePlanoSaude(pacientePlano: InsertPacientePlanoSaude): Promise<PacientePlanoSaude>;
   updatePacientePlanoSaude(id: number, pacientePlano: Partial<InsertPacientePlanoSaude>): Promise<PacientePlanoSaude | undefined>;
   deletePacientePlanoSaude(id: number): Promise<boolean>;

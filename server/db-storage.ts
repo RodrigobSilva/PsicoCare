@@ -415,6 +415,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(pacientesPlanosSaude).where(eq(pacientesPlanosSaude.pacienteId, pacienteId));
   }
 
+  async getPacientesPlanoSaudeByPlano(planoId: number): Promise<PacientePlanoSaude[]> {
+    return await db.select().from(pacientesPlanosSaude).where(eq(pacientesPlanosSaude.planoSaudeId, planoId));
+  }
+
   async createPacientePlanoSaude(pacientePlano: InsertPacientePlanoSaude): Promise<PacientePlanoSaude> {
     const [createdPacientePlano] = await db.insert(pacientesPlanosSaude).values(pacientePlano).returning();
     return createdPacientePlano;
