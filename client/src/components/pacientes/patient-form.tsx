@@ -550,9 +550,9 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
           {activeTab === "planoSaude" ? (
             <Button 
-              type="button"
+              type="submit"
               disabled={mutation.isPending}
-              onClick={() => form.handleSubmit(onSubmit)()}
+              onClick={() => form.handleSubmit(handleSubmit)()}
             >
               {mutation.isPending ? (
                 <>
