@@ -50,6 +50,7 @@ function GerenciamentoUsuarios() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "inativos">("todos");
   
   // Buscar lista de usuários
   const { data: usuarios, isLoading, refetch } = useQuery<Usuario[]>({
@@ -59,6 +60,13 @@ function GerenciamentoUsuarios() {
       if (!res.ok) throw new Error("Falha ao buscar usuários");
       return await res.json();
     }
+  });
+
+  // Filtrar usuários por status
+  const usuariosFiltrados = usuarios?.filter(usuario => {
+    if (filtroStatus === "ativos") return usuario.ativo !== false;
+    if (filtroStatus === "inativos") return usuario.ativo === false;
+    return true;
   });
   
   // Formulário para novo usuário
@@ -217,15 +225,30 @@ function GerenciamentoUsuarios() {
   
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Gerenciamento de Usuários</CardTitle>
-          <CardDescription>Cadastre e gerencie usuários do sistema</CardDescription>
+      <CardHeader>
+        <div className="flex flex-row items-center justify-between mb-4">
+          <div>
+            <CardTitle>Gerenciamento de Usuários</CardTitle>
+            <CardDescription>Cadastre e gerencie usuários do sistema</CardDescription>
+          </div>
+          <Button onClick={abrirDialogCriarUsuario}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Novo Usuário
+          </Button>
         </div>
-        <Button onClick={abrirDialogCriarUsuario}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Novo Usuário
-        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filtrar por status:</span>
+          <Select value={filtroStatus} onValueChange={(value: "todos" | "ativos" | "inativos") => setFiltroStatus(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecione o status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="ativos">Ativos</SelectItem>
+              <SelectItem value="inativos">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -245,8 +268,8 @@ function GerenciamentoUsuarios() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {usuarios && usuarios.length > 0 ? (
-                  usuarios.map((usuario) => (
+                {usuariosFiltrados && usuariosFiltrados.length > 0 ? (
+                  usuariosFiltrados.map((usuario) => (
                     <TableRow key={usuario.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
