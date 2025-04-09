@@ -116,7 +116,7 @@ const agendamentoFormSchema = insertAgendamentoSchema.extend({
 interface AgendamentoFormProps {
   agendamentoId?: number;
   defaultDate?: Date;
-  onSuccess: () => void;
+  onSuccess: (data?: any) => void;
   onCanceled?: () => void;
 }
 
@@ -228,12 +228,17 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
     },
     onSuccess: (data) => {
       setIsSaving(false);
-      // Verificar se o status é diferente de "cancelado" antes de chamar onSuccess
-      if (data?.status !== "cancelado") {
-        onSuccess();
+      // Sempre passar os dados para as funções de callback
+      if (data?.status === "cancelado") {
+        // Se for cancelado, chamar onCanceled
+        if (onCanceled) {
+          onCanceled();
+        } else {
+          onSuccess(data);
+        }
       } else {
-        // Se for cancelado, chamar onCanceled se existir, ou onSuccess sem toast
-        onCanceled ? onCanceled() : onSuccess();
+        // Para outros status, passar os dados para onSuccess
+        onSuccess(data);
       }
     },
     onError: (error) => {
@@ -338,7 +343,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
         if (values.status === "cancelado" && onCanceled) {
           onCanceled();
         } else {
-          onSuccess();
+          onSuccess({ status: values.status });
         }
       } catch (error) {
         console.error("Erro ao salvar agendamento:", error);

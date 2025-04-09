@@ -206,13 +206,13 @@ export default function Agenda() {
             <AgendamentoForm
               agendamentoId={selectedAgendamento?.id}
               defaultDate={selectedDate}
-              onSuccess={() => {
+              onSuccess={(data) => {
                 setIsFormOpen(false);
                 queryClient.invalidateQueries({
                   queryKey: ["/api/agendamentos"],
                 });
-                // Só mostrar o toast se o status não for "cancelado"
-                if (selectedAgendamento?.status !== "cancelado") {
+                // Só mostrar o toast se o status for "confirmado"
+                if (data && data.status === "confirmado") {
                   toast({
                     title: selectedAgendamento
                       ? "Agendamento atualizado"
