@@ -21,7 +21,7 @@ export default function QuickAccess({ userType }: QuickAccessProps) {
         icon: <UserPlus />,
         bgColor: "bg-primary-light bg-opacity-10",
         iconBgColor: "bg-primary",
-        roles: ["admin", "secretaria"]
+        roles: ["admin", "secretaria"] // Apenas admin e secretaria podem criar pacientes
       },
       {
         href: "/agenda?new=true",
@@ -29,7 +29,7 @@ export default function QuickAccess({ userType }: QuickAccessProps) {
         icon: <CalendarPlus />,
         bgColor: "bg-secondary bg-opacity-10",
         iconBgColor: "bg-secondary",
-        roles: ["admin", "secretaria", "psicologo", "paciente"]
+        roles: ["admin", "secretaria", "psicologo"] // Removido paciente conforme solicitado
       },
       {
         href: "/relatorios",

@@ -11,6 +11,17 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -30,12 +41,19 @@ const registerSchema = z.object({
   path: ["confirmarSenha"],
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email("Email inválido")
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [tab, setTab] = useState<"login" | "register">("login");
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -55,6 +73,34 @@ export default function AuthPage() {
       tipo: "paciente"
     }
   });
+  
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: ""
+    }
+  });
+  
+  // Mutation para redefinição de senha
+  const { toast } = useToast();
+  
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: ResetPasswordFormValues) => {
+      const res = await apiRequest("POST", "/api/reset-password", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      setResetPasswordSuccess(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao solicitar redefinição de senha",
+        description: error.message || "Ocorreu um erro ao processar sua solicitação.",
+        variant: "destructive",
+      });
+      setResetPasswordDialogOpen(false);
+    }
+  });
 
   const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data);
@@ -65,6 +111,10 @@ export default function AuthPage() {
     const { confirmarSenha, ...registerData } = data;
     registerMutation.mutate(registerData);
   };
+  
+  const onResetPasswordSubmit = (data: ResetPasswordFormValues) => {
+    resetPasswordMutation.mutate(data);
+  };
 
   // Redirecionar se já estiver autenticado
   if (user) {
@@ -73,6 +123,66 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col md:flex-row">
+      {/* Diálogo de Redefinição de Senha */}
+      <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {resetPasswordSuccess ? "Solicitação Enviada" : "Redefinir Senha"}
+            </DialogTitle>
+            <DialogDescription>
+              {resetPasswordSuccess
+                ? "Um email com instruções para redefinir sua senha foi enviado para você."
+                : "Insira seu email para receber um link de redefinição de senha."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!resetPasswordSuccess ? (
+            <Form {...resetPasswordForm}>
+              <form onSubmit={resetPasswordForm.handleSubmit(onResetPasswordSubmit)} className="space-y-4">
+                <FormField
+                  control={resetPasswordForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="seu@email.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  {resetPasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    "Enviar Link de Redefinição"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          ) : (
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                setResetPasswordDialogOpen(false);
+                setResetPasswordSuccess(false);
+              }}
+            >
+              Fechar
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       {/* Hero/Banner Section */}
       <div className="bg-primary md:w-1/2 p-8 flex items-center justify-center">
         <div className="max-w-md text-white">
@@ -166,11 +276,20 @@ export default function AuthPage() {
                     </form>
                   </Form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                  <p className="text-sm text-muted-foreground">
+                <CardFooter className="flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground text-center">
                     Não tem uma conta?{" "}
                     <Button variant="link" className="p-0" onClick={() => setTab("register")}>
                       Registre-se
+                    </Button>
+                  </p>
+                  <p className="text-sm text-muted-foreground text-center">
+                    <Button 
+                      variant="link" 
+                      className="p-0" 
+                      onClick={() => setResetPasswordDialogOpen(true)}
+                    >
+                      Esqueci minha senha
                     </Button>
                   </p>
                 </CardFooter>

@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { Usuario, loginSchema } from "@shared/schema";
 import { z } from "zod";
+import { logger } from "./logger";
 
 declare global {
   namespace Express {
@@ -170,5 +171,36 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
+  });
+
+  // Rota para solicitar redefinição de senha
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Email não fornecido" 
+        });
+      }
+      
+      // Verificar se o email existe no sistema
+      const usuario = await storage.getUserByEmail(email);
+      
+      // Por segurança, não revelamos se o email existe ou não
+      // Retornamos uma mensagem genérica para ambos os casos
+      return res.status(200).json({ 
+        success: true,
+        message: "Se o email estiver cadastrado em nosso sistema, você receberá instruções para redefinir sua senha."
+      });
+      
+    } catch (error) {
+      logger.error("Erro ao processar solicitação de redefinição de senha:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Erro ao processar solicitação de redefinição de senha"
+      });
+    }
   });
 }
