@@ -211,14 +211,17 @@ export default function Agenda() {
                 queryClient.invalidateQueries({
                   queryKey: ["/api/agendamentos"],
                 });
-                toast({
-                  title: selectedAgendamento
-                    ? "Agendamento atualizado"
-                    : "Agendamento criado",
-                  description: selectedAgendamento
-                    ? "O agendamento foi atualizado com sucesso."
-                    : "O agendamento foi criado com sucesso.",
-                });
+                // Só mostrar o toast se o status não for "cancelado"
+                if (selectedAgendamento?.status !== "cancelado") {
+                  toast({
+                    title: selectedAgendamento
+                      ? "Agendamento atualizado"
+                      : "Agendamento criado",
+                    description: selectedAgendamento
+                      ? "O agendamento foi atualizado com sucesso."
+                      : "O agendamento foi criado com sucesso.",
+                  });
+                }
               }}
               onCanceled={() => {
                 setIsFormOpen(false);

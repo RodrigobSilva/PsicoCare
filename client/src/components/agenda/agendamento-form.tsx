@@ -226,9 +226,15 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
         return res.json();
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsSaving(false);
-      onSuccess();
+      // Verificar se o status é diferente de "cancelado" antes de chamar onSuccess
+      if (data?.status !== "cancelado") {
+        onSuccess();
+      } else {
+        // Se for cancelado, chamar onCanceled se existir, ou onSuccess sem toast
+        onCanceled ? onCanceled() : onSuccess();
+      }
     },
     onError: (error) => {
       console.error("Erro ao salvar agendamento:", error);
@@ -325,10 +331,15 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
           await apiRequest("POST", "/api/agendamentos", agendamentoData);
         }
         
-        // Invalidar consultas e fechar o modal sem mostrar toast
+        // Invalidar consultas e fechar o modal
         queryClient.invalidateQueries({ queryKey: ["/api/agendamentos"] });
         setIsSaving(false);
-        onCanceled ? onCanceled() : onSuccess();
+        // Se o status for cancelado, sempre usar onCanceled para não mostrar toast
+        if (values.status === "cancelado" && onCanceled) {
+          onCanceled();
+        } else {
+          onSuccess();
+        }
       } catch (error) {
         console.error("Erro ao salvar agendamento:", error);
         setIsSaving(false);
