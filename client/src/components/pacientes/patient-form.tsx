@@ -186,12 +186,19 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
   });
 
   // Lidar com envio do formulário
-  const onSubmit = (data: PatientFormValues) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: PatientFormValues) => {
+    try {
+      await mutation.mutateAsync(data);
+    } catch (error) {
+      console.error("Erro ao salvar paciente:", error);
+    }
   };
 
   // Avançar para próxima aba
-  const goToNextTab = () => {
+  const goToNextTab = async () => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
     if (activeTab === "dadosPessoais") {
       setActiveTab("informacoesClinicas");
     } else if (activeTab === "informacoesClinicas") {
