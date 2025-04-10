@@ -1,27 +1,30 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Layout from "@/components/layout/layout";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Lock, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Redirect } from "wouter";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { Shield, User, KeyRound, Mail, Phone, UserCircle } from "lucide-react";
 
-// Schema para validação da alteração de senha
+// Schema para validação do formulário de alteração de senha
 const alterarSenhaSchema = z.object({
-  senhaAtual: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
-  novaSenha: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
-  confirmarSenha: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+  senhaAtual: z.string().min(1, "A senha atual é obrigatória"),
+  novaSenha: z.string().min(6, "A nova senha deve ter pelo menos 6 caracteres"),
+  confirmarSenha: z.string().min(6, "Confirme a nova senha"),
 }).refine((data) => data.novaSenha === data.confirmarSenha, {
   message: "As senhas não coincidem",
   path: ["confirmarSenha"],
@@ -31,176 +34,243 @@ type AlterarSenhaFormValues = z.infer<typeof alterarSenhaSchema>;
 
 export default function PerfilPage() {
   const { user, changePasswordMutation } = useAuth();
-  const [tab, setTab] = useState<"perfil" | "senha">("perfil");
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("info");
 
-  const alterarSenhaForm = useForm<AlterarSenhaFormValues>({
+  // Formulário para alteração de senha
+  const form = useForm<AlterarSenhaFormValues>({
     resolver: zodResolver(alterarSenhaSchema),
     defaultValues: {
       senhaAtual: "",
       novaSenha: "",
-      confirmarSenha: ""
-    }
+      confirmarSenha: "",
+    },
   });
 
   const onAlterarSenhaSubmit = (data: AlterarSenhaFormValues) => {
-    // Remova a confirmação de senha antes de enviar para a API
-    const { confirmarSenha, ...senhaData } = data;
-    changePasswordMutation.mutate(senhaData, {
+    changePasswordMutation.mutate({
+      senhaAtual: data.senhaAtual,
+      novaSenha: data.novaSenha,
+    }, {
       onSuccess: () => {
-        alterarSenhaForm.reset();
+        form.reset();
       }
     });
   };
 
-  if (!user) {
-    return <Redirect to="/auth" />;
-  }
+  // Obter as iniciais do usuário para o avatar
+  const getUserInitials = () => {
+    if (!user || !user.nome) return "??";
+    
+    const names = user.nome.split(" ");
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
+  // Obter a cor de fundo do avatar com base no tipo de usuário
+  const getAvatarColor = () => {
+    const colors: Record<string, string> = {
+      admin: "bg-red-500",
+      secretaria: "bg-purple-500",
+      psicologo: "bg-blue-500",
+      paciente: "bg-green-500"
+    };
+    
+    return user?.tipo ? colors[user.tipo] || "bg-gray-500" : "bg-gray-500";
+  };
+
+  // Obter o rótulo do tipo de usuário
+  const getUserTypeLabel = () => {
+    const types: Record<string, string> = {
+      admin: "Administrador",
+      secretaria: "Secretária",
+      psicologo: "Psicólogo",
+      paciente: "Paciente"
+    };
+    
+    return user?.tipo ? types[user.tipo] || user.tipo : "";
+  };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Meu Perfil</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-12 h-12 text-primary" />
-                </div>
-              </div>
-              <CardTitle>{user.nome}</CardTitle>
-              <CardDescription>{user.email}</CardDescription>
-              <CardDescription>
-                {user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1)}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        <div className="md:col-span-2">
-          <Tabs defaultValue="perfil" value={tab} onValueChange={(value) => setTab(value as "perfil" | "senha")}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="perfil">Informações</TabsTrigger>
-              <TabsTrigger value="senha">Alterar Senha</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="perfil">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informações Pessoais</CardTitle>
-                  <CardDescription>
-                    Visualize suas informações cadastradas no sistema
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Layout>
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Coluna esquerda - Informações do usuário */}
+          <div className="md:w-1/3">
+            <Card>
+              <CardHeader className="flex flex-col items-center pb-2">
+                <Avatar className={`h-24 w-24 ${getAvatarColor()}`}>
+                  <AvatarFallback className="text-3xl">{getUserInitials()}</AvatarFallback>
+                </Avatar>
+                <CardTitle className="mt-4">{user?.nome}</CardTitle>
+                <CardDescription className="flex items-center mt-1">
+                  <Shield className="h-4 w-4 mr-1" />
+                  {getUserTypeLabel()}
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Mail className="h-5 w-5 mr-3 text-gray-500" />
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Nome</h3>
-                      <p className="text-base">{user.nome}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                      <p className="text-base">{user.email}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Telefone</h3>
-                      <p className="text-base">{user.telefone || "-"}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">CPF</h3>
-                      <p className="text-base">{user.cpf || "-"}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Perfil</h3>
-                      <p className="text-base">{user.tipo.charAt(0).toUpperCase() + user.tipo.slice(1)}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                      <p className="text-base">{user.ativo ? "Ativo" : "Inativo"}</p>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p>{user?.email}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="senha">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Alterar Senha</CardTitle>
-                  <CardDescription>
-                    Altere sua senha de acesso ao sistema
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...alterarSenhaForm}>
-                    <form onSubmit={alterarSenhaForm.handleSubmit(onAlterarSenhaSubmit)} className="space-y-4">
-                      <FormField
-                        control={alterarSenhaForm.control}
-                        name="senhaAtual"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Senha Atual</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input type="password" placeholder="******" {...field} />
-                                <Lock className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={alterarSenhaForm.control}
-                        name="novaSenha"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nova Senha</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input type="password" placeholder="******" {...field} />
-                                <Lock className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={alterarSenhaForm.control}
-                        name="confirmarSenha"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirmar Nova Senha</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input type="password" placeholder="******" {...field} />
-                                <Lock className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={changePasswordMutation.isPending}>
-                        {changePasswordMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Alterando senha...
-                          </>
-                        ) : (
-                          "Alterar Senha"
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  
+                  {user?.telefone && (
+                    <div className="flex items-center">
+                      <Phone className="h-5 w-5 mr-3 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Telefone</p>
+                        <p>{user.telefone}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center">
+                    <UserCircle className="h-5 w-5 mr-3 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Usuário desde</p>
+                      <p>{user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Coluna direita - Tabs */}
+          <div className="md:w-2/3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Meu Perfil</CardTitle>
+                <CardDescription>
+                  Gerencie suas informações de conta e altere sua senha
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="info" className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      Informações Pessoais
+                    </TabsTrigger>
+                    <TabsTrigger value="security" className="flex items-center">
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Segurança
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="info">
+                    <div className="space-y-4">
+                      <p className="text-gray-500">
+                        Esta seção exibirá suas informações pessoais. Para alterações de cadastro, entre em contato com a administração da clínica.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <h3 className="font-medium">Nome Completo</h3>
+                          <p>{user?.nome || '-'}</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h3 className="font-medium">Email</h3>
+                          <p>{user?.email || '-'}</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h3 className="font-medium">Telefone</h3>
+                          <p>{user?.telefone || '-'}</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h3 className="font-medium">CPF</h3>
+                          <p>{user?.cpf || '-'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="security">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">Alterar Senha</h3>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit(onAlterarSenhaSubmit)} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="senhaAtual"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Senha Atual</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="novaSenha"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nova Senha</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="confirmarSenha"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Confirmar Nova Senha</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <Button 
+                              type="submit" 
+                              className="w-full md:w-auto"
+                              disabled={changePasswordMutation.isPending}
+                            >
+                              {changePasswordMutation.isPending ? "Alterando..." : "Alterar Senha"}
+                            </Button>
+                          </form>
+                        </Form>
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <h3 className="text-lg font-medium mb-2">Dicas de Segurança</h3>
+                        <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                          <li>Use senhas fortes com pelo menos 8 caracteres</li>
+                          <li>Combine letras maiúsculas, minúsculas, números e símbolos</li>
+                          <li>Não use a mesma senha em vários sites</li>
+                          <li>Nunca compartilhe suas credenciais de acesso</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
