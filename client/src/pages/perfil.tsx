@@ -55,8 +55,7 @@ export default function PerfilPage() {
       onSuccess: () => {
         toast({
           title: 'Senha alterada com sucesso!',
-          description: 'Sua senha foi atualizada com sucesso.',
-          variant: 'success',
+          description: 'Sua senha foi atualizada com sucesso.'
         })
         form.reset();
       },
@@ -146,7 +145,7 @@ export default function PerfilPage() {
                     <UserCircle className="h-5 w-5 mr-3 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Usuário desde</p>
-                      <p>{user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}</p>
+                      <p>-</p>
                     </div>
                   </div>
                 </div>
