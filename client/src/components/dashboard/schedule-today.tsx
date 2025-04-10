@@ -111,8 +111,9 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
   const processarAgendamentos = (agendamentos: any[]) => {
     if (!agendamentos || agendamentos.length === 0) return [];
     
-    // Obter a data de hoje no formato YYYY-MM-DD
-    const hoje = new Date().toISOString().split('T')[0];
+    // Obter data de hoje sem horário
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
     
     // Filtrar agendamentos
     const agendamentosHoje = agendamentos.filter(agendamento => {
@@ -121,47 +122,53 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
         return false;
       }
 
-      // Filtrar por data
-      const isHoje = agendamento.data === hoje;
+      // Converter data do agendamento para objeto Date
+      const dataAgendamento = new Date(agendamento.data);
+      dataAgendamento.setHours(0, 0, 0, 0);
+
+      // Verificar se é hoje
+      const isHoje = dataAgendamento.getTime() === hoje.getTime();
+
+      // Verificar se não está cancelado ou realizado
+      const statusValido = !['cancelado', 'realizado'].includes(agendamento.status?.toLowerCase());
 
       // Se for psicólogo, mostrar apenas seus agendamentos
       if (user?.tipo === 'psicologo') {
-        return isHoje && agendamento.psicologo.usuario.id === user.id;
+        return isHoje && statusValido && agendamento.psicologo.usuario.id === user.id;
       }
 
-      return isHoje;
+      return isHoje && statusValido;
     });
+
+    // Criar Map usando ID como chave para eliminar duplicatas
+    const agendamentosUnicos = new Map();
     
-    // Criar um objeto para rastrear agendamentos únicos
-    const agendamentosMap = new Map();
-    
-    // Agrupar e priorizar por status
     agendamentosHoje.forEach(agendamento => {
-      const chave = `${agendamento.id}`;
+      // Usar ID como chave única
+      const chave = agendamento.id;
       
-      // Prioridade de status: confirmado > agendado > outros
-      const statusPrioridade = {
-        'confirmado': 3,
-        'agendado': 2,
-        'realizado': 1,
-        'cancelado': 0
-      };
-      
-      const prioridadeAtual = statusPrioridade[agendamentosMap.get(chave)?.status] || 0;
-      const prioridadeNova = statusPrioridade[agendamento.status] || 0;
-      
-      if (!agendamentosMap.has(chave) || prioridadeNova > prioridadeAtual) {
-        agendamentosMap.set(chave, agendamento);
+      // Se já existe um agendamento com este ID, manter apenas o mais recente
+      // ou com status mais relevante
+      if (!agendamentosUnicos.has(chave) || 
+          (agendamento.status === 'confirmado' && 
+           agendamentosUnicos.get(chave).status !== 'confirmado')) {
+        agendamentosUnicos.set(chave, agendamento);
       }
     });
     
-    // Converter de volta para array e ordenar por horário
-    const agendamentosUnicos = Array.from(agendamentosMap.values());
-    return agendamentosUnicos.sort((a, b) => {
-      const horaA = a.horaInicio.substring(0, 5);
-      const horaB = b.horaInicio.substring(0, 5);
-      return horaA.localeCompare(horaB);
-    });
+    // Converter para array e ordenar por horário
+    return Array.from(agendamentosUnicos.values())
+      .sort((a, b) => {
+        // Primeiro ordenar por hora
+        const horaComparison = a.horaInicio.localeCompare(b.horaInicio);
+        if (horaComparison !== 0) return horaComparison;
+        
+        // Em caso de mesmo horário, priorizar confirmados
+        if (a.status === 'confirmado' && b.status !== 'confirmado') return -1;
+        if (b.status === 'confirmado' && a.status !== 'confirmado') return 1;
+        
+        return 0;
+      });
   };
   
   // Processar os agendamentos para remover duplicatas
