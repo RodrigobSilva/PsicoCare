@@ -71,12 +71,20 @@ export default function Atendimentos() {
   hoje.setHours(0, 0, 0, 0);
 
   // Filtra agendamentos para mostrar apenas os que ainda não foram atendidos
+  // Filtra para mostrar apenas agendamentos futuros
   const proximasConsultas = agendamentos?.filter((agendamento: any) => {
     const dataAgendamento = new Date(agendamento.data);
     const [hora, minuto] = agendamento.horaInicio.split(':');
     dataAgendamento.setHours(parseInt(hora), parseInt(minuto), 0, 0);
+    
     const agora = new Date();
-    return (dataAgendamento >= agora) && agendamento.status !== 'cancelado' && agendamento.status !== 'realizado';
+    console.log(`Agendamento ${agendamento.id}: data=${agendamento.data}, status=${agendamento.status}`);
+    console.log(`  Data agendamento: ${dataAgendamento.toISOString()}, Agora: ${agora.toISOString()}`);
+    console.log(`  É futuro: ${dataAgendamento >= agora}`);
+    
+    return (dataAgendamento >= agora) && 
+           agendamento.status !== 'cancelado' && 
+           agendamento.status !== 'realizado';
   }).sort((a: any, b: any) => {
     const dataA = new Date(a.data);
     const dataB = new Date(b.data);

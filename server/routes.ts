@@ -738,9 +738,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const todosAgendamentos = await storage.getAllAgendamentos();
         const dataInicioStr = dataInicio.toISOString().split('T')[0];
         
+        console.log(`Filtrando agendamentos a partir de: ${dataInicioStr}`);
+        console.log(`Total de agendamentos no banco: ${todosAgendamentos.length}`);
+        
         agendamentos = todosAgendamentos.filter((ag: any) => {
           const dataAg = typeof ag.data === 'string' ? ag.data : ag.data.toISOString().split('T')[0];
-          return dataAg >= dataInicioStr;
+          const resultado = dataAg >= dataInicioStr;
+          console.log(`Agendamento ${ag.id}, data: ${dataAg}, incluído: ${resultado}`);
+          return resultado;
         });
       } else if (pacienteId) {
         agendamentos = await storage.getAgendamentosByPaciente(pacienteId);
