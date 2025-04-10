@@ -18,6 +18,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ChartBarStacked, 
   ChartPie, 
@@ -25,14 +42,30 @@ import {
   FileText, 
   Users, 
   CalendarRange, 
-  DownloadCloud 
+  DownloadCloud,
+  Plus,
+  Loader2
 } from "lucide-react";
 import { subDays } from "date-fns";
+
+// Schema para o formulário de novo relatório
+const novoRelatorioSchema = z.object({
+  nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
+  tipo: z.string(),
+  categoria: z.string(),
+  descricao: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
+  periodoPadrao: z.number().int().min(1),
+});
+
+type NovoRelatorioFormValues = z.infer<typeof novoRelatorioSchema>;
 
 export default function Relatorios() {
   const [activeTab, setActiveTab] = useState("assistenciais");
   const [tipoRelatorio, setTipoRelatorio] = useState("sessoes_por_profissional");
   const [tipoRelatorioFinanceiro, setTipoRelatorioFinanceiro] = useState("faturamento_mensal");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  
   const [dateRange, setDateRange] = useState({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -59,6 +92,29 @@ export default function Relatorios() {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Relatórios</h1>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Relatório Personalizado
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Criar Novo Relatório</DialogTitle>
+                <DialogDescription>
+                  Configure um novo relatório personalizado que ficará disponível no sistema.
+                </DialogDescription>
+              </DialogHeader>
+              <NovoRelatorioForm onSuccess={() => {
+                setIsDialogOpen(false);
+                toast({
+                  title: "Relatório criado",
+                  description: "O novo relatório foi adicionado com sucesso.",
+                });
+              }} />
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -420,5 +476,194 @@ export default function Relatorios() {
         </Tabs>
       </div>
     </Layout>
+  );
+}
+
+// Componente de formulário para criar novo relatório
+interface NovoRelatorioFormProps {
+  onSuccess: () => void;
+}
+
+function NovoRelatorioForm({ onSuccess }: NovoRelatorioFormProps) {
+  const form = useForm<NovoRelatorioFormValues>({
+    resolver: zodResolver(novoRelatorioSchema),
+    defaultValues: {
+      nome: "",
+      tipo: "grafico_barras",
+      categoria: "assistencial",
+      descricao: "",
+      periodoPadrao: 30,
+    },
+  });
+  
+  const [isLoading, setIsLoading] = useState(false);
+  
+  async function onSubmit(data: NovoRelatorioFormValues) {
+    setIsLoading(true);
+    try {
+      // Simular API request (na implementação real, enviar para o servidor)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log("Novo relatório:", data);
+      onSuccess();
+    } catch (error) {
+      console.error("Erro ao criar relatório:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  
+  const tiposRelatorio = [
+    { value: "grafico_barras", label: "Gráfico de Barras" },
+    { value: "grafico_linhas", label: "Gráfico de Linhas" },
+    { value: "grafico_pizza", label: "Gráfico de Pizza" },
+    { value: "tabela", label: "Tabela de Dados" },
+  ];
+  
+  const categoriasRelatorio = [
+    { value: "assistencial", label: "Assistencial" },
+    { value: "financeiro", label: "Financeiro" },
+    { value: "administrativo", label: "Administrativo" },
+  ];
+  
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="nome"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome do Relatório</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Produtividade por Psicólogo" {...field} />
+              </FormControl>
+              <FormDescription>
+                Um nome descritivo para o relatório
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="categoria"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Categoria</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a categoria" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categoriasRelatorio.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Classificação do relatório
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Visualização</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {tiposRelatorio.map((tipo) => (
+                      <SelectItem key={tipo.value} value={tipo.value}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Formato de visualização dos dados
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="descricao"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Descreva o propósito deste relatório..." 
+                  className="resize-none" 
+                  rows={3}
+                  {...field} 
+                />
+              </FormControl>
+              <FormDescription>
+                Explique brevemente o propósito e os dados apresentados
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="periodoPadrao"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Período Padrão (dias)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  min={1}
+                  {...field}
+                  onChange={e => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
+              <FormDescription>
+                Período padrão para análise de dados (em dias)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onSuccess}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Criar Relatório
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
