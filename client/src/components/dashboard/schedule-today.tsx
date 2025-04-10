@@ -224,9 +224,16 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
                     <h4 className="text-sm font-medium text-neutral-800">
                       {agendamento.paciente?.usuario?.nome || "Paciente não encontrado"}
                     </h4>
-                    <p className="text-xs text-neutral-600">
-                      {`Dr. ${agendamento.psicologo?.usuario?.nome || "Não atribuído"} • ${agendamento.tipoAtendimento || "Consulta"}`}
-                    </p>
+                    <div className="text-xs text-neutral-600 space-y-0.5">
+                      <p>
+                        {`Dr. ${agendamento.psicologo?.usuario?.nome || "Não atribuído"} • ${agendamento.tipoAtendimento || "Consulta"}`}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span>{format(new Date(agendamento.data), "dd/MM/yyyy")}</span>
+                        <span>•</span>
+                        <span>{formatTime(agendamento.horaInicio)} - {formatTime(agendamento.horaFim)}</span>
+                      </p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <span className={cn("text-xs px-2 py-1 rounded-full", getStatusColor(agendamento.status))}>
