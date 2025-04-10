@@ -104,21 +104,22 @@ export default function Atendimentos() {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  // Filtra agendamentos para mostrar apenas os que ainda não foram atendidos
-  // Filtra para mostrar apenas agendamentos futuros
+  // Filtra agendamentos para mostrar apenas os futuros e do psicólogo atual
   const proximasConsultas = agendamentos?.filter((agendamento: any) => {
     const dataAgendamento = new Date(agendamento.data);
     const [hora, minuto] = agendamento.horaInicio.split(':');
     dataAgendamento.setHours(parseInt(hora), parseInt(minuto), 0, 0);
     
     const agora = new Date();
-    console.log(`Agendamento ${agendamento.id}: data=${agendamento.data}, status=${agendamento.status}`);
-    console.log(`  Data agendamento: ${dataAgendamento.toISOString()}, Agora: ${agora.toISOString()}`);
-    console.log(`  É futuro: ${dataAgendamento >= agora}`);
+    
+    // Verificar se é do psicólogo atual
+    const isAgendamentoDoPsicologo = user?.tipo !== 'psicologo' || 
+      (psicologoUsuario && agendamento.psicologoId === psicologoUsuario.id);
     
     return (dataAgendamento >= agora) && 
            agendamento.status !== 'cancelado' && 
-           agendamento.status !== 'realizado';
+           agendamento.status !== 'realizado' &&
+           isAgendamentoDoPsicologo;
   }).sort((a: any, b: any) => {
     const dataA = new Date(a.data);
     const dataB = new Date(b.data);
