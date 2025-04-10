@@ -63,7 +63,7 @@ export default function PerfilPage() {
         toast({
           title: 'Erro ao alterar senha',
           description: error.message,
-          variant: 'error',
+          variant: 'destructive',
         })
       }
     });

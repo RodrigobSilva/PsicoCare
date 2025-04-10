@@ -14,9 +14,10 @@ import { Loader2, ChevronLeft, PlayCircle, StopCircle, FileText, Send, Video } f
 
 interface AtendimentoFormProps {
   agendamentoId?: number;
+  onSuccess?: () => void;
 }
 
-export default function AtendimentoForm({ agendamentoId }: AtendimentoFormProps) {
+export default function AtendimentoForm({ agendamentoId, onSuccess }: AtendimentoFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
@@ -118,7 +119,13 @@ export default function AtendimentoForm({ agendamentoId }: AtendimentoFormProps)
       queryClient.invalidateQueries({ queryKey: ['/api/atendimentos/agendamento', agendamentoId] });
       queryClient.invalidateQueries({ queryKey: ['/api/agendamentos', agendamentoId] });
       setSessaoIniciada(false);
-      setLocation('/atendimentos');
+      
+      // Chamar callback onSuccess se existir
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        setLocation('/atendimentos');
+      }
     },
     onError: (error) => {
       toast({
@@ -260,7 +267,7 @@ export default function AtendimentoForm({ agendamentoId }: AtendimentoFormProps)
     apiRequest('PUT', `/api/agendamentos/${agendamentoId}`, {
       status: 'concluido'
     });
-  }, [atendimentosExistentes, resumo, observacoes, finalizarAtendimentoMutation, toast, agendamentoId]);
+  }, [atendimentosExistentes, resumo, observacoes, finalizarAtendimentoMutation, toast, agendamentoId, onSuccess, setLocation]);
 
   // Simular geração de resumo via OpenAI
   const handleGerarResumo = useCallback(() => {
