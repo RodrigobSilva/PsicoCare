@@ -73,9 +73,11 @@ export default function Agenda() {
   // Redirecionar psicólogo para sua própria agenda
   useEffect(() => {
     if (user?.tipo === 'psicologo' && psicologoUsuario?.id && !query.get("psicologo")) {
-      window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
+      const url = new URL(window.location.href);
+      url.searchParams.set('psicologo', psicologoUsuario.id.toString());
+      window.history.pushState({}, '', url.toString());
     }
-  }, [user?.tipo, psicologoUsuario?.id, query]);
+  }, [user?.tipo, psicologoUsuario?.id]);
 
   const psicologoId = query.get("psicologo");
   const filialId = query.get("filial");
