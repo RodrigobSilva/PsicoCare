@@ -100,8 +100,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ mensagem: "Já existe um usuário com este email" });
       }
       
-      // Criar o usuário
-      const novoUsuario = await storage.createUser(req.body);
+      // Hash da senha antes de criar o usuário
+      const { hashPassword } = await import('./auth');
+      const senhaCriptografada = await hashPassword(req.body.senha);
+      
+      // Criar o usuário com a senha criptografada
+      const novoUsuario = await storage.createUser({
+        ...req.body,
+        senha: senhaCriptografada
+      });
       
       // Não retornamos a senha na resposta
       const { senha, ...usuarioSemSenha } = novoUsuario;
