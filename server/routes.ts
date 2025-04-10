@@ -130,8 +130,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Preparar dados para atualização
+      const dadosAtualizados = { ...req.body };
+      
+      // Se a senha estiver sendo alterada, fazer o hash
+      if (dadosAtualizados.senha) {
+        const { hashPassword } = await import('./auth');
+        dadosAtualizados.senha = await hashPassword(dadosAtualizados.senha);
+        console.log("Senha criptografada com sucesso");
+      }
+      
       // Atualizar o usuário
-      const usuarioAtualizado = await storage.updateUser(id, req.body);
+      const usuarioAtualizado = await storage.updateUser(id, dadosAtualizados);
       
       if (!usuarioAtualizado) {
         return res.status(404).json({ mensagem: "Usuário não encontrado" });
