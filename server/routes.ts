@@ -735,18 +735,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataInicio = req.query.dataInicio ? new Date(req.query.dataInicio as string) : undefined;
       const dataFim = req.query.dataFim ? new Date(req.query.dataFim as string) : undefined;
       const pacienteId = req.query.pacienteId ? parseInt(req.query.pacienteId as string) : undefined;
-      const psicologoId = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
+      let psicologoIdParam = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
 
       // Verificar tipo de usuário e aplicar restrições
-      if (req.user.tipo === 'psicologo') {
+      if (req.user && req.user.tipo === 'psicologo') {
         // Buscar o psicólogo pelo usuário
         const psicologo = await storage.getPsicologoByUserId(req.user.id);
         if (!psicologo) {
           return res.status(403).json({ mensagem: "Acesso não autorizado" });
         }
         // Forçar filtro pelo ID do psicólogo logado, ignorando qualquer outro psicologoId
-        psicologoId = psicologo.id;
+        psicologoIdParam = psicologo.id;
       }
 
       let queryData = new Date();
@@ -782,8 +782,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else if (pacienteId) {
         agendamentos = await storage.getAgendamentosByPaciente(pacienteId);
-      } else if (psicologoId) {
-        agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
+      } else if (psicologoIdParam) {
+        agendamentos = await storage.getAgendamentosByPsicologo(psicologoIdParam);
       } else if (filialId) {
         agendamentos = await storage.getAgendamentosByFilial(filialId);
       } else {
