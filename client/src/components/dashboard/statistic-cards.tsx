@@ -29,7 +29,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
         value: estatisticas?.sessoesHoje || 0,
         icon: <Calendar className="text-primary" />,
         bgColor: "bg-primary bg-opacity-10",
-        trend: { value: 12, label: "em relação à semana passada", positive: true }
+        trend: null
       },
       {
         title: "Novos Pacientes",
