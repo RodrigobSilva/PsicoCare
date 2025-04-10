@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -8,6 +8,14 @@ import { storage } from "./storage";
 import { Usuario, loginSchema } from "@shared/schema";
 import { z } from "zod";
 import { logger } from "./logger";
+
+// Middleware para verificar autenticação
+const verificarAutenticacao = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ mensagem: "Usuário não autenticado" });
+  }
+  next();
+};
 
 declare global {
   namespace Express {
@@ -200,6 +208,57 @@ export function setupAuth(app: Express) {
       return res.status(500).json({ 
         success: false,
         message: "Erro ao processar solicitação de redefinição de senha"
+      });
+    }
+  });
+  
+  // Endpoint para alterar senha do usuário autenticado
+  app.post("/api/change-password", verificarAutenticacao, async (req, res) => {
+    try {
+      const { senhaAtual, novaSenha } = req.body;
+      
+      if (!senhaAtual || !novaSenha) {
+        return res.status(400).json({
+          success: false,
+          message: "Senha atual e nova senha são obrigatórias"
+        });
+      }
+      
+      // Como o middleware verificarAutenticacao já garante que req.user existe
+      // O TypeScript ainda pode não reconhecer isso, então usamos o operador ! para afirmar que não é undefined
+      const userId = req.user!.id;
+      
+      // Verificar se a senha atual está correta
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Usuário não encontrado"
+        });
+      }
+      
+      const senhaCorreta = await comparePasswords(senhaAtual, user.senha);
+      if (!senhaCorreta) {
+        return res.status(400).json({
+          success: false,
+          message: "Senha atual incorreta"
+        });
+      }
+      
+      // Atualizar a senha
+      const senhaCriptografada = await hashPassword(novaSenha);
+      await storage.updateUser(user.id, { senha: senhaCriptografada });
+      
+      return res.status(200).json({
+        success: true,
+        message: "Senha alterada com sucesso"
+      });
+      
+    } catch (error) {
+      logger.error("Erro ao alterar senha:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao alterar senha"
       });
     }
   });

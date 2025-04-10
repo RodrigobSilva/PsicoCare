@@ -8,6 +8,12 @@ import { Usuario, LoginData } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Tipo de dados para a mudança de senha
+type ChangePasswordData = {
+  senhaAtual: string;
+  novaSenha: string;
+};
+
 type AuthContextType = {
   user: Usuario | null;
   isLoading: boolean;
@@ -15,6 +21,7 @@ type AuthContextType = {
   loginMutation: UseMutationResult<Usuario, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<Usuario, Error, any>;
+  changePasswordMutation: UseMutationResult<any, Error, ChangePasswordData>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -99,6 +106,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+  
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: ChangePasswordData) => {
+      const res = await apiRequest("POST", "/api/change-password", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Erro ao alterar senha");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Senha alterada com sucesso",
+        description: "Sua senha foi atualizada com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao alterar senha",
+        description: error.message || "Verifique os dados e tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <AuthContext.Provider
@@ -109,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        changePasswordMutation,
       }}
     >
       {children}

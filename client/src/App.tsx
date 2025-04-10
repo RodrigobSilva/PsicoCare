@@ -14,6 +14,7 @@ import Configuracoes from "@/pages/configuracoes";
 import Teleconsulta from "@/pages/teleconsulta";
 import Atendimentos from "@/pages/atendimentos";
 import Atendimento from "@/pages/atendimento";
+import Perfil from "@/pages/perfil";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 
