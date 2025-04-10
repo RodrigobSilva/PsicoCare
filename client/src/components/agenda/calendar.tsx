@@ -226,17 +226,18 @@ export default function Calendar({
     };
   };
 
+  // Verificar se devemos buscar agendamentos (se for admin/secretaria, só buscar se algum filtro estiver ativo)
+  const shouldFetchAgendamentos = isPsicologo || !!selectedPsicologo || !!selectedFilial;
+  
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
     queryKey: ["/api/agendamentos", buildQueryKey()],
     queryFn: async () => {
-      // Para admin/secretaria, só buscar se um psicólogo ou filial estiver selecionado
-      if (!isPsicologo && !selectedPsicologo && !selectedFilial) {
-        return [];
-      }
       const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
       return res.json();
     },
+    // Só executar a query se tivermos algum filtro ativo para admin/secretaria
+    enabled: shouldFetchAgendamentos
   });
 
   // Navegar para o próximo período
@@ -528,6 +529,7 @@ export default function Calendar({
 
   // Renderizar conteúdo baseado na visualização atual
   const renderCalendarContent = () => {
+    // Mostrar mensagem de carregamento
     if (isLoadingAgendamentos) {
       return (
         <div className="flex justify-center items-center p-12">
@@ -535,7 +537,23 @@ export default function Calendar({
         </div>
       );
     }
+    
+    // Para admin/secretaria, mostrar mensagem quando nenhum filtro estiver selecionado
+    if (!isPsicologo && !selectedPsicologo && !selectedFilial) {
+      return (
+        <div className="flex justify-center items-center p-12 h-full">
+          <div className="text-center max-w-md p-6 bg-neutral-50 rounded-lg border border-neutral-200">
+            <CalendarIcon className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-700 mb-2">Selecione um filtro</h3>
+            <p className="text-neutral-500">
+              Para visualizar a agenda, selecione um psicólogo ou uma filial nos filtros acima.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
+    // Renderizar o calendário de acordo com a visualização
     if (currentView === "day") {
       return generateDayView();
     } else if (currentView === "week") {

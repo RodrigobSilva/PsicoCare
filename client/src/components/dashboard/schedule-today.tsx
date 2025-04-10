@@ -91,6 +91,40 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
     return false;
   };
 
+  // Função para eliminar agendamentos duplicados e ordenar por horário
+  const processarAgendamentos = (agendamentos: any[]) => {
+    if (!agendamentos || agendamentos.length === 0) return [];
+    
+    // Criar um objeto para rastrear agendamentos únicos pelo paciente e psicólogo
+    const agendamentosMap = new Map();
+    
+    // Agrupar por combinação de paciente e psicólogo
+    agendamentos.forEach(agendamento => {
+      const pacienteId = agendamento.paciente?.id;
+      const psicologoId = agendamento.psicologo?.id;
+      const horarioInicio = agendamento.horaInicio;
+      
+      // Cria uma chave única para cada combinação de paciente, psicólogo e horário
+      const chave = `${pacienteId}-${psicologoId}-${horarioInicio}`;
+      
+      // Só adiciona se não existir ou se o status for diferente
+      if (!agendamentosMap.has(chave) || agendamento.status === "confirmado") {
+        agendamentosMap.set(chave, agendamento);
+      }
+    });
+    
+    // Converter de volta para array e ordenar por horário
+    const agendamentosUnicos = Array.from(agendamentosMap.values());
+    return agendamentosUnicos.sort((a, b) => {
+      const horaA = a.horaInicio.substring(0, 5);
+      const horaB = b.horaInicio.substring(0, 5);
+      return horaA.localeCompare(horaB);
+    });
+  };
+  
+  // Processar os agendamentos para remover duplicatas
+  const agendamentosProcessados = processarAgendamentos(agendamentos || []);
+
   return (
     <Card className="mb-6 lg:mb-0 border-primary/20 shadow-lg">
       <CardHeader className="pb-4 border-b border-neutral-200 flex flex-row items-center justify-between bg-primary/5">
@@ -127,8 +161,8 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
           </div>
         ) : (
           <div className="space-y-4">
-            {agendamentos && agendamentos.length > 0 ? (
-              agendamentos.map((agendamento) => (
+            {agendamentosProcessados.length > 0 ? (
+              agendamentosProcessados.map((agendamento) => (
                 <div 
                   key={agendamento.id} 
                   className={cn(
