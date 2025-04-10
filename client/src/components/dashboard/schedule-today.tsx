@@ -152,18 +152,7 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
       }
     });
     
-    agendamentosHoje.forEach(agendamento => {
-      // Usar ID como chave única
-      const chave = agendamento.id;
-      
-      // Se já existe um agendamento com este ID, manter apenas o mais recente
-      // ou com status mais relevante
-      if (!agendamentosUnicos.has(chave) || 
-          (agendamento.status === 'confirmado' && 
-           agendamentosUnicos.get(chave).status !== 'confirmado')) {
-        agendamentosUnicos.set(chave, agendamento);
-      }
-    });
+    // Converter para array e ordenar por horário
     
     // Converter para array e ordenar por horário
     return Array.from(agendamentosUnicos.values())
