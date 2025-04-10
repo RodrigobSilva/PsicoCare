@@ -100,15 +100,38 @@ export default function Calendar({
   // Se usuário for psicólogo, o filtro de psicólogo deve ser fixo como o ID dele
   // Se for admin ou secretaria, pode ser qualquer psicólogo ou nenhum
   const isPsicologo = user?.tipo === 'psicologo';
-  const userPsicologoId = isPsicologo ? user?.psicologoId : undefined;
+  
+  // Consulta para obter o ID do psicólogo do usuário atual (se for psicólogo)
+  const { data: psicologoUsuario, isLoading: isLoadingPsicologoUsuario } = useQuery({
+    queryKey: ['/api/psicologos/usuario', user?.id],
+    queryFn: async () => {
+      if (!user?.id || user?.tipo !== 'psicologo') return null;
+      try {
+        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
+        return res.json();
+      } catch (error) {
+        console.error('Erro ao buscar psicólogo do usuário:', error);
+        return null;
+      }
+    },
+    enabled: !!user?.id && user?.tipo === 'psicologo'
+  });
+  
+  // ID do psicólogo associado ao usuário atual
+  const userPsicologoId = isPsicologo && psicologoUsuario ? psicologoUsuario.id : undefined;
   
   // Se for psicólogo, sempre usa o ID do próprio psicólogo
   // Caso contrário, usa o ID passado como prop ou o selecionado no filtro
   const [selectedPsicologo, setSelectedPsicologo] = useState<string>(
-    isPsicologo && userPsicologoId 
-      ? userPsicologoId.toString() 
-      : psicologoId ? psicologoId.toString() : ""
+    psicologoId ? psicologoId.toString() : ""
   );
+  
+  // Atualizar o filtro de psicólogo quando recebermos os dados do psicólogo do usuário
+  useEffect(() => {
+    if (isPsicologo && userPsicologoId) {
+      setSelectedPsicologo(userPsicologoId.toString());
+    }
+  }, [isPsicologo, userPsicologoId]);
   const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "");
 
   // Consultas para obter dados
@@ -546,23 +569,34 @@ export default function Calendar({
           </div>
 
           <div>
-            <Select 
-              value={selectedPsicologo} 
-              onValueChange={setSelectedPsicologo}
-              disabled={isLoadingPsicologos}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um psicólogo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os psicólogos</SelectItem>
-                {psicologos?.map((psicologo: any) => (
-                  <SelectItem key={psicologo.id} value={psicologo.id.toString()}>
-                    {psicologo.usuario.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isPsicologo ? (
+              // Para psicólogos, mostrar apenas um rótulo estático indicando que são seus agendamentos
+              <div className="h-10 px-3 py-2 rounded-md border border-input flex items-center">
+                <span className="text-sm text-muted-foreground">Meus agendamentos</span>
+              </div>
+            ) : (
+              // Para admin e secretarias, permitir selecionar qualquer psicólogo
+              <Select 
+                value={selectedPsicologo} 
+                onValueChange={setSelectedPsicologo}
+                disabled={isLoadingPsicologos}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um psicólogo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os psicólogos</SelectItem>
+                  {psicologos?.map((psicologo: any) => (
+                    <SelectItem 
+                      key={psicologo.id} 
+                      value={psicologo.id.toString()}
+                    >
+                      {psicologo.usuario.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div>

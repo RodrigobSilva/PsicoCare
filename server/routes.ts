@@ -337,6 +337,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/psicologos/usuario/:userId", verificarAutenticacao, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const psicologo = await storage.getPsicologoByUserId(userId);
+
+      if (!psicologo) {
+        return res.status(404).json({ mensagem: "Psicólogo não encontrado para este usuário" });
+      }
+
+      const usuario = await storage.getUser(psicologo.usuarioId);
+      const disponibilidades = await storage.getDisponibilidadesByPsicologo(psicologo.id);
+      
+      res.json({
+        ...psicologo,
+        usuario,
+        disponibilidades
+      });
+    } catch (error) {
+      res.status(500).json({ mensagem: "Erro ao buscar psicólogo", erro: error });
+    }
+  });
+
   app.get("/api/psicologos/:id", verificarAutenticacao, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

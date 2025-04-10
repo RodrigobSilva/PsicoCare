@@ -38,32 +38,66 @@ export default function Atendimentos() {
   const [selectedAgendamentoId, setSelectedAgendamentoId] = useState<number | null>(null);
   const isAdminOrPsicologo = user?.tipo === 'admin' || user?.tipo === 'psicologo';
 
-  // Buscar atendimentos
-  const { data: atendimentos, isLoading: isLoadingAtendimentos } = useQuery({
-    queryKey: ["/api/atendimentos"],
+  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
+  const { data: psicologoUsuario } = useQuery({
+    queryKey: ['/api/psicologos/usuario', user?.id],
     queryFn: async () => {
-      const res = await fetch("/api/atendimentos");
+      if (!user?.id || user?.tipo !== 'psicologo') return null;
+      try {
+        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
+        return res.json();
+      } catch (error) {
+        console.error('Erro ao buscar psicólogo do usuário:', error);
+        return null;
+      }
+    },
+    enabled: !!user?.id && user?.tipo === 'psicologo'
+  });
+
+  // Buscar atendimentos (filtrados por psicólogo se o usuário for psicólogo)
+  const { data: atendimentos, isLoading: isLoadingAtendimentos } = useQuery({
+    queryKey: ["/api/atendimentos", user?.tipo === 'psicologo' ? psicologoUsuario?.id : 'all'],
+    queryFn: async () => {
+      let url = "/api/atendimentos";
+      
+      // Se for psicólogo, filtrar apenas pelos seus atendimentos
+      if (user?.tipo === 'psicologo' && psicologoUsuario?.id) {
+        url = `/api/atendimentos/psicologo/${psicologoUsuario.id}`;
+      }
+      
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Erro ao buscar atendimentos");
       return res.json();
     },
+    // Só habilitar a query quando tiver o ID do psicólogo para usuários do tipo psicólogo
+    enabled: user?.tipo !== 'psicologo' || !!psicologoUsuario?.id
   });
 
   // Buscar agendamentos futuros (a partir de hoje)
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
-    queryKey: ["/api/agendamentos/proximos"],
+    queryKey: ["/api/agendamentos/proximos", user?.tipo === 'psicologo' ? psicologoUsuario?.id : 'all'],
     queryFn: async () => {
       const hoje = new Date();
       const dataHoje = hoje.toISOString().split('T')[0]; // formato YYYY-MM-DD
       
+      let url = `/api/agendamentos?dataInicio=${dataHoje}`;
+      
+      // Se for psicólogo, filtrar pelos seus agendamentos
+      if (user?.tipo === 'psicologo' && psicologoUsuario?.id) {
+        url = `/api/agendamentos?dataInicio=${dataHoje}&psicologoId=${psicologoUsuario.id}`;
+      }
+      
       console.log("Buscando agendamentos a partir de:", dataHoje);
       
-      const res = await apiRequest("GET", `/api/agendamentos?dataInicio=${dataHoje}`);
+      const res = await apiRequest("GET", url);
       if (!res.ok) throw new Error("Erro ao buscar agendamentos");
       
       const data = await res.json();
       console.log("Agendamentos retornados:", data.length, data);
       return data;
     },
+    // Só habilitar a query quando tiver o ID do psicólogo para usuários do tipo psicólogo
+    enabled: user?.tipo !== 'psicologo' || !!psicologoUsuario?.id
   });
 
   // Buscar próximas sessões agendadas
