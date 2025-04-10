@@ -230,6 +230,10 @@ export default function Calendar({
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
     queryKey: ["/api/agendamentos", buildQueryKey()],
     queryFn: async () => {
+      // Para admin/secretaria, só buscar se um psicólogo ou filial estiver selecionado
+      if (!isPsicologo && !selectedPsicologo && !selectedFilial) {
+        return [];
+      }
       const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
       return res.json();
     },

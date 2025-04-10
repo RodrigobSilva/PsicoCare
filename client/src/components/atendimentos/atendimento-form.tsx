@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const atendimentoFormSchema = z.object({
   observacoes: z.string().min(1, "Observações são obrigatórias"),
@@ -26,6 +27,7 @@ interface AtendimentoFormProps {
 }
 
 export default function AtendimentoForm({ agendamentoId, onSuccess }: AtendimentoFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof atendimentoFormSchema>>({
     resolver: zodResolver(atendimentoFormSchema),
     defaultValues: {
@@ -53,6 +55,11 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
       return response.json();
     },
     onSuccess: () => {
+      // Mostrar toast apenas quando o atendimento for salvo com sucesso
+      toast({
+        title: "Atendimento registrado",
+        description: "O atendimento foi registrado com sucesso."
+      });
       onSuccess();
     },
   });

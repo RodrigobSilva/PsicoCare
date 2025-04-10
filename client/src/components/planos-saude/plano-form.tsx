@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -38,6 +39,8 @@ interface PlanoFormProps {
 }
 
 export default function PlanoForm({ planoId, onSuccess }: PlanoFormProps) {
+  const { toast } = useToast();
+  
   // Buscar dados do plano se estiver editando
   const { data: plano, isLoading } = useQuery({
     queryKey: ["/api/planos-saude", planoId],
@@ -88,6 +91,13 @@ export default function PlanoForm({ planoId, onSuccess }: PlanoFormProps) {
       }
     },
     onSuccess: () => {
+      // Mostrar toast apenas quando o plano for salvo com sucesso
+      toast({
+        title: planoId ? "Plano atualizado" : "Plano cadastrado",
+        description: planoId
+          ? "As informações do plano foram atualizadas com sucesso."
+          : "O plano foi cadastrado com sucesso no sistema.",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/planos-saude"] });
       onSuccess();
     },

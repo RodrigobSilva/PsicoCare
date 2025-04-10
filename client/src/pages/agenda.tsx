@@ -428,10 +428,9 @@ export default function Agenda() {
                   queryClient.invalidateQueries({
                     queryKey: ["/api/agendamentos"],
                   });
-                  toast({
-                    title: "Atendimento registrado",
-                    description: "O atendimento foi registrado com sucesso.",
-                  });
+                  // Toast será mostrado apenas quando o atendimento for realmente registrado
+                  // não quando for cancelado, pois o cancelamento é tratado pelo botão "Cancelar"
+                  // no próprio formulário de atendimento
                 }}
               />
             )}

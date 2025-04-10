@@ -260,13 +260,7 @@ export default function PlanosSaude() {
               planoId={editingPlanoId}
               onSuccess={() => {
                 setIsFormOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["/api/planos-saude"] });
-                toast({
-                  title: editingPlanoId ? "Plano atualizado" : "Plano cadastrado",
-                  description: editingPlanoId
-                    ? "As informações do plano foram atualizadas com sucesso."
-                    : "O plano foi cadastrado com sucesso no sistema.",
-                });
+                // Toast é gerenciado dentro do componente PlanoForm
               }}
             />
           </DialogContent>
