@@ -738,6 +738,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const psicologoId = req.query.psicologoId ? parseInt(req.query.psicologoId as string) : undefined;
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
 
+      // Verificar tipo de usuário e aplicar restrições
+      if (req.user.tipo === 'psicologo') {
+        // Buscar o psicólogo pelo usuário
+        const psicologo = await storage.getPsicologoByUserId(req.user.id);
+        if (!psicologo) {
+          return res.status(403).json({ mensagem: "Acesso não autorizado" });
+        }
+        // Forçar filtro pelo ID do psicólogo logado
+        psicologoId = psicologo.id;
+      }
+
       let queryData = new Date();
       if (data) {
         queryData = new Date(data);

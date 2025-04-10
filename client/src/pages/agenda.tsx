@@ -51,6 +51,14 @@ export default function Agenda() {
   
   // Verificar se o usuário é administrador ou secretária
   const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
+  const isPsicologo = user?.tipo === "psicologo";
+  
+  // Redirecionar psicólogo para sua própria agenda
+  useEffect(() => {
+    if (isPsicologo && psicologoUsuario?.id && !query.get("psicologo")) {
+      window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
+    }
+  }, [isPsicologo, psicologoUsuario]);
   
   // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
   const { data: psicologoUsuario } = useQuery({
