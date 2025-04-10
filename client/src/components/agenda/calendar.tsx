@@ -180,11 +180,11 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, envia apenas se um psicólogo estiver selecionado
-    else if (selectedPsicologo && selectedPsicologo !== "todos") {
+    else if (selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "none") {
       params.append("psicologoId", selectedPsicologo);
     }
 
-    if (selectedFilial && selectedFilial !== "todas") {
+    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "none") {
       params.append("filialId", selectedFilial);
     }
 
@@ -617,7 +617,7 @@ export default function Calendar({
                   <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Selecione um psicólogo</SelectItem>
+                  <SelectItem value="none">Selecione um psicólogo</SelectItem>
                   <SelectItem value="todos">Todos os psicólogos</SelectItem>
                   {psicologos?.map((psicologo: any) => (
                     <SelectItem 
@@ -642,7 +642,7 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Selecione uma filial</SelectItem>
+                <SelectItem value="none">Selecione uma filial</SelectItem>
                 <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>
