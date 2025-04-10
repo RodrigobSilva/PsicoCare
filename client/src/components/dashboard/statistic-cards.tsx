@@ -91,7 +91,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
                 {card.icon}
               </div>
             </div>
-            {!isLoading && (
+            {!isLoading && card.trend && (
               <div className="mt-4 flex items-center">
                 <span className={`text-sm font-medium ${card.trend.positive ? 'text-success' : 'text-danger'}`}>
                   {card.trend.positive ? (
