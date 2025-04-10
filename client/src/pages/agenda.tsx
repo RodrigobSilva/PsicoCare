@@ -53,15 +53,28 @@ export default function Agenda() {
   const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
   const isPsicologo = user?.tipo === "psicologo";
   
+  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
+  const { data: psicologoUsuario } = useQuery({
+    queryKey: ['/api/psicologos/usuario', user?.id],
+    queryFn: async () => {
+      if (!user?.id || user?.tipo !== 'psicologo') return null;
+      try {
+        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
+        return res.json();
+      } catch (error) {
+        console.error('Erro ao buscar psicólogo do usuário:', error);
+        return null;
+      }
+    },
+    enabled: !!user?.id && user?.tipo === 'psicologo'
+  });
+
   // Redirecionar psicólogo para sua própria agenda
   useEffect(() => {
     if (isPsicologo && psicologoUsuario?.id && !query.get("psicologo")) {
       window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
     }
-  }, [isPsicologo, psicologoUsuario]);
-  
-  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
-  const { data: psicologoUsuario } = useQuery({
+  }, [isPsicologo, psicologoUsuario, query]);
     queryKey: ['/api/psicologos/usuario', user?.id],
     queryFn: async () => {
       if (!user?.id || user?.tipo !== 'psicologo') return null;
