@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Select, 
@@ -92,9 +93,22 @@ export default function Calendar({
   view = "day",
   initialDate = new Date()
 }: CalendarProps) {
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [currentView, setCurrentView] = useState<"day" | "week" | "month">(view);
-  const [selectedPsicologo, setSelectedPsicologo] = useState<string>(psicologoId ? psicologoId.toString() : "");
+  
+  // Se usuário for psicólogo, o filtro de psicólogo deve ser fixo como o ID dele
+  // Se for admin ou secretaria, pode ser qualquer psicólogo ou nenhum
+  const isPsicologo = user?.tipo === 'psicologo';
+  const userPsicologoId = isPsicologo ? user?.psicologoId : undefined;
+  
+  // Se for psicólogo, sempre usa o ID do próprio psicólogo
+  // Caso contrário, usa o ID passado como prop ou o selecionado no filtro
+  const [selectedPsicologo, setSelectedPsicologo] = useState<string>(
+    isPsicologo && userPsicologoId 
+      ? userPsicologoId.toString() 
+      : psicologoId ? psicologoId.toString() : ""
+  );
   const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "");
 
   // Consultas para obter dados
