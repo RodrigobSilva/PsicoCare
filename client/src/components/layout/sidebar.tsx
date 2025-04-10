@@ -68,7 +68,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       href: "/financeiro", 
       label: "Financeiro", 
       icon: <Coins className="w-5 text-center" />,
-      roles: ["admin", "secretaria"]
+      roles: ["admin"]
     },
     { 
       href: "/salas", 

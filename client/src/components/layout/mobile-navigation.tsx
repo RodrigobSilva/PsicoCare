@@ -54,7 +54,7 @@ export default function MobileNavigation() {
         icon={<Coins className="text-lg" />} 
         label="Financeiro" 
         active={location === "/financeiro"}
-        hidden={user.tipo !== "admin" && user.tipo !== "secretaria"}
+        hidden={user.tipo !== "admin"}
       />
       <NavItem 
         href="#menu" 

@@ -63,9 +63,12 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
     } else if (userType === 'paciente') {
       // Pacientes veem apenas suas próprias consultas agendadas
       return [baseCards[0]]; // Apenas o card de "Sessões Hoje"
+    } else if (userType === 'secretaria') {
+      // Secretárias veem sessões hoje e novos pacientes, sem faturamento e taxa de ocupação
+      return [baseCards[0], baseCards[1]]; 
     }
     
-    // Admin e secretaria veem todos os cards
+    // Admin vê todos os cards
     return baseCards;
   };
   

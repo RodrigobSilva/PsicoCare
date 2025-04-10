@@ -81,7 +81,7 @@ export default function Dashboard() {
 
           <div className="lg:col-span-1">
             <QuickAccess userType={user?.tipo} />
-            {user?.tipo !== 'psicologo' && (
+            {user?.tipo === 'admin' && (
               <NotificationsPanel 
                 notificacoes={notificacoes} 
                 isLoading={isLoadingNotificacoes} 
