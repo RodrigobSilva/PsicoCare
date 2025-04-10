@@ -96,11 +96,11 @@ export default function Calendar({
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [currentView, setCurrentView] = useState<"day" | "week" | "month">(view);
-  
+
   // Se usuário for psicólogo, o filtro de psicólogo deve ser fixo como o ID dele
   // Se for admin ou secretaria, pode ser qualquer psicólogo ou nenhum
   const isPsicologo = user?.tipo === 'psicologo';
-  
+
   // Consulta para obter o ID do psicólogo do usuário atual (se for psicólogo)
   const { data: psicologoUsuario, isLoading: isLoadingPsicologoUsuario } = useQuery({
     queryKey: ['/api/psicologos/usuario', user?.id],
@@ -116,16 +116,16 @@ export default function Calendar({
     },
     enabled: !!user?.id && user?.tipo === 'psicologo'
   });
-  
+
   // ID do psicólogo associado ao usuário atual
   const userPsicologoId = isPsicologo && psicologoUsuario ? psicologoUsuario.id : undefined;
-  
+
   // Se for psicólogo, sempre usa o ID do próprio psicólogo
   // Caso contrário, usa o ID passado como prop ou o selecionado no filtro
   const [selectedPsicologo, setSelectedPsicologo] = useState<string>(
     psicologoId ? psicologoId.toString() : ""
   );
-  
+
   // Atualizar o filtro de psicólogo quando recebermos os dados do psicólogo do usuário
   useEffect(() => {
     if (isPsicologo && userPsicologoId) {
@@ -180,7 +180,7 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, envia apenas se um psicólogo estiver selecionado
-    else if (selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "none") {
+    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "none") {
       params.append("psicologoId", selectedPsicologo);
     }
 
@@ -228,7 +228,7 @@ export default function Calendar({
 
   // Verificar se devemos buscar agendamentos (se for admin/secretaria, só buscar se algum filtro estiver ativo)
   const shouldFetchAgendamentos = isPsicologo || !!selectedPsicologo || !!selectedFilial;
-  
+
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
     queryKey: ["/api/agendamentos", buildQueryKey()],
@@ -537,7 +537,7 @@ export default function Calendar({
         </div>
       );
     }
-    
+
     // Para admin/secretaria, mostrar mensagem quando nenhum filtro estiver selecionado
     if (!isPsicologo && selectedPsicologo === "" && selectedFilial === "") {
       return (
