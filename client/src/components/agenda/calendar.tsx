@@ -175,7 +175,12 @@ export default function Calendar({
       params.append("dataFim", end.toISOString().split('T')[0]);
     }
 
-    if (selectedPsicologo && selectedPsicologo !== "todos") {
+    // Se usuário for psicólogo, sempre envia o ID do psicólogo
+    if (isPsicologo && userPsicologoId) {
+      params.append("psicologoId", userPsicologoId.toString());
+    } 
+    // Para admin/secretária, envia apenas se um psicólogo estiver selecionado
+    else if (selectedPsicologo && selectedPsicologo !== "todos") {
       params.append("psicologoId", selectedPsicologo);
     }
 
@@ -208,9 +213,14 @@ export default function Calendar({
       };
     }
 
+    // Determinar qual ID de psicólogo usar na query key
+    const psicologoIdForKey = isPsicologo && userPsicologoId 
+      ? userPsicologoId.toString() 
+      : selectedPsicologo;
+
     return {
       ...dateParams,
-      psicologoId: selectedPsicologo,
+      psicologoId: psicologoIdForKey,
       filialId: selectedFilial,
       view: currentView
     };
