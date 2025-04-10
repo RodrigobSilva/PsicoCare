@@ -115,11 +115,14 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    // Filtrar agendamentos
-    const agendamentosHoje = agendamentos.filter(agendamento => {
+    // Criar um Map para armazenar agendamentos únicos
+    const agendamentosUnicos = new Map();
+    
+    // Processar cada agendamento
+    agendamentos.forEach(agendamento => {
       // Verificar se é um agendamento válido
-      if (!agendamento.data || !agendamento.paciente || !agendamento.psicologo) {
-        return false;
+      if (!agendamento?.data || !agendamento?.paciente || !agendamento?.psicologo) {
+        return;
       }
 
       // Converter data do agendamento para objeto Date
@@ -132,16 +135,22 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
       // Verificar se não está cancelado ou realizado
       const statusValido = !['cancelado', 'realizado'].includes(agendamento.status?.toLowerCase());
 
-      // Se for psicólogo, mostrar apenas seus agendamentos
-      if (user?.tipo === 'psicologo') {
-        return isHoje && statusValido && agendamento.psicologo.usuario.id === user.id;
+      // Verificar se pertence ao psicólogo atual (se for psicólogo)
+      const isPsicologoCorreto = user?.tipo !== 'psicologo' || 
+        (user?.tipo === 'psicologo' && agendamento.psicologo.usuario.id === user.id);
+
+      // Se passar em todas as validações, adicionar ao Map
+      if (isHoje && statusValido && isPsicologoCorreto) {
+        const chave = `${agendamento.id}`;
+        
+        // Só substituir se o novo status for mais relevante
+        if (!agendamentosUnicos.has(chave) || 
+            (agendamento.status === 'confirmado' && 
+             agendamentosUnicos.get(chave).status !== 'confirmado')) {
+          agendamentosUnicos.set(chave, agendamento);
+        }
       }
-
-      return isHoje && statusValido;
     });
-
-    // Criar Map usando ID como chave para eliminar duplicatas
-    const agendamentosUnicos = new Map();
     
     agendamentosHoje.forEach(agendamento => {
       // Usar ID como chave única
