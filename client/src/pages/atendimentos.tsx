@@ -54,9 +54,15 @@ export default function Atendimentos() {
     queryFn: async () => {
       const hoje = new Date();
       const dataHoje = hoje.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      
+      console.log("Buscando agendamentos a partir de:", dataHoje);
+      
       const res = await apiRequest("GET", `/api/agendamentos?dataInicio=${dataHoje}`);
       if (!res.ok) throw new Error("Erro ao buscar agendamentos");
-      return res.json();
+      
+      const data = await res.json();
+      console.log("Agendamentos retornados:", data.length, data);
+      return data;
     },
   });
 
