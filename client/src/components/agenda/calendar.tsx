@@ -175,11 +175,11 @@ export default function Calendar({
       params.append("dataFim", end.toISOString().split('T')[0]);
     }
 
-    // Se usuário for psicólogo, sempre envia o ID do psicólogo
+    // Se for psicólogo, sempre usa apenas seus próprios agendamentos
     if (isPsicologo && userPsicologoId) {
       params.append("psicologoId", userPsicologoId.toString());
     } 
-    // Para admin/secretária, envia apenas se um psicólogo estiver selecionado
+    // Para admin/secretária, permite filtrar por psicólogo
     else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "none") {
       params.append("psicologoId", selectedPsicologo);
     }
@@ -226,17 +226,22 @@ export default function Calendar({
     };
   };
 
-  // Verificar se devemos buscar agendamentos (se for admin/secretaria, só buscar se algum filtro estiver ativo)
-  const shouldFetchAgendamentos = isPsicologo || !!selectedPsicologo || !!selectedFilial;
+  // Se for psicólogo, sempre busca seus agendamentos
+  // Se for admin/secretaria, só busca se tiver filtro ativo
+  const shouldFetchAgendamentos = isPsicologo ? !!userPsicologoId : (!!selectedPsicologo || !!selectedFilial);
 
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
     queryKey: ["/api/agendamentos", buildQueryKey()],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
-      return res.json();
+      const data = await res.json();
+      // Filtro adicional para garantir que psicólogo só veja seus agendamentos
+      if (isPsicologo && userPsicologoId) {
+        return data.filter((ag: any) => ag.psicologoId === userPsicologoId);
+      }
+      return data;
     },
-    // Só executar a query se tivermos algum filtro ativo para admin/secretaria
     enabled: shouldFetchAgendamentos
   });
 
