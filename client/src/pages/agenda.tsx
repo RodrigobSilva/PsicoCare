@@ -75,9 +75,6 @@ export default function Agenda() {
       window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
     }
   }, [isPsicologo, psicologoUsuario, query]);
-    queryKey: ['/api/psicologos/usuario', user?.id],
-    queryFn: async () => {
-      if (!user?.id || user?.tipo !== 'psicologo') return null;
       try {
         const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
         return res.json();
