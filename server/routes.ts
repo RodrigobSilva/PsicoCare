@@ -739,13 +739,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filialId = req.query.filialId ? parseInt(req.query.filialId as string) : undefined;
 
       // Verificar tipo de usuário e aplicar restrições
-      if (req.user.tipo === 'psicologo' && !psicologoId) {
+      if (req.user.tipo === 'psicologo') {
         // Buscar o psicólogo pelo usuário
         const psicologo = await storage.getPsicologoByUserId(req.user.id);
         if (!psicologo) {
           return res.status(403).json({ mensagem: "Acesso não autorizado" });
         }
-        // Forçar filtro pelo ID do psicólogo logado apenas se não houver psicologoId definido
+        // Forçar filtro pelo ID do psicólogo logado, ignorando qualquer outro psicologoId
         psicologoId = psicologo.id;
       }
 
