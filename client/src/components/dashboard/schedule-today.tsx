@@ -111,9 +111,9 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
   const processarAgendamentos = (agendamentos: any[]) => {
     if (!agendamentos || agendamentos.length === 0) return [];
     
-    // Obter data de hoje sem horário
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+    // Obter data de hoje formatada como string YYYY-MM-DD para comparação direta
+    const hoje = new Date().toISOString().split('T')[0];
+    console.log("Buscando agendamentos a partir de:", hoje);
     
     // Criar um Map para armazenar agendamentos únicos
     const agendamentosUnicos = new Map();
@@ -125,12 +125,14 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
         return;
       }
 
-      // Converter data do agendamento para objeto Date
-      const dataAgendamento = new Date(agendamento.data);
-      dataAgendamento.setHours(0, 0, 0, 0);
+      // Obter a data do agendamento como string YYYY-MM-DD
+      const dataAgendamento = agendamento.data.split('T')[0];
 
-      // Verificar se é hoje
-      const isHoje = dataAgendamento.getTime() === hoje.getTime();
+      // Debugar cada agendamento
+      console.log(`Agendamento ${agendamento.id}, data: ${dataAgendamento}, incluído: ${dataAgendamento === hoje}`);
+
+      // Verificar se é hoje por comparação de strings (mais preciso)
+      const isHoje = dataAgendamento === hoje;
 
       // Verificar se não está cancelado ou realizado
       const statusValido = !['cancelado', 'realizado'].includes(agendamento.status?.toLowerCase());
@@ -151,8 +153,6 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
         }
       }
     });
-    
-    // Converter para array e ordenar por horário
     
     // Converter para array e ordenar por horário
     return Array.from(agendamentosUnicos.values())

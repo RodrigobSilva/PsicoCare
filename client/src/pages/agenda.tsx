@@ -132,6 +132,48 @@ export default function Agenda() {
     return false;
   };
   
+  // Verificar se o usuário pode excluir o agendamento
+  const canDeleteAgendamento = () => {
+    if (!user || !selectedAgendamento) return false;
+
+    // Apenas Admin e secretaria podem excluir agendamentos
+    if (user.tipo === "admin" || user.tipo === "secretaria") return true;
+
+    return false;
+  };
+  
+  // Mutation para excluir agendamento
+  const deleteAgendamentoMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/agendamentos/${id}`);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/agendamentos"],
+      });
+      setIsDetailsOpen(false);
+      toast({
+        title: "Agendamento excluído",
+        description: "O agendamento foi excluído com sucesso.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao excluir o agendamento.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handler para excluir agendamento
+  const handleDeleteAgendamento = () => {
+    if (window.confirm("Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.")) {
+      deleteAgendamentoMutation.mutate(selectedAgendamento.id);
+    }
+  };
+  
   // Verificar se o usuário pode registrar atendimento
   const canRegisterAtendimento = () => {
     if (!user || !selectedAgendamento) return false;
@@ -399,6 +441,12 @@ export default function Agenda() {
                     {canRegisterAtendimento() && selectedAgendamento?.status === "confirmado" && (
                       <Button onClick={() => setShowAtendimentoForm(true)}>
                         Registrar Atendimento
+                      </Button>
+                    )}
+                    
+                    {canDeleteAgendamento() && (
+                      <Button variant="destructive" onClick={handleDeleteAgendamento}>
+                        Excluir Agendamento
                       </Button>
                     )}
                   </div>
