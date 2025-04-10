@@ -69,12 +69,8 @@ export default function Agenda() {
     enabled: !!user?.id && user?.tipo === 'psicologo'
   });
 
-  // Redirecionar psicólogo para sua própria agenda
-  useEffect(() => {
-    if (isPsicologo && psicologoUsuario?.id && !query.get("psicologo")) {
-      window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
-    }
-  }, [isPsicologo, psicologoUsuario, query]);
+  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
+  const { data: psicologoUsuario } = useQuery({
     queryKey: ['/api/psicologos/usuario', user?.id],
     queryFn: async () => {
       if (!user?.id || user?.tipo !== 'psicologo') return null;
@@ -88,6 +84,13 @@ export default function Agenda() {
     },
     enabled: !!user?.id && user?.tipo === 'psicologo'
   });
+
+  // Redirecionar psicólogo para sua própria agenda
+  useEffect(() => {
+    if (user?.tipo === 'psicologo' && psicologoUsuario?.id && !query.get("psicologo")) {
+      window.location.href = `/agenda?psicologo=${psicologoUsuario.id}`;
+    }
+  }, [user?.tipo, psicologoUsuario?.id, query]);
 
   const psicologoId = query.get("psicologo");
   const filialId = query.get("filial");
