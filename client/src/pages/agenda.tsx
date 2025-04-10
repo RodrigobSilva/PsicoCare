@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/layout";
 import Calendar from "@/components/agenda/calendar";
@@ -44,7 +45,7 @@ export default function Agenda() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedAgendamento, setSelectedAgendamento] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showAtendimentoForm, setShowAtendimentoForm] = useState(false); // State for the new dialog
+  const [showAtendimentoForm, setShowAtendimentoForm] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const query = useSearchParams();
@@ -53,22 +54,6 @@ export default function Agenda() {
   const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
   const isPsicologo = user?.tipo === "psicologo";
   
-  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
-  const { data: psicologoUsuario } = useQuery({
-    queryKey: ['/api/psicologos/usuario', user?.id],
-    queryFn: async () => {
-      if (!user?.id || user?.tipo !== 'psicologo') return null;
-      try {
-        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
-        return res.json();
-      } catch (error) {
-        console.error('Erro ao buscar psicólogo do usuário:', error);
-        return null;
-      }
-    },
-    enabled: !!user?.id && user?.tipo === 'psicologo'
-  });
-
   // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
   const { data: psicologoUsuario } = useQuery({
     queryKey: ['/api/psicologos/usuario', user?.id],
@@ -403,14 +388,12 @@ export default function Agenda() {
                   </Button>
 
                   <div className="flex gap-2">
-                    {/* Botão de editar apenas para admin/secretaria */}
                     {canEditAgendamento() && (
                       <Button onClick={handleEditAgendamento}>
                         Editar Agendamento
                       </Button>
                     )}
                     
-                    {/* Botão de registrar atendimento (disponível tanto para admin/secretaria quanto para psicólogos, mas apenas para seus próprios agendamentos) */}
                     {canRegisterAtendimento() && selectedAgendamento?.status === "confirmado" && (
                       <Button onClick={() => setShowAtendimentoForm(true)}>
                         Registrar Atendimento
@@ -456,4 +439,3 @@ export default function Agenda() {
     </Layout>
   );
 }
-
