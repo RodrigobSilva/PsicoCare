@@ -58,8 +58,8 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
     
     // Filtragem dos cards de acordo com o tipo de usuário
     if (userType === 'psicologo') {
-      // Psicólogos não veem informações de faturamento
-      return baseCards.filter(card => card.title !== "Faturamento Mensal");
+      // Psicólogos veem apenas sessões hoje
+      return [baseCards[0]]; // Apenas o card de "Sessões Hoje"
     } else if (userType === 'paciente') {
       // Pacientes veem apenas suas próprias consultas agendadas
       return [baseCards[0]]; // Apenas o card de "Sessões Hoje"
