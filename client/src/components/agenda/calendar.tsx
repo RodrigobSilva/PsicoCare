@@ -539,7 +539,7 @@ export default function Calendar({
     }
     
     // Para admin/secretaria, mostrar mensagem quando nenhum filtro estiver selecionado
-    if (!isPsicologo && !selectedPsicologo && !selectedFilial) {
+    if (!isPsicologo && selectedPsicologo === "" && selectedFilial === "") {
       return (
         <div className="flex justify-center items-center p-12 h-full">
           <div className="text-center max-w-md p-6 bg-neutral-50 rounded-lg border border-neutral-200">
@@ -617,6 +617,7 @@ export default function Calendar({
                   <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">Selecione um psicólogo</SelectItem>
                   <SelectItem value="todos">Todos os psicólogos</SelectItem>
                   {psicologos?.map((psicologo: any) => (
                     <SelectItem 
@@ -641,6 +642,7 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Selecione uma filial</SelectItem>
                 <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>

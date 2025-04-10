@@ -91,15 +91,23 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
     return false;
   };
 
-  // Função para eliminar agendamentos duplicados e ordenar por horário
+  // Função para eliminar agendamentos duplicados, filtrar apenas por hoje e ordenar por horário
   const processarAgendamentos = (agendamentos: any[]) => {
     if (!agendamentos || agendamentos.length === 0) return [];
     
-    // Criar um objeto para rastrear agendamentos únicos pelo paciente e psicólogo
+    // Obter a data de hoje no formato YYYY-MM-DD
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    // Filtrar apenas agendamentos de hoje
+    const agendamentosHoje = agendamentos.filter(agendamento => {
+      return agendamento.data === hoje;
+    });
+    
+    // Criar um objeto para rastrear agendamentos únicos pelo paciente, psicólogo e horário
     const agendamentosMap = new Map();
     
-    // Agrupar por combinação de paciente e psicólogo
-    agendamentos.forEach(agendamento => {
+    // Agrupar por combinação de paciente, psicólogo e horário
+    agendamentosHoje.forEach(agendamento => {
       const pacienteId = agendamento.paciente?.id;
       const psicologoId = agendamento.psicologo?.id;
       const horarioInicio = agendamento.horaInicio;
@@ -107,7 +115,7 @@ export default function ScheduleToday({ agendamentos, isLoading }: ScheduleToday
       // Cria uma chave única para cada combinação de paciente, psicólogo e horário
       const chave = `${pacienteId}-${psicologoId}-${horarioInicio}`;
       
-      // Só adiciona se não existir ou se o status for diferente
+      // Só adiciona se não existir ou se o status for confirmado (priorizar confirmados)
       if (!agendamentosMap.has(chave) || agendamento.status === "confirmado") {
         agendamentosMap.set(chave, agendamento);
       }
