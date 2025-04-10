@@ -20,11 +20,12 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Search, Edit, Trash2, PowerOff } from "lucide-react";
+import { Loader2, Plus, Search, Edit, Trash2, PowerOff, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import PatientForm from "@/components/pacientes/patient-form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -49,6 +50,12 @@ export default function Pacientes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editing, setEditing] = useState<number | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Verificar se o usuário é psicólogo
+  const isPsicologo = user?.tipo === "psicologo";
+  // Verificar se o usuário é administrador ou secretária
+  const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
 
   const { data: pacientes, isLoading } = useQuery({
     queryKey: ["/api/pacientes"],
@@ -111,9 +118,11 @@ export default function Pacientes() {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Gerenciamento de Pacientes</h1>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Paciente
-          </Button>
+          {isAdminOrSecretaria && (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Novo Paciente
+            </Button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
@@ -178,19 +187,27 @@ export default function Pacientes() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditDialog(paciente.id)}>
-                                <Edit className="mr-2 h-4 w-4" /> Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => toggleAtivoMutation.mutate({
-                                  id: paciente.id, 
-                                  ativo: !paciente.usuario.ativo
-                                })}
-                              >
-                                <PowerOff className="mr-2 h-4 w-4" />
-                                {paciente.usuario.ativo ? "Desativar" : "Ativar"}
-                              </DropdownMenuItem>
-
+                              {isAdminOrSecretaria ? (
+                                <>
+                                  <DropdownMenuItem onClick={() => openEditDialog(paciente.id)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => toggleAtivoMutation.mutate({
+                                      id: paciente.id, 
+                                      ativo: !paciente.usuario.ativo
+                                    })}
+                                  >
+                                    <PowerOff className="mr-2 h-4 w-4" />
+                                    {paciente.usuario.ativo ? "Desativar" : "Ativar"}
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                // Para psicólogos, apenas visualização
+                                <DropdownMenuItem onClick={() => window.location.href = `/pacientes/${paciente.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" /> Visualizar
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
