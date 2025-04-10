@@ -48,11 +48,13 @@ export default function Atendimentos() {
     },
   });
 
-  // Buscar agendamentos
+  // Buscar agendamentos futuros (a partir de hoje)
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
-    queryKey: ["/api/agendamentos"],
+    queryKey: ["/api/agendamentos/proximos"],
     queryFn: async () => {
-      const res = await fetch("/api/agendamentos");
+      const hoje = new Date();
+      const dataHoje = hoje.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      const res = await apiRequest("GET", `/api/agendamentos?dataInicio=${dataHoje}`);
       if (!res.ok) throw new Error("Erro ao buscar agendamentos");
       return res.json();
     },
@@ -192,7 +194,7 @@ export default function Atendimentos() {
                             
                             <div className="flex items-center space-x-2 text-muted-foreground">
                               <Badge variant="secondary">
-                                {agendamento.modalidade === 'teleconsulta' ? 'Teleconsulta' : 'Presencial'}
+                                {agendamento.remoto ? 'Teleconsulta' : 'Presencial'}
                               </Badge>
                               {agendamento.psicologo && (
                                 <span>• {psicologoNome}</span>

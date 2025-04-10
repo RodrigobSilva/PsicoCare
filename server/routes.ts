@@ -729,9 +729,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const dataInicioStr = dataInicio.toISOString().split('T')[0];
         const dataFimStr = dataFim.toISOString().split('T')[0];
         
-        agendamentos = todosAgendamentos.filter(ag => {
-          const dataAg = ag.data;
+        agendamentos = todosAgendamentos.filter((ag: any) => {
+          const dataAg = typeof ag.data === 'string' ? ag.data : ag.data.toISOString().split('T')[0];
           return dataAg >= dataInicioStr && dataAg <= dataFimStr;
+        });
+      } else if (dataInicio) {
+        // Se só tiver a data de início, retorna todos os agendamentos a partir desta data
+        const todosAgendamentos = await storage.getAllAgendamentos();
+        const dataInicioStr = dataInicio.toISOString().split('T')[0];
+        
+        agendamentos = todosAgendamentos.filter((ag: any) => {
+          const dataAg = typeof ag.data === 'string' ? ag.data : ag.data.toISOString().split('T')[0];
+          return dataAg >= dataInicioStr;
         });
       } else if (pacienteId) {
         agendamentos = await storage.getAgendamentosByPaciente(pacienteId);

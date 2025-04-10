@@ -73,6 +73,7 @@ export interface IStorage {
   getAgendamentosByPsicologo(psicologoId: number): Promise<Agendamento[]>;
   getAgendamentosByData(data: Date): Promise<Agendamento[]>;
   getAgendamentosByFilial(filialId: number): Promise<Agendamento[]>;
+  getAllAgendamentos(): Promise<Agendamento[]>;
   createAgendamento(agendamento: InsertAgendamento): Promise<Agendamento>;
   updateAgendamento(id: number, agendamento: Partial<InsertAgendamento>): Promise<Agendamento | undefined>;
   deleteAgendamento(id: number): Promise<boolean>;
@@ -450,6 +451,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.agendamentos.values()).filter(
       (agendamento) => agendamento.filialId === filialId
     );
+  }
+  
+  async getAllAgendamentos(): Promise<Agendamento[]> {
+    return Array.from(this.agendamentos.values());
   }
 
   async createAgendamento(agendamento: InsertAgendamento): Promise<Agendamento> {

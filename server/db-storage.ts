@@ -250,6 +250,10 @@ export class DatabaseStorage implements IStorage {
   async getAgendamentosByFilial(filialId: number): Promise<Agendamento[]> {
     return await db.select().from(agendamentos).where(eq(agendamentos.filialId, filialId));
   }
+  
+  async getAllAgendamentos(): Promise<Agendamento[]> {
+    return await db.select().from(agendamentos);
+  }
 
   async createAgendamento(agendamento: InsertAgendamento): Promise<Agendamento> {
     const [createdAgendamento] = await db.insert(agendamentos).values(agendamento).returning();
