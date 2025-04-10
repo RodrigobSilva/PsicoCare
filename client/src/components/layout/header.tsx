@@ -1,6 +1,14 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Menu, Bell } from "lucide-react";
-import { useLocation } from "wouter";
+import { Menu, Bell, User } from "lucide-react";
+import { useLocation, Link } from "wouter";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -53,12 +61,26 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           </span>
         </button>
         <div className="hidden md:block">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center">
-              <span>{getUserInitials()}</span>
-            </div>
-            <span className="ml-2 text-sm font-medium text-neutral-700">{user?.nome}</span>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="focus:outline-none">
+              <div className="flex items-center cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center">
+                  <span>{getUserInitials()}</span>
+                </div>
+                <span className="ml-2 text-sm font-medium text-neutral-700">{user?.nome}</span>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link href="/perfil">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

@@ -87,6 +87,11 @@ function Router() {
         allowedRoles={["admin", "psicologo"]}
       />
       
+      <ProtectedRoute
+        path="/perfil"
+        component={Perfil}
+      />
+      
       <Route component={NotFound} />
     </Switch>
   );
