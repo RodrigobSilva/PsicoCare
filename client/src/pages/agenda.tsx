@@ -48,6 +48,25 @@ export default function Agenda() {
   const { user } = useAuth();
   const { toast } = useToast();
   const query = useSearchParams();
+  
+  // Verificar se o usuário é administrador ou secretária
+  const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
+  
+  // Buscar o ID do psicólogo associado ao usuário atual (se for psicólogo)
+  const { data: psicologoUsuario } = useQuery({
+    queryKey: ['/api/psicologos/usuario', user?.id],
+    queryFn: async () => {
+      if (!user?.id || user?.tipo !== 'psicologo') return null;
+      try {
+        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
+        return res.json();
+      } catch (error) {
+        console.error('Erro ao buscar psicólogo do usuário:', error);
+        return null;
+      }
+    },
+    enabled: !!user?.id && user?.tipo === 'psicologo'
+  });
 
   const psicologoId = query.get("psicologo");
   const filialId = query.get("filial");
@@ -96,14 +115,26 @@ export default function Agenda() {
   const canEditAgendamento = () => {
     if (!user || !selectedAgendamento) return false;
 
+    // Apenas Admin e secretaria podem editar agendamentos
     if (user.tipo === "admin" || user.tipo === "secretaria") return true;
 
+    return false;
+  };
+  
+  // Verificar se o usuário pode registrar atendimento
+  const canRegisterAtendimento = () => {
+    if (!user || !selectedAgendamento) return false;
+    
+    // Admin e secretaria podem registrar atendimentos
+    if (user.tipo === "admin" || user.tipo === "secretaria") return true;
+    
+    // Psicólogos podem registrar apenas seus próprios atendimentos
     if (
       user.tipo === "psicologo" &&
-      selectedAgendamento.psicologo?.usuario?.id === user.id
+      selectedAgendamento.psicologoId === psicologoUsuario?.id
     )
       return true;
-
+      
     return false;
   };
 
@@ -151,14 +182,18 @@ export default function Agenda() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Agenda</h1>
           <div className="flex gap-2">
-            <Button onClick={handleNewAgendamento}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Agendamento
-            </Button>
-            <Button variant="secondary" onClick={() => window.location.href = "/pacientes?new=true"}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Paciente
-            </Button>
+            {isAdminOrSecretaria && (
+              <>
+                <Button onClick={handleNewAgendamento}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Agendamento
+                </Button>
+                <Button variant="secondary" onClick={() => window.location.href = "/pacientes?new=true"}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Paciente
+                </Button>
+              </>
+            )}
             <Button variant="outline" onClick={() => setIsFormOpen(true)}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -344,17 +379,18 @@ export default function Agenda() {
                   </Button>
 
                   <div className="flex gap-2">
+                    {/* Botão de editar apenas para admin/secretaria */}
                     {canEditAgendamento() && (
-                      <>
-                        <Button onClick={handleEditAgendamento}>
-                          Editar Agendamento
-                        </Button>
-                        {selectedAgendamento?.status === "confirmado" && (
-                          <Button onClick={() => setShowAtendimentoForm(true)}>
-                            Registrar Atendimento
-                          </Button>
-                        )}
-                      </>
+                      <Button onClick={handleEditAgendamento}>
+                        Editar Agendamento
+                      </Button>
+                    )}
+                    
+                    {/* Botão de registrar atendimento (disponível tanto para admin/secretaria quanto para psicólogos, mas apenas para seus próprios agendamentos) */}
+                    {canRegisterAtendimento() && selectedAgendamento?.status === "confirmado" && (
+                      <Button onClick={() => setShowAtendimentoForm(true)}>
+                        Registrar Atendimento
+                      </Button>
                     )}
                   </div>
                 </CardFooter>
