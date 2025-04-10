@@ -236,11 +236,31 @@ export default function Calendar({
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
       const data = await res.json();
-      // Filtro adicional para garantir que psicólogo só veja seus agendamentos
-      if (isPsicologo && userPsicologoId) {
-        return data.filter((ag: any) => ag.psicologoId === userPsicologoId);
-      }
-      return data;
+
+      // Criar um Map para armazenar agendamentos únicos usando ID como chave
+      const uniqueAgendamentos = new Map();
+
+      data.forEach((ag: any) => {
+        // Verificar se é um agendamento válido e se pertence ao psicólogo correto
+        if (isPsicologo && userPsicologoId && ag.psicologo?.id !== userPsicologoId) {
+          return;
+        }
+
+        // Usar o ID como chave para garantir unicidade
+        if (!uniqueAgendamentos.has(ag.id)) {
+          uniqueAgendamentos.set(ag.id, ag);
+        }
+      });
+
+      // Converter Map de volta para array e ordenar por data e hora
+      return Array.from(uniqueAgendamentos.values())
+        .sort((a, b) => {
+          const dateCompare = a.data.localeCompare(b.data);
+          if (dateCompare === 0) {
+            return a.horaInicio.localeCompare(b.horaInicio);
+          }
+          return dateCompare;
+        });
     },
     enabled: shouldFetchAgendamentos
   });
