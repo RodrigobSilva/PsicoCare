@@ -190,16 +190,7 @@ export default function Pacientes() {
                                 <PowerOff className="mr-2 h-4 w-4" />
                                 {paciente.usuario.ativo ? "Desativar" : "Ativar"}
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={() => {
-                                  if (confirm('Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.')) {
-                                    handleDelete(paciente.id);
-                                  }
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
+
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
