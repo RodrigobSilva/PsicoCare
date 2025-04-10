@@ -90,31 +90,8 @@ export default function Relatorios() {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Relatórios</h1>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Relatório Personalizado
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Relatório</DialogTitle>
-                <DialogDescription>
-                  Configure um novo relatório personalizado que ficará disponível no sistema.
-                </DialogDescription>
-              </DialogHeader>
-              <NovoRelatorioForm onSuccess={() => {
-                setIsDialogOpen(false);
-                toast({
-                  title: "Relatório criado",
-                  description: "O novo relatório foi adicionado com sucesso.",
-                });
-              }} />
-            </DialogContent>
-          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
