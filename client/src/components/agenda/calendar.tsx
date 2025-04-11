@@ -649,14 +649,17 @@ export default function Calendar({
               // Para admin e secretarias, permitir selecionar qualquer psicólogo
               <Select 
                 value={selectedPsicologo} 
-                onValueChange={setSelectedPsicologo}
+                onValueChange={(value) => {
+                  console.log("Selecionado psicólogo:", value);
+                  setSelectedPsicologo(value);
+                }}
                 disabled={isLoadingPsicologos}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Selecione um psicólogo</SelectItem>
+                  <SelectItem value="">Selecione um psicólogo</SelectItem>
                   <SelectItem value="todos">Todos os psicólogos</SelectItem>
                   {psicologos?.map((psicologo: any) => (
                     <SelectItem 
@@ -674,14 +677,17 @@ export default function Calendar({
           <div>
             <Select 
               value={selectedFilial} 
-              onValueChange={setSelectedFilial}
+              onValueChange={(value) => {
+                console.log("Selecionada filial:", value);
+                setSelectedFilial(value);
+              }}
               disabled={isLoadingFiliais}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Selecione uma filial</SelectItem>
+                <SelectItem value="">Selecione uma filial</SelectItem>
                 <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>

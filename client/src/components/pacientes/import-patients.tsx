@@ -346,12 +346,12 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
           <TabsContent value="upload" className="p-4 border rounded-lg">
             <div className="flex flex-col gap-4">
               <div>
-                <Label htmlFor="file-upload">Selecione um arquivo CSV</Label>
+                <Label htmlFor="file-upload">Selecione um arquivo CSV ou Excel</Label>
                 <Input 
                   id="file-upload" 
                   type="file" 
                   ref={fileInputRef}
-                  accept=".csv" 
+                  accept=".csv,.xlsx,.xls" 
                   onChange={handleFileUpload} 
                   disabled={processing}
                   className="mt-1"
@@ -365,23 +365,8 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
                   <li>email* - E-mail do paciente</li>
                   <li>telefone - Telefone</li>
                   <li>cpf - CPF</li>
-                  <li>dataNascimento - Data de nascimento (AAAA-MM-DD)</li>
-                  <li>genero - Gênero</li>
-                  <li>endereco - Endereço completo</li>
-                  <li>cidade - Cidade</li>
-                  <li>estado - Estado (UF)</li>
-                  <li>cep - CEP</li>
-                  <li>observacoes - Observações gerais</li>
-                  <li>planoSaudeNome - Nome do plano de saúde</li>
-                  <li>numeroCarteirinha - Número da carteirinha (obrigatório se houver plano)</li>
-                  <li>dataValidade - Data de validade do plano (AAAA-MM-DD, obrigatório se houver plano)</li>
                 </ul>
               </div>
-
-              <Button variant="outline" onClick={downloadTemplate}>
-                <Download className="mr-2 h-4 w-4" />
-                Baixar modelo CSV
-              </Button>
             </div>
           </TabsContent>
 
