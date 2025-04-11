@@ -600,11 +600,23 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
               disabled={mutation.isPending}
               onClick={(e) => {
                 e.preventDefault();
-                // Submeter o formulário e fechar quando concluído
-                form.handleSubmit(async (data) => {
-                  await onSubmit(data);
-                  // O callback onSuccess será chamado após o sucesso da mutation
-                })();
+                // Validar todo o formulário e submeter
+                form.trigger().then(isValid => {
+                  if (isValid) {
+                    // Submeter o formulário e fechar quando concluído
+                    form.handleSubmit(async (data) => {
+                      await onSubmit(data);
+                      // O callback onSuccess será chamado após o sucesso da mutation
+                    })();
+                  } else {
+                    // Se houver erros, mostrar mensagem ao usuário
+                    toast({
+                      title: "Verificar informações",
+                      description: "Corrija os campos inválidos antes de salvar.",
+                      variant: "destructive"
+                    });
+                  }
+                });
               }}
             >
               {mutation.isPending ? (
