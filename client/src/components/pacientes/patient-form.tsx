@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Esquema de validação para dados pessoais
 const dadosPessoaisSchema = z.object({
@@ -67,6 +68,7 @@ interface PatientFormProps {
 
 export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps) {
   const [activeTab, setActiveTab] = useState<string>("dadosPessoais");
+  const { toast } = useToast();
 
   // Carregar dados do paciente para edição
   const { data: paciente, isLoading: isLoadingPaciente } = useQuery({
@@ -574,7 +576,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                     <FormItem>
                       <FormLabel>Data de Validade</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
