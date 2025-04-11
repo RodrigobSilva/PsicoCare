@@ -425,7 +425,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
                           <TableCell>{row.planoSaudeNome || "Particular"}</TableCell>
                           <TableCell>
                             {validationResults[index]?.valid ? (
-                              <Badge variant="success" className="bg-green-500">Válido</Badge>
+                              <Badge variant="default" className="bg-green-500 text-white">Válido</Badge>
                             ) : (
                               <Badge variant="destructive">Com erros</Badge>
                             )}
@@ -486,7 +486,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
               </div>
               
               {importStats.failed > 0 && (
-                <Alert variant="warning" className="mt-4">
+                <Alert variant="destructive" className="mt-4">
                   <AlertTitle>Alguns registros não foram importados</AlertTitle>
                   <AlertDescription>
                     Verifique os erros, corrija o arquivo e tente importar novamente os registros pendentes.

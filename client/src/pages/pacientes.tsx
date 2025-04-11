@@ -48,6 +48,7 @@ import {
 
 export default function Pacientes() {
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editing, setEditing] = useState<number | null>(null);
   const { toast } = useToast();
@@ -58,10 +59,20 @@ export default function Pacientes() {
   // Verificar se o usuário é administrador ou secretária
   const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
 
+  // Buscar pacientes
   const { data: pacientes, isLoading } = useQuery({
     queryKey: ["/api/pacientes"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/pacientes");
+      return res.json();
+    },
+  });
+  
+  // Buscar planos de saúde para importação
+  const { data: planosSaude = [] } = useQuery({
+    queryKey: ["/api/planos-saude"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/planos-saude");
       return res.json();
     },
   });
@@ -120,12 +131,17 @@ export default function Pacientes() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Gerenciamento de Pacientes</h1>
           {isAdminOrSecretaria && (
-            <Button onClick={() => {
-              setEditing(null); // Garantir que estamos criando um novo paciente
-              setOpen(true);
-            }}>
-              <Plus className="mr-2 h-4 w-4" /> Novo Paciente
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Importar Planilha
+              </Button>
+              <Button onClick={() => {
+                setEditing(null); // Garantir que estamos criando um novo paciente
+                setOpen(true);
+              }}>
+                <Plus className="mr-2 h-4 w-4" /> Novo Paciente
+              </Button>
+            </div>
           )}
         </div>
 
@@ -255,6 +271,20 @@ export default function Pacientes() {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Componente para importação de planilha */}
+        <ImportPatients
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          planosSaude={planosSaude}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/pacientes"] });
+            toast({
+              title: "Importação concluída",
+              description: "Os pacientes foram importados com sucesso."
+            });
+          }}
+        />
       </div>
     </Layout>
   );
