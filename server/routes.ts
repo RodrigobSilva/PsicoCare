@@ -1422,6 +1422,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para buscar próximos agendamentos de um psicólogo
+  app.get("/api/atendimentos/psicologo/:id", verificarAutenticacao, async (req, res) => {
+    try {
+      const psicologoId = parseInt(req.params.id);
+      
+      if (isNaN(psicologoId)) {
+        return res.status(400).json({ mensagem: "ID de psicólogo inválido" });
+      }
+
+      // Verificar se o usuário logado é o psicólogo ou é um admin
+      if (req.user?.tipo === "psicologo") {
+        const psicologo = await storage.getPsicologoByUserId(req.user.id);
+        if (!psicologo || psicologo.id !== psicologoId) {
+          return res.status(403).json({ mensagem: "Acesso não autorizado" });
+        }
+      } else if (req.user?.tipo !== "admin") {
+        return res.status(403).json({ mensagem: "Acesso não autorizado" });
+      }
+      
+      // Buscar os atendimentos realizados por este psicólogo
+      const atendimentos = await storage.getAtendimentosByPsicologo(psicologoId);
+      
+      // Buscar próximos agendamentos (a partir da data atual)
+      const hoje = new Date();
+      const dataHoje = hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      
+      console.log("Filtrando agendamentos a partir de:", dataHoje);
+      
+      // Buscar agendamentos através de funções existentes no storage
+      let agendamentosFuturos = [];
+      // Buscar agendamentos do psicólogo específico
+      const agendamentosDoPsicologo = await storage.getAgendamentosByPsicologo(psicologoId);
+      
+      // Filtrar apenas os agendamentos futuros
+      agendamentosFuturos = agendamentosDoPsicologo.filter((agendamento: any) => {
+        // Verificar se o agendamento pertence ao psicólogo
+        if (agendamento.psicologoId !== psicologoId) {
+          return false;
+        }
+        
+        // Converter data do agendamento para comparação
+        const dataAgendamento = agendamento.data.split('T')[0];
+        console.log(`Agendamento ${agendamento.id}, data: ${dataAgendamento}, incluído: ${dataAgendamento >= dataHoje}`);
+        
+        // Incluir apenas agendamentos a partir de hoje
+        return dataAgendamento >= dataHoje &&
+               agendamento.status !== 'cancelado' &&
+               agendamento.status !== 'realizado';
+      });
+      
+      // Ordenar por data e hora
+      agendamentosFuturos.sort((a: any, b: any) => {
+        // Primeiro compara as datas
+        const compareDatas = a.data.localeCompare(b.data);
+        if (compareDatas !== 0) return compareDatas;
+        
+        // Se as datas forem iguais, compara as horas
+        return a.horaInicio.localeCompare(b.horaInicio);
+      });
+      
+      // Enriquecer os agendamentos com dados de pacientes e psicólogos
+      const agendamentosDetalhados = await Promise.all(agendamentosFuturos.map(async (agendamento: any) => {
+        const paciente = await storage.getPaciente(agendamento.pacienteId);
+        const psicologo = await storage.getPsicologo(agendamento.psicologoId);
+        const sala = agendamento.salaId ? await storage.getSala(agendamento.salaId) : null;
+        const filial = agendamento.filialId ? await storage.getFilial(agendamento.filialId) : null;
+        
+        // Adicionar dados do usuário ao paciente e psicólogo
+        let pacienteComUsuario = paciente;
+        let psicologoComUsuario = psicologo;
+        
+        if (paciente) {
+          const usuarioPaciente = await storage.getUser(paciente.usuarioId);
+          pacienteComUsuario = {
+            ...paciente,
+            usuario: usuarioPaciente
+          };
+        }
+        
+        if (psicologo) {
+          const usuarioPsicologo = await storage.getUser(psicologo.usuarioId);
+          psicologoComUsuario = {
+            ...psicologo,
+            usuario: usuarioPsicologo
+          };
+        }
+        
+        return {
+          ...agendamento,
+          paciente: pacienteComUsuario,
+          psicologo: psicologoComUsuario,
+          sala,
+          filial
+        };
+      }));
+      
+      res.json(agendamentosDetalhados);
+    } catch (error) {
+      console.error("Erro ao buscar próximos agendamentos do psicólogo:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao buscar próximos agendamentos", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
   // Inicializar o servidor HTTP
   const httpServer = createServer(app);
   return httpServer;
