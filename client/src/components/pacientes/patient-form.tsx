@@ -278,7 +278,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem>
                     <FormLabel>CPF</FormLabel>
                     <FormControl>
-                      <Input placeholder="000.000.000-00" {...field} />
+                      <Input placeholder="000.000.000-00" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -292,7 +292,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem>
                     <FormLabel>Data de Nascimento</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -347,7 +347,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem>
                     <FormLabel>Telefone</FormLabel>
                     <FormControl>
-                      <Input placeholder="(00) 00000-0000" {...field} />
+                      <Input placeholder="(00) 00000-0000" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -409,7 +409,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem className="md:col-span-2">
                     <FormLabel>Endereço</FormLabel>
                     <FormControl>
-                      <Input placeholder="Rua, número, complemento" {...field} />
+                      <Input placeholder="Rua, número, complemento" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -423,7 +423,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem>
                     <FormLabel>Cidade</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cidade" {...field} />
+                      <Input placeholder="Cidade" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -487,7 +487,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <FormItem>
                     <FormLabel>CEP</FormLabel>
                     <FormControl>
-                      <Input placeholder="00000-000" {...field} />
+                      <Input placeholder="00000-000" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -508,6 +508,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                     <Textarea 
                       placeholder="Observações sobre o paciente" 
                       {...field} 
+                      value={field.value || ""}
                       className="min-h-[200px]"
                     />
                   </FormControl>
@@ -559,7 +560,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                     <FormItem>
                       <FormLabel>Número da Carteirinha</FormLabel>
                       <FormControl>
-                        <Input placeholder="Número da carteirinha" {...field} />
+                        <Input placeholder="Número da carteirinha" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
