@@ -36,7 +36,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
         value: estatisticas?.novosPacientes || 0,
         icon: <UserPlus className="text-secondary" />,
         bgColor: "bg-secondary bg-opacity-10",
-        trend: { value: 5, label: "em relação ao mês passado", positive: true }
+        trend: null // Removendo a tendência estática e deixando apenas o valor real
       },
       {
         title: "Faturamento Mensal",

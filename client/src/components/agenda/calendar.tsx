@@ -260,10 +260,25 @@ export default function Calendar({
       const uniqueAgendamentos = new Map();
 
       data.forEach((ag: any) => {
-        // Verificar se é um agendamento válido e se pertence ao psicólogo correto
+        // Filtrar agendamentos por psicólogo se um psicólogo específico for selecionado
+        if (selectedPsicologo && selectedPsicologo !== "todos" && 
+            ag.psicologo?.id.toString() !== selectedPsicologo) {
+          return;
+        }
+        
+        // Filtrar agendamentos por filial se uma filial específica for selecionada
+        if (selectedFilial && selectedFilial !== "nenhuma" &&
+            ag.filial?.id.toString() !== selectedFilial) {
+          return;
+        }
+        
+        // Verificação adicional para psicólogo logado (visualiza apenas seus agendamentos)
         if (isPsicologo && userPsicologoId && ag.psicologo?.id !== userPsicologoId) {
           return;
         }
+
+        // Depuração para verificar o motivo de inclusão/exclusão
+        console.log(`Agendamento ${ag.id} em ${ag.data} - Psicólogo: ${ag.psicologo?.id}, Filial: ${ag.filial?.id} - Incluído nos resultados`);
 
         // Usar o ID como chave para garantir unicidade
         if (!uniqueAgendamentos.has(ag.id)) {

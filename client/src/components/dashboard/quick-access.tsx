@@ -45,7 +45,7 @@ export default function QuickAccess({ userType }: QuickAccessProps) {
         icon: <Coins />,
         bgColor: "bg-info bg-opacity-10",
         iconBgColor: "bg-info",
-        roles: ["admin", "secretaria"]
+        roles: ["admin"] // Apenas admin pode acessar o financeiro
       }
     ];
 

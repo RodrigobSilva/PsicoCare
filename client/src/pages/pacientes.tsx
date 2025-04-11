@@ -78,7 +78,7 @@ export default function Pacientes() {
   });
 
   // Filtrar pacientes com base na pesquisa
-  const filteredPacientes = pacientes?.filter(paciente => 
+  const filteredPacientes = pacientes?.filter((paciente: any) => 
     paciente.usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     paciente.usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (paciente.usuario.cpf && paciente.usuario.cpf.includes(searchTerm))
@@ -178,7 +178,7 @@ export default function Pacientes() {
                 </TableHeader>
                 <TableBody>
                   {filteredPacientes && filteredPacientes.length > 0 ? (
-                    filteredPacientes.map((paciente) => (
+                    filteredPacientes.map((paciente: any) => (
                       <TableRow 
                         key={paciente.id} 
                         className={!paciente.usuario.ativo ? "bg-neutral-50" : undefined}
