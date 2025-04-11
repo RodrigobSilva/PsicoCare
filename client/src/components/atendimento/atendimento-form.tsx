@@ -374,6 +374,11 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
               >
                 {format(new Date(agendamento.data), "'Sessão em' dd 'de' MMMM", { locale: ptBR })} - {agendamento.horaInicio.substring(0, 5)}
               </Badge>
+              {agendamento.proximaSessao && (
+                <Badge variant="outline">
+                  Próxima sessão: {format(new Date(agendamento.proximaSessao.data), "dd 'de' MMMM", { locale: ptBR })} - {agendamento.proximaSessao.horaInicio.substring(0, 5)}
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
