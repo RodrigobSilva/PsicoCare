@@ -50,6 +50,14 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
       
       try {
         const res = await apiRequest("GET", `/api/atendimentos/psicologo/${psicologoIdFinal}`);
+        
+        // Verificar se a resposta é de fato um JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("A resposta não é um JSON válido");
+          return [];
+        }
+        
         const data = await res.json();
         console.log("Dados recebidos:", data);
         return data;
