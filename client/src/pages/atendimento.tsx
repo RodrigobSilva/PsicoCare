@@ -39,6 +39,48 @@ export default function Atendimento() {
     },
     enabled: !!user?.id && user?.tipo === 'psicologo'
   });
+  
+  // Criar atendimento se necessário ao carregar a página
+  useQuery({
+    queryKey: ['createAtendimento', agendamentoId],
+    queryFn: async () => {
+      if (!agendamentoId) return null;
+      if (!user || !isAdminOrPsicologo) return null;
+      
+      try {
+        // Verificar se já existe um atendimento para este agendamento
+        console.log("Verificando atendimento existente para agendamento:", agendamentoId);
+        const verificacaoRes = await apiRequest("GET", `/api/atendimentos/agendamento/${agendamentoId}`);
+        const atendimentosExistentes = await verificacaoRes.json();
+        
+        if (atendimentosExistentes && atendimentosExistentes.length > 0) {
+          console.log("Atendimento já existente:", atendimentosExistentes);
+          return atendimentosExistentes[0];
+        }
+        
+        // Se não existe atendimento, criar um novo
+        console.log("Nenhum atendimento existente, criando novo...");
+        const dataAtual = new Date();
+        
+        // Dados para criar o atendimento
+        const dadosAtendimento = {
+          agendamentoId: agendamentoId,
+          dataAtendimento: dataAtual,
+          status: "em_andamento"
+        };
+        
+        const criacaoRes = await apiRequest("POST", "/api/atendimentos", dadosAtendimento);
+        const novoAtendimento = await criacaoRes.json();
+        console.log("Novo atendimento criado:", novoAtendimento);
+        
+        return novoAtendimento;
+      } catch (error) {
+        console.error("Erro ao processar atendimento:", error);
+        return null;
+      }
+    },
+    enabled: !!agendamentoId && !!user && isAdminOrPsicologo
+  });
 
   // Verificar permissão do usuário
   useEffect(() => {
