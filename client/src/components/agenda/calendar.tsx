@@ -189,12 +189,13 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, permite filtrar por psicólogo
-    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "none") {
+    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "") {
       params.append("psicologoId", selectedPsicologo);
+      console.log("Aplicando filtro de psicólogo:", selectedPsicologo);
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "none" && selectedFilial !== "") {
+    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
@@ -385,7 +386,7 @@ export default function Calendar({
             {horario}
           </div>
           <div className="flex-1 p-2">
-            {agendamentosNoHorario?.length > 0 ? (
+            {agendamentosNoHorario && agendamentosNoHorario.length > 0 ? (
               agendamentosNoHorario.map(renderAgendamentoCard)
             ) : null}
           </div>
@@ -454,7 +455,7 @@ export default function Calendar({
                     isToday(day) ? "bg-primary-light/5" : ""
                   )}
                 >
-                  {agendamentosNaHora?.length > 0 ? (
+                  {agendamentosNaHora && agendamentosNaHora.length > 0 ? (
                     agendamentosNaHora.map(renderAgendamentoCard)
                   ) : null}
                 </div>
