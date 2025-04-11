@@ -114,33 +114,9 @@ export default function ProximasSessoes({ psicologoId, onSelectAgendamento }: Pr
         onSelectAgendamento(agendamento.id);
         return;
       }
-      
-      // Verificar se é um atendimento remoto (teleconsulta) ou presencial
-      if (agendamento.remoto) {
-        // Para teleconsulta, direcionar para a página específica
-        navigate(`/teleconsulta/${agendamento.id}`);
-      } else {
-        // Para atendimento presencial, verificar se já existe um atendimento
-        const verificacaoRes = await apiRequest("GET", `/api/atendimentos/agendamento/${agendamento.id}`);
-        const atendimentosExistentes = await verificacaoRes.json();
-        
-        if (atendimentosExistentes && atendimentosExistentes.length > 0) {
-          // Se já existe, redirecionar para o formulário de atendimento
-          navigate(`/atendimento/${agendamento.id}`);
-        } else {
-          // Se não existe, criar um novo atendimento
-          const dataAtual = new Date();
-          
-          const dadosAtendimento = {
-            agendamentoId: agendamento.id,
-            dataAtendimento: dataAtual,
-            status: "em_andamento"
-          };
-          
-          await apiRequest("POST", "/api/atendimentos", dadosAtendimento);
-          navigate(`/atendimento/${agendamento.id}`);
-        }
-      }
+
+      // Sempre vai para a página de atendimento, independentemente do tipo (presencial ou remoto)
+      navigate(`/atendimento/${agendamento.id}`);
     } catch (error) {
       console.error("Erro ao iniciar atendimento:", error);
       alert("Ocorreu um erro ao iniciar o atendimento. Por favor, tente novamente.");

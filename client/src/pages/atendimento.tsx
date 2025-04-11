@@ -114,13 +114,8 @@ export default function Atendimento() {
     }
   }, [user, isAdminOrPsicologo, navigate]);
 
-  // Redirecionar para teleconsulta se for um atendimento remoto
-  useEffect(() => {
-    if (agendamento && agendamento.remoto) {
-      console.log("Este agendamento é uma teleconsulta. Redirecionando...");
-      navigate(`/teleconsulta/${agendamentoId}`);
-    }
-  }, [agendamento, agendamentoId, navigate]);
+  // Não redirecionamos mais automaticamente para teleconsulta
+  // Em vez disso, ambos os tipos de atendimento são gerenciados na mesma página
 
   const iniciarTeleconsulta = () => {
     if (agendamentoId) {
@@ -188,46 +183,7 @@ export default function Atendimento() {
     );
   }
 
-  // Verificar se é uma teleconsulta
-  if (agendamento && agendamento.remoto) {
-    return (
-      <Layout>
-        <div className="container py-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Teleconsulta</CardTitle>
-              <CardDescription>
-                Este agendamento foi marcado como uma teleconsulta remota
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center p-6 bg-primary/5 rounded-lg mb-6">
-                <Video className="h-12 w-12 text-primary mb-4" />
-                <h2 className="text-xl font-semibold mb-2">Iniciar Sessão de Teleconsulta</h2>
-                <p className="text-center text-muted-foreground mb-6">
-                  Você pode iniciar a teleconsulta imediatamente clicando no botão abaixo.
-                  Certifique-se de que sua câmera e microfone estão funcionando adequadamente.
-                </p>
-                <Button className="gap-2" size="lg" onClick={iniciarTeleconsulta}>
-                  <Video className="h-4 w-4" />
-                  Iniciar Teleconsulta
-                </Button>
-              </div>
-              
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => navigate('/atendimentos')}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar para Atendimentos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Página normal de atendimento presencial
+  // Página de atendimento unificada (funciona tanto para teleconsulta quanto para presencial)
   return (
     <Layout>
       <div className="container py-6">
@@ -241,6 +197,34 @@ export default function Atendimento() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
+            {/* Se for teleconsulta, mostra a opção para iniciar */}
+            {agendamento && agendamento.remoto && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Video className="h-5 w-5 mr-2 text-primary" />
+                    Teleconsulta
+                  </CardTitle>
+                  <CardDescription>
+                    Este agendamento foi marcado como uma teleconsulta remota
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="flex flex-col items-center p-6 bg-primary/5 rounded-lg">
+                    <h2 className="text-xl font-semibold mb-2">Iniciar Sessão de Teleconsulta</h2>
+                    <p className="text-center text-muted-foreground mb-6">
+                      Você pode iniciar a teleconsulta imediatamente clicando no botão abaixo.
+                      Certifique-se de que sua câmera e microfone estão funcionando adequadamente.
+                    </p>
+                    <Button className="gap-2" size="lg" onClick={iniciarTeleconsulta}>
+                      <Video className="h-4 w-4" />
+                      Iniciar Teleconsulta
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             <AtendimentoForm agendamentoId={agendamentoId} />
           </div>
           <div className="lg:col-span-1">

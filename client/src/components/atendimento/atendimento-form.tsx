@@ -38,8 +38,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
     queryKey: ['/api/agendamentos', agendamentoId],
     queryFn: async () => {
       if (!agendamentoId) return null;
-      const res = await fetch(`/api/agendamentos/${agendamentoId}`);
-      if (!res.ok) throw new Error('Erro ao buscar agendamento');
+      const res = await apiRequest("GET", `/api/agendamentos/${agendamentoId}`);
       return res.json();
     },
     enabled: !!agendamentoId
@@ -50,8 +49,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
     queryKey: ['/api/atendimentos/agendamento', agendamentoId],
     queryFn: async () => {
       if (!agendamentoId) return [];
-      const res = await fetch(`/api/atendimentos/agendamento/${agendamentoId}`);
-      if (!res.ok) throw new Error('Erro ao buscar atendimentos');
+      const res = await apiRequest("GET", `/api/atendimentos/agendamento/${agendamentoId}`);
       return res.json();
     },
     enabled: !!agendamentoId
@@ -61,8 +59,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
   const { data: psicologos, isLoading: isLoadingPsicologos } = useQuery({
     queryKey: ['/api/psicologos'],
     queryFn: async () => {
-      const res = await fetch('/api/psicologos');
-      if (!res.ok) throw new Error('Erro ao buscar psicólogos');
+      const res = await apiRequest("GET", '/api/psicologos');
       return res.json();
     },
     enabled: user?.tipo === 'admin'
@@ -73,8 +70,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
     queryKey: ['/api/psicologos/usuario', user?.id],
     queryFn: async () => {
       if (!user?.id || user?.tipo !== 'psicologo') return null;
-      const res = await fetch(`/api/psicologos/usuario/${user.id}`);
-      if (!res.ok) throw new Error('Erro ao buscar psicólogo atual');
+      const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
       return res.json();
     },
     enabled: !!user?.id && user?.tipo === 'psicologo'
@@ -242,7 +238,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
     });
 
     // Se for uma teleconsulta, gerar link automaticamente
-    if (agendamento?.modalidade === 'teleconsulta') {
+    if (agendamento?.remoto === true) {
       gerarLinkTeleconsultaMutation.mutate(agendamentoId!);
     }
   }, [agendamentoId, psicologoId, agendamento, iniciarAtendimentoMutation, gerarLinkTeleconsultaMutation, toast]);
