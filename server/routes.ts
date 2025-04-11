@@ -798,14 +798,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Agendamento ${ag.id}, data: ${dataAg}, incluído: ${resultado}`);
           return resultado;
         });
-      } else if (pacienteId) {
-        agendamentos = await storage.getAgendamentosByPaciente(pacienteId);
-      } else if (psicologoIdParam) {
-        agendamentos = await storage.getAgendamentosByPsicologo(psicologoIdParam);
-      } else if (filialId) {
-        agendamentos = await storage.getAgendamentosByFilial(filialId);
       } else {
-        agendamentos = await storage.getAgendamentosByData(queryData);
+        // Obter todos os agendamentos
+        const todosAgendamentos = await storage.getAllAgendamentos();
+        
+        // Aplicar os filtros combinados
+        agendamentos = todosAgendamentos.filter((ag: any) => {
+          // Se tem filtro de paciente e não corresponde, excluir
+          if (pacienteId && ag.pacienteId !== pacienteId) {
+            return false;
+          }
+          
+          // Se tem filtro de psicólogo e não corresponde, excluir
+          if (psicologoIdParam && ag.psicologoId !== psicologoIdParam) {
+            return false;
+          }
+          
+          // Se tem filtro de filial e não corresponde, excluir
+          if (filialId && ag.filialId !== filialId) {
+            return false;
+          }
+          
+          // Se tem filtro de data (sem intervalo) e não corresponde, excluir
+          if (data && !dataInicio && !dataFim) {
+            const dataAg = typeof ag.data === 'string' ? ag.data : ag.data.toISOString().split('T')[0];
+            const dataStr = queryData.toISOString().split('T')[0];
+            if (dataAg !== dataStr) {
+              return false;
+            }
+          }
+          
+          // Se não tem nenhum filtro, exibir apenas os de hoje
+          if (!pacienteId && !psicologoIdParam && !filialId && !data && !dataInicio && !dataFim) {
+            const dataAg = typeof ag.data === 'string' ? ag.data : ag.data.toISOString().split('T')[0];
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const hojeStr = hoje.toISOString().split('T')[0];
+            return dataAg === hojeStr;
+          }
+          
+          // Passou por todos os filtros
+          return true;
+        });
       }
 
       const agendamentosCompletos = await Promise.all(agendamentos.map(async (agendamento) => {

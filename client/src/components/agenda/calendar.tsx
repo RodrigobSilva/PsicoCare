@@ -132,7 +132,16 @@ export default function Calendar({
       setSelectedPsicologo(userPsicologoId.toString());
     }
   }, [isPsicologo, userPsicologoId]);
+  
+  // Estado para a filial selecionada
   const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "");
+  
+  // Atualizar o filtro de filial quando receber como prop
+  useEffect(() => {
+    if (filialId) {
+      setSelectedFilial(filialId.toString());
+    }
+  }, [filialId]);
 
   // Consultas para obter dados
   const { data: psicologos, isLoading: isLoadingPsicologos } = useQuery({

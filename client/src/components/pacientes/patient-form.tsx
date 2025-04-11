@@ -354,34 +354,37 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="dadosPessoais.ativo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="mr-2 h-4 w-4"
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                          <FormLabel className="m-0">
-                            Paciente Ativo
-                          </FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            {field.value
-                              ? "O paciente está ativo e pode agendar consultas"
-                              : "O paciente está inativo e não pode agendar consultas"}
-                          </p>
+              {/* Campo ativo só aparece na edição de paciente existente */}
+              {pacienteId && (
+                <FormField
+                  control={form.control}
+                  name="dadosPessoais.ativo"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="mr-2 h-4 w-4"
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <FormLabel className="m-0">
+                              Paciente Ativo
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              {field.value
+                                ? "O paciente está ativo e pode agendar consultas"
+                                : "O paciente está inativo e não pode agendar consultas"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {!pacienteId && (
                 <FormField
@@ -525,6 +528,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value || ""}
+                    value={field.value || "nenhum"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -532,7 +536,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="nenhum">Nenhum</SelectItem>
+                      <SelectItem value="nenhum">Particular (Sem plano)</SelectItem>
                       {planosSaude?.map((plano: any) => (
                         <SelectItem key={plano.id} value={plano.id.toString()}>
                           {plano.nome}
@@ -544,34 +548,39 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                 </FormItem>
               )}
             />
+            
+            {/* Mostrar campos de carteirinha e validade apenas se tiver um plano de saúde selecionado */}
+            {form.watch("planoSaude.planoSaudeId") && form.watch("planoSaude.planoSaudeId") !== "nenhum" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="planoSaude.numeroCarteirinha"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número da Carteirinha</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Número da carteirinha" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="planoSaude.numeroCarteirinha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número da Carteirinha</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Número da carteirinha" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="planoSaude.dataValidade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Validade</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="planoSaude.dataValidade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de Validade</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </TabsContent>
         </Tabs>
 
