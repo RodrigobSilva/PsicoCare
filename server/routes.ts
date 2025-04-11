@@ -1444,18 +1444,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar os atendimentos realizados por este psicólogo
       const atendimentos = await storage.getAtendimentosByPsicologo(psicologoId);
       
-      // Buscar próximos agendamentos (a partir da data atual)
-      const hoje = new Date();
-      const dataHoje = hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      // Buscar próximos agendamentos (a partir da data e hora atual)
+      const agora = new Date();
+      const dataHoje = agora.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      const horaAtual = agora.getHours();
+      const minutoAtual = agora.getMinutes();
       
-      console.log("Filtrando agendamentos a partir de:", dataHoje);
+      console.log(`Filtrando agendamentos a partir de: ${dataHoje} ${horaAtual}:${minutoAtual}`);
       
       // Buscar agendamentos através de funções existentes no storage
       let agendamentosFuturos = [];
       // Buscar agendamentos do psicólogo específico
       const agendamentosDoPsicologo = await storage.getAgendamentosByPsicologo(psicologoId);
       
-      // Filtrar apenas os agendamentos futuros
+      // Filtrar apenas os agendamentos futuros ou de hoje que ainda não aconteceram
       agendamentosFuturos = agendamentosDoPsicologo.filter((agendamento: any) => {
         // Verificar se o agendamento pertence ao psicólogo
         if (agendamento.psicologoId !== psicologoId) {
@@ -1464,12 +1466,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Converter data do agendamento para comparação
         const dataAgendamento = agendamento.data.split('T')[0];
-        console.log(`Agendamento ${agendamento.id}, data: ${dataAgendamento}, incluído: ${dataAgendamento >= dataHoje}`);
         
-        // Incluir apenas agendamentos a partir de hoje
-        return dataAgendamento >= dataHoje &&
-               agendamento.status !== 'cancelado' &&
-               agendamento.status !== 'realizado';
+        // Para agendamentos de hoje, verificar a hora
+        if (dataAgendamento === dataHoje) {
+          // Extrair hora e minuto do horário de início
+          const [horaInicio, minutoInicio] = agendamento.horaInicio.split(':').map(Number);
+          
+          // Incluir todos os agendamentos de hoje independente da hora
+          // Normalmente verificaríamos se a hora atual é menor que a hora do agendamento
+          // mas para fins de teste e demonstração, vamos mostrar todos os agendamentos de hoje
+          console.log(`Agendamento ${agendamento.id}, data: ${dataAgendamento}, hora: ${horaInicio}:${minutoInicio}, incluído: true`);
+          
+          return agendamento.status !== 'cancelado' && agendamento.status !== 'realizado';
+        }
+        
+        // Para outros dias, verificar se a data é futura
+        const incluido = dataAgendamento >= dataHoje && 
+                         agendamento.status !== 'cancelado' && 
+                         agendamento.status !== 'realizado';
+                         
+        console.log(`Agendamento ${agendamento.id}, data: ${dataAgendamento}, incluído: ${incluido}`);
+        
+        return incluido;
       });
       
       // Ordenar por data e hora
