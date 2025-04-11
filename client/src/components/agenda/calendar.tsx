@@ -122,19 +122,20 @@ export default function Calendar({
 
   // Se for psicólogo, sempre usa o ID do próprio psicólogo
   // Caso contrário, usa o ID passado como prop ou o selecionado no filtro
-  const [selectedPsicologo, setSelectedPsicologo] = useState<string>(
-    psicologoId ? psicologoId.toString() : "nenhum"
-  );
+  const [selectedPsicologo, setSelectedPsicologo] = useState<string>("todos");
 
   // Atualizar o filtro de psicólogo quando recebermos os dados do psicólogo do usuário
+  // ou quando a prop psicologoId mudar
   useEffect(() => {
     if (isPsicologo && userPsicologoId) {
       setSelectedPsicologo(userPsicologoId.toString());
+    } else if (psicologoId) {
+      setSelectedPsicologo(psicologoId.toString());
     }
-  }, [isPsicologo, userPsicologoId]);
+  }, [isPsicologo, userPsicologoId, psicologoId]);
   
-  // Estado para a filial selecionada
-  const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "nenhuma");
+  // Estado para a filial selecionada - inicializa corretamente
+  const [selectedFilial, setSelectedFilial] = useState<string>("nenhuma");
   
   // Atualizar o filtro de filial quando receber como prop
   useEffect(() => {
@@ -189,15 +190,13 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, permite filtrar por psicólogo
-    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && 
-             selectedPsicologo !== "nenhum" && selectedPsicologo !== "") {
+    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos") {
       params.append("psicologoId", selectedPsicologo);
       console.log("Aplicando filtro de psicólogo:", selectedPsicologo);
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "todas" && 
-        selectedFilial !== "nenhuma" && selectedFilial !== "") {
+    if (selectedFilial && selectedFilial !== "nenhuma") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
@@ -245,11 +244,10 @@ export default function Calendar({
   };
 
   // Se for psicólogo, sempre busca seus agendamentos
-  // Se for admin/secretaria, busca com filtros ou busca todos
+  // Se for admin/secretaria, busca todos ou com filtros aplicados
   const shouldFetchAgendamentos = isPsicologo ? 
     !!userPsicologoId : 
-    ((selectedPsicologo !== "nenhum" && selectedPsicologo !== "") || 
-     (selectedFilial !== "nenhuma" && selectedFilial !== ""));
+    true; // Sempre buscar para admin/secretaria (mesmo sem filtros)
 
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
