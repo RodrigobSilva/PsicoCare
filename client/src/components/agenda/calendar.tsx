@@ -123,7 +123,7 @@ export default function Calendar({
   // Se for psicólogo, sempre usa o ID do próprio psicólogo
   // Caso contrário, usa o ID passado como prop ou o selecionado no filtro
   const [selectedPsicologo, setSelectedPsicologo] = useState<string>(
-    psicologoId ? psicologoId.toString() : ""
+    psicologoId ? psicologoId.toString() : "nenhum"
   );
 
   // Atualizar o filtro de psicólogo quando recebermos os dados do psicólogo do usuário
@@ -189,13 +189,13 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, permite filtrar por psicólogo
-    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "") {
+    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "nenhum") {
       params.append("psicologoId", selectedPsicologo);
       console.log("Aplicando filtro de psicólogo:", selectedPsicologo);
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "") {
+    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "nenhuma") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
@@ -243,7 +243,7 @@ export default function Calendar({
   // Se for admin/secretaria, busca com filtros ou busca todos
   const shouldFetchAgendamentos = isPsicologo ? 
     !!userPsicologoId : 
-    (!!selectedPsicologo || selectedPsicologo === "todos" || !!selectedFilial || selectedFilial === "todas");
+    (selectedPsicologo !== "nenhum" || selectedFilial !== "nenhuma");
 
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
@@ -579,7 +579,7 @@ export default function Calendar({
     }
 
     // Para admin/secretaria, mostrar mensagem quando nenhum filtro estiver selecionado
-    if (!isPsicologo && selectedPsicologo === "" && selectedFilial === "") {
+    if (!isPsicologo && (selectedPsicologo === "nenhum" || selectedPsicologo === "") && (selectedFilial === "nenhuma" || selectedFilial === "")) {
       return (
         <div className="flex justify-center items-center p-12 h-full">
           <div className="text-center max-w-md p-6 bg-neutral-50 rounded-lg border border-neutral-200">
@@ -660,7 +660,7 @@ export default function Calendar({
                   <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Selecione um psicólogo</SelectItem>
+                  <SelectItem value="nenhum">Selecione um psicólogo</SelectItem>
                   <SelectItem value="todos">Todos os psicólogos</SelectItem>
                   {psicologos?.map((psicologo: any) => (
                     <SelectItem 
@@ -688,7 +688,7 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Selecione uma filial</SelectItem>
+                <SelectItem value="nenhuma">Selecione uma filial</SelectItem>
                 <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>
