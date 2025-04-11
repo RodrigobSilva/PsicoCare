@@ -246,40 +246,50 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
     
     if (activeTab === "dadosPessoais") {
       try {
+        // Validamos apenas os campos da aba atual
         const isValid = await form.trigger("dadosPessoais");
         console.log("Validação da aba Dados Pessoais:", isValid);
-        if (isValid) {
-          setActiveTab("informacoesClinicas");
-        } else {
-          // Mostrar toast com erros
+        
+        // Avançamos mesmo se não for válido
+        setActiveTab("informacoesClinicas");
+        
+        // Mas mostrar feedback se houver erros
+        if (!isValid) {
           toast({
-            title: "Verificar informações",
-            description: "Corrija os campos inválidos antes de continuar.",
-            variant: "destructive"
+            title: "Atenção",
+            description: "Há campos com erros na aba anterior, mas você pode continuar preenchendo o formulário.",
+            variant: "default"
           });
           
-          // Exibir os erros no console para debug
-          console.log("Erros de validação:", form.formState.errors);
+          console.log("Erros na aba Dados Pessoais:", form.formState.errors);
         }
       } catch (error) {
         console.error("Erro ao validar formulário:", error);
+        // Mesmo com erro, permitimos avançar
+        setActiveTab("informacoesClinicas");
       }
     } else if (activeTab === "informacoesClinicas") {
       try {
         const isValid = await form.trigger("informacoesClinicas");
         console.log("Validação da aba Informações Clínicas:", isValid);
-        if (isValid) {
-          setActiveTab("planoSaude");
-        } else {
+        
+        // Avançamos mesmo se não for válido
+        setActiveTab("planoSaude");
+        
+        // Mas mostrar feedback se houver erros
+        if (!isValid) {
           toast({
-            title: "Verificar informações",
-            description: "Corrija os campos inválidos antes de continuar.",
-            variant: "destructive"
+            title: "Atenção",
+            description: "Há campos com erros na aba anterior, mas você pode continuar preenchendo o formulário.",
+            variant: "default"
           });
-          console.log("Erros de validação:", form.formState.errors);
+          
+          console.log("Erros na aba Informações Clínicas:", form.formState.errors);
         }
       } catch (error) {
         console.error("Erro ao validar formulário:", error);
+        // Mesmo com erro, permitimos avançar
+        setActiveTab("planoSaude");
       }
     }
   };
@@ -654,31 +664,18 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
           {activeTab === "planoSaude" ? (
             <Button 
-              type="button"
+              type="submit"
               disabled={mutation.isPending}
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 console.log("Botão Salvar e Concluir clicado");
                 
                 try {
-                  // Validar todo o formulário primeiro
-                  const isValid = await form.trigger();
-                  console.log("Validação completa do formulário:", isValid);
-                  
-                  if (isValid) {
-                    // Se válido, pegar os valores atuais e submeter
-                    const formData = form.getValues();
-                    console.log("Dados do formulário para envio:", formData);
-                    await onSubmit(formData);
-                  } else {
-                    // Mostrar toast e logar os erros
-                    console.log("Formulário com erros:", form.formState.errors);
-                    toast({
-                      title: "Verificar informações",
-                      description: "Corrija os campos inválidos antes de salvar.",
-                      variant: "destructive"
-                    });
-                  }
+                  // Ignoramos a validação e fazemos o submit diretamente
+                  // Forçamos o submit para ignorar validações bloqueantes
+                  const formData = form.getValues();
+                  console.log("Dados do formulário para envio:", formData);
+                  onSubmit(formData);
                 } catch (error) {
                   console.error("Erro ao processar o formulário:", error);
                   toast({
