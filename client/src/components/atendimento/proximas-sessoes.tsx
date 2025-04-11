@@ -7,17 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, User, Video, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ProximasSessoesProps {
   psicologoId?: number;
+  onSelectAgendamento?: (agendamentoId: number) => void;
 }
 
-export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
+export default function ProximasSessoes({ psicologoId, onSelectAgendamento }: ProximasSessoesProps) {
   const { user } = useAuth();
-  const [_, setLocation] = useLocation();
+  const [_, navigate] = useLocation();
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -106,21 +107,43 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
   // Próximas consultas filtradas
   const proximasConsultas = agendamentos || [];
 
-  const iniciarAtendimento = async (agendamentoId: number) => {
+  const iniciarAtendimento = async (agendamento: any) => {
     try {
-      // Mostrar mensagem de processamento
-      alert("Iniciando atendimento... Por favor, aguarde.");
+      if (onSelectAgendamento) {
+        // Se houver um callback de seleção, usá-lo (para uso em outras páginas)
+        onSelectAgendamento(agendamento.id);
+        return;
+      }
       
-      // Redirecionar diretamente para a página de atendimento
-      // Em vez de criar um atendimento aqui, vamos deixar essa lógica para a página de atendimento
-      // Isso evitará problemas de estado e perda de sessão durante o redirecionamento
-      
-      // Usar location.replace para evitar ciclos no histórico de navegação
-      window.location.replace(`/atendimento/${agendamentoId}`);
-      
+      // Verificar se é um atendimento remoto (teleconsulta) ou presencial
+      if (agendamento.remoto) {
+        // Para teleconsulta, direcionar para a página específica
+        navigate(`/teleconsulta/${agendamento.id}`);
+      } else {
+        // Para atendimento presencial, verificar se já existe um atendimento
+        const verificacaoRes = await apiRequest("GET", `/api/atendimentos/agendamento/${agendamento.id}`);
+        const atendimentosExistentes = await verificacaoRes.json();
+        
+        if (atendimentosExistentes && atendimentosExistentes.length > 0) {
+          // Se já existe, redirecionar para o formulário de atendimento
+          navigate(`/atendimento/${agendamento.id}`);
+        } else {
+          // Se não existe, criar um novo atendimento
+          const dataAtual = new Date();
+          
+          const dadosAtendimento = {
+            agendamentoId: agendamento.id,
+            dataAtendimento: dataAtual,
+            status: "em_andamento"
+          };
+          
+          await apiRequest("POST", "/api/atendimentos", dadosAtendimento);
+          navigate(`/atendimento/${agendamento.id}`);
+        }
+      }
     } catch (error) {
       console.error("Erro ao iniciar atendimento:", error);
-      alert("Houve um erro ao iniciar o atendimento. Tente novamente.");
+      alert("Ocorreu um erro ao iniciar o atendimento. Por favor, tente novamente.");
     }
   };
 
@@ -186,18 +209,28 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
                       </div>
                       
                       <div className="flex items-center space-x-2 text-muted-foreground">
-                        <Badge variant="secondary">
-                          {agendamento.remoto ? 'Teleconsulta' : 'Presencial'}
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          {agendamento.remoto ? (
+                            <>
+                              <Video className="h-3 w-3" />
+                              <span>Teleconsulta</span>
+                            </>
+                          ) : (
+                            <>
+                              <MapPin className="h-3 w-3" />
+                              <span>Presencial</span>
+                            </>
+                          )}
                         </Badge>
-                        {agendamento.sala && (
+                        {agendamento.sala && !agendamento.remoto && (
                           <span>• Sala: {agendamento.sala.nome}</span>
                         )}
                       </div>
                     </div>
                     
                     <div className="flex items-center">
-                      <Button onClick={() => iniciarAtendimento(agendamento.id)}>
-                        Iniciar Atendimento
+                      <Button onClick={() => iniciarAtendimento(agendamento)} className="whitespace-nowrap">
+                        {agendamento.remoto ? 'Iniciar Teleconsulta' : 'Iniciar Atendimento'}
                       </Button>
                     </div>
                   </div>
