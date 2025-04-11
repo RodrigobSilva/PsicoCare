@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, ChevronLeft, PlayCircle, StopCircle, FileText, Send, Video } from "lucide-react";
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 interface AtendimentoFormProps {
   agendamentoId?: number;
@@ -119,7 +121,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
       queryClient.invalidateQueries({ queryKey: ['/api/atendimentos/agendamento', agendamentoId] });
       queryClient.invalidateQueries({ queryKey: ['/api/agendamentos', agendamentoId] });
       setSessaoIniciada(false);
-      
+
       // Chamar callback onSuccess se existir
       if (onSuccess) {
         onSuccess();
@@ -272,14 +274,14 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
   // Simular geração de resumo via OpenAI
   const handleGerarResumo = useCallback(() => {
     setGerandoResumo(true);
-    
+
     // Simulando uma transcrição para teste
     const transcricaoExemplo = "Na sessão de hoje, o paciente relatou dificuldades no ambiente de trabalho, " +
       "principalmente relacionadas a conflitos com colegas. Mencionou sintomas de ansiedade como preocupação excessiva, " +
       "dificuldade para dormir e tensão muscular. Discutimos técnicas de respiração e mindfulness para gerenciar a ansiedade " +
       "no momento em que ela surge. Combinamos que para a próxima sessão o paciente tentará identificar gatilhos específicos " +
       "que desencadeiam sua ansiedade no trabalho.";
-    
+
     gerarResumoMutation.mutate(transcricaoExemplo);
   }, [gerarResumoMutation]);
 
@@ -364,15 +366,15 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
               <CardTitle>Atendimento</CardTitle>
               <CardDescription>Gerenciamento da sessão terapêutica</CardDescription>
             </div>
-            <Badge 
-              variant={statusAgendamento === 'concluido' ? 'default' : 
-                      statusAgendamento === 'cancelado' ? 'destructive' : 
-                      statusAgendamento === 'confirmado' ? 'outline' : 'secondary'}
-            >
-              {statusAgendamento === 'concluido' ? 'Concluído' : 
-               statusAgendamento === 'cancelado' ? 'Cancelado' : 
-               statusAgendamento === 'confirmado' ? 'Confirmado' : 'Agendado'}
-            </Badge>
+            <div className="flex flex-col gap-2">
+              <Badge 
+                variant={statusAgendamento === 'concluido' ? 'default' : 
+                        statusAgendamento === 'cancelado' ? 'destructive' : 
+                        statusAgendamento === 'confirmado' ? 'outline' : 'secondary'}
+              >
+                {format(new Date(agendamento.data), "'Sessão em' dd 'de' MMMM", { locale: ptBR })} - {agendamento.horaInicio.substring(0, 5)}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -425,7 +427,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
           {isTeleconsulta && (
             <div className="border rounded-md p-4 space-y-4">
               <h3 className="text-lg font-semibold">Teleconsulta</h3>
-              
+
               {!linkTeleconsulta ? (
                 <div className="flex gap-2">
                   <Button
@@ -441,7 +443,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
                   <div className="p-2 bg-muted rounded flex items-center justify-between">
                     <span className="font-mono text-sm truncate">{linkTeleconsulta}</span>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     <Button onClick={() => handleEnviarLink('email')} disabled={enviarLinkMutation.isPending}>
                       {enviarLinkMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -531,7 +533,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
                   </p>
                 )}
               </div>
-              
+
               <div>
                 <Label htmlFor="observacoes">Observações Adicionais</Label>
                 <Textarea
