@@ -134,7 +134,7 @@ export default function Calendar({
   }, [isPsicologo, userPsicologoId]);
   
   // Estado para a filial selecionada
-  const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "");
+  const [selectedFilial, setSelectedFilial] = useState<string>(filialId ? filialId.toString() : "nenhuma");
   
   // Atualizar o filtro de filial quando receber como prop
   useEffect(() => {
