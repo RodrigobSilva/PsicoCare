@@ -600,7 +600,11 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
               disabled={mutation.isPending}
               onClick={(e) => {
                 e.preventDefault();
-                form.handleSubmit(onSubmit)();
+                // Submeter o formulário e fechar quando concluído
+                form.handleSubmit(async (data) => {
+                  await onSubmit(data);
+                  // O callback onSuccess será chamado após o sucesso da mutation
+                })();
               }}
             >
               {mutation.isPending ? (
@@ -609,7 +613,7 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
                   Salvando...
                 </>
               ) : (
-                "Salvar"
+                "Salvar e Concluir"
               )}
             </Button>
           ) : (

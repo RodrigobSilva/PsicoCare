@@ -194,7 +194,7 @@ export default function Calendar({
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "none") {
+    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "none" && selectedFilial !== "") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
@@ -239,8 +239,10 @@ export default function Calendar({
   };
 
   // Se for psicólogo, sempre busca seus agendamentos
-  // Se for admin/secretaria, só busca se tiver filtro ativo
-  const shouldFetchAgendamentos = isPsicologo ? !!userPsicologoId : (!!selectedPsicologo || !!selectedFilial);
+  // Se for admin/secretaria, busca com filtros ou busca todos
+  const shouldFetchAgendamentos = isPsicologo ? 
+    !!userPsicologoId : 
+    (!!selectedPsicologo || selectedPsicologo === "todos" || !!selectedFilial || selectedFilial === "todas");
 
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
