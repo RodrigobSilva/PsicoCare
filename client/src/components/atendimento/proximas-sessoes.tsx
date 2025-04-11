@@ -87,7 +87,7 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
       if (atendimentosExistentes && atendimentosExistentes.length > 0) {
         // Se já existe um atendimento, redirecionar para a página do atendimento
         console.log("Atendimento já existente, redirecionando...");
-        setLocation(`/atendimento/${agendamentoId}`);
+        window.location.href = `/atendimento/${agendamentoId}`;
       } else {
         // Se não existe atendimento, criar um novo
         console.log("Criando novo atendimento para agendamento:", agendamentoId);
@@ -113,8 +113,9 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
         const novoAtendimento = await criacaoRes.json();
         console.log("Novo atendimento criado:", novoAtendimento);
         
-        // Redirecionar para a página do atendimento
-        setLocation(`/atendimento/${agendamentoId}`);
+        // Redirecionar para a página do atendimento usando o ID do agendamento
+        // A página de atendimento vai buscar o atendimento associado a este agendamento
+        window.location.href = `/atendimento/${agendamentoId}`;
       }
     } catch (error) {
       console.error("Erro ao iniciar atendimento:", error);
