@@ -20,10 +20,11 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Search, Edit, Trash2, PowerOff, Eye } from "lucide-react";
+import { Loader2, Plus, Search, Edit, Trash2, PowerOff, Eye, Upload, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import PatientForm from "@/components/pacientes/patient-form";
+import ImportPatients from "@/components/pacientes/import-patients";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -119,7 +120,10 @@ export default function Pacientes() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Gerenciamento de Pacientes</h1>
           {isAdminOrSecretaria && (
-            <Button onClick={() => setOpen(true)}>
+            <Button onClick={() => {
+              setEditing(null); // Garantir que estamos criando um novo paciente
+              setOpen(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" /> Novo Paciente
             </Button>
           )}
