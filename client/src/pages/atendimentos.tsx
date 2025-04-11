@@ -304,7 +304,7 @@ export default function Atendimentos() {
                           {isAdminOrPsicologo && (
                             <div className="flex items-center">
                               <Button onClick={() => iniciarAtendimento(agendamento.id)}>
-                                Iniciar Atendimento
+                                {agendamento.remoto ? 'Iniciar Teleconsulta' : 'Iniciar Atendimento'}
                               </Button>
                             </div>
                           )}
