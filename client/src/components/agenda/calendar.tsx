@@ -193,10 +193,13 @@ export default function Calendar({
       params.append("psicologoId", selectedPsicologo);
     }
 
+    // Adicionar filtro de filial - certifique-se de que é um valor válido
     if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "none") {
       params.append("filialId", selectedFilial);
+      console.log("Aplicando filtro de filial:", selectedFilial);
     }
 
+    console.log("Parâmetros de filtro completos:", Object.fromEntries(params.entries()));
     return params.toString();
   };
 
