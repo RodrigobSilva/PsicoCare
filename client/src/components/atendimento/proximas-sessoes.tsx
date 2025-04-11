@@ -41,9 +41,11 @@ export default function ProximasSessoes({ psicologoId, onSelectAgendamento }: Pr
   // Usar o psicologoId passado como prop, ou o ID do psicólogo atual
   const psicologoIdFinal = psicologoId || psicologoUsuario?.id;
 
+  const [showOnlyToday, setShowOnlyToday] = useState(true);
+
   // Buscar próximos agendamentos do psicólogo
   const { data: agendamentos, isLoading, error: agendamentosError } = useQuery({
-    queryKey: ['/api/agendamentos/proximos', psicologoIdFinal],
+    queryKey: ['/api/agendamentos/proximos', psicologoIdFinal, showOnlyToday],
     queryFn: async () => {
       if (!psicologoIdFinal) return [];
       
@@ -76,10 +78,13 @@ export default function ProximasSessoes({ psicologoId, onSelectAgendamento }: Pr
           const [horaInicio, minutoInicio] = agendamento.horaInicio.split(':').map(Number);
           dataAgendamento.setHours(horaInicio, minutoInicio, 0, 0);
           
+          const isHoje = dataAgendamento.toDateString() === agora.toDateString();
+          
           return (
             dataAgendamento >= agora && 
             agendamento.status !== 'cancelado' && 
-            agendamento.status !== 'realizado'
+            agendamento.status !== 'realizado' &&
+            (!showOnlyToday || isHoje)
           );
         }).sort((a: any, b: any) => {
           // Ordenar por data e hora
@@ -126,10 +131,21 @@ export default function ProximasSessoes({ psicologoId, onSelectAgendamento }: Pr
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Próximas Sessões</CardTitle>
-        <CardDescription>
-          Visualize suas próximas sessões agendadas e inicie os atendimentos
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Próximas Sessões</CardTitle>
+            <CardDescription>
+              Visualize suas próximas sessões agendadas e inicie os atendimentos
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowOnlyToday(!showOnlyToday)}
+          >
+            {showOnlyToday ? 'Mostrar Todas' : 'Apenas Hoje'}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
