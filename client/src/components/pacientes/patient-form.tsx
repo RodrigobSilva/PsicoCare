@@ -204,27 +204,82 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
   // Lidar com envio do formulário
   const onSubmit = async (data: PatientFormValues) => {
     try {
+      console.log("Tentando submeter formulário com dados:", data);
+      
+      // Validar o formulário inteiro
       const isValid = await form.trigger();
-      if (!isValid) return;
+      console.log("Formulário válido?", isValid);
+      
+      if (!isValid) {
+        console.log("Formulário com erros:", form.formState.errors);
+        toast({
+          title: "Verificar informações",
+          description: "Corrija os campos inválidos antes de salvar.",
+          variant: "destructive"
+        });
+        return;
+      }
 
+      console.log("Enviando dados para o servidor");
       await mutation.mutateAsync(data);
+      
+      toast({
+        title: "Sucesso!",
+        description: pacienteId ? "Paciente atualizado com sucesso." : "Paciente cadastrado com sucesso.",
+        variant: "default"
+      });
+      
       onSuccess();
     } catch (error) {
       console.error("Erro ao salvar paciente:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar os dados do paciente. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
   // Avançar para próxima aba
   const goToNextTab = async () => {
+    console.log("Tentando avançar para a próxima aba. Aba atual:", activeTab);
+    
     if (activeTab === "dadosPessoais") {
-      const isValid = await form.trigger("dadosPessoais");
-      if (isValid) {
-        setActiveTab("informacoesClinicas");
+      try {
+        const isValid = await form.trigger("dadosPessoais");
+        console.log("Validação da aba Dados Pessoais:", isValid);
+        if (isValid) {
+          setActiveTab("informacoesClinicas");
+        } else {
+          // Mostrar toast com erros
+          toast({
+            title: "Verificar informações",
+            description: "Corrija os campos inválidos antes de continuar.",
+            variant: "destructive"
+          });
+          
+          // Exibir os erros no console para debug
+          console.log("Erros de validação:", form.formState.errors);
+        }
+      } catch (error) {
+        console.error("Erro ao validar formulário:", error);
       }
     } else if (activeTab === "informacoesClinicas") {
-      const isValid = await form.trigger("informacoesClinicas");
-      if (isValid) {
-        setActiveTab("planoSaude");
+      try {
+        const isValid = await form.trigger("informacoesClinicas");
+        console.log("Validação da aba Informações Clínicas:", isValid);
+        if (isValid) {
+          setActiveTab("planoSaude");
+        } else {
+          toast({
+            title: "Verificar informações",
+            description: "Corrija os campos inválidos antes de continuar.",
+            variant: "destructive"
+          });
+          console.log("Erros de validação:", form.formState.errors);
+        }
+      } catch (error) {
+        console.error("Erro ao validar formulário:", error);
       }
     }
   };
@@ -599,27 +654,39 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
 
           {activeTab === "planoSaude" ? (
             <Button 
-              type="submit"
+              type="button"
               disabled={mutation.isPending}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
-                // Validar todo o formulário e submeter
-                form.trigger().then(isValid => {
+                console.log("Botão Salvar e Concluir clicado");
+                
+                try {
+                  // Validar todo o formulário primeiro
+                  const isValid = await form.trigger();
+                  console.log("Validação completa do formulário:", isValid);
+                  
                   if (isValid) {
-                    // Submeter o formulário e fechar quando concluído
-                    form.handleSubmit(async (data) => {
-                      await onSubmit(data);
-                      // O callback onSuccess será chamado após o sucesso da mutation
-                    })();
+                    // Se válido, pegar os valores atuais e submeter
+                    const formData = form.getValues();
+                    console.log("Dados do formulário para envio:", formData);
+                    await onSubmit(formData);
                   } else {
-                    // Se houver erros, mostrar mensagem ao usuário
+                    // Mostrar toast e logar os erros
+                    console.log("Formulário com erros:", form.formState.errors);
                     toast({
                       title: "Verificar informações",
                       description: "Corrija os campos inválidos antes de salvar.",
                       variant: "destructive"
                     });
                   }
-                });
+                } catch (error) {
+                  console.error("Erro ao processar o formulário:", error);
+                  toast({
+                    title: "Erro",
+                    description: "Ocorreu um erro ao salvar os dados. Tente novamente.",
+                    variant: "destructive"
+                  });
+                }
               }}
             >
               {mutation.isPending ? (
@@ -632,7 +699,11 @@ export default function PatientForm({ pacienteId, onSuccess }: PatientFormProps)
               )}
             </Button>
           ) : (
-            <Button type="button" onClick={goToNextTab}>
+            <Button 
+              type="button" 
+              onClick={goToNextTab}
+              className="bg-primary hover:bg-primary/90"
+            >
               Próximo
             </Button>
           )}
