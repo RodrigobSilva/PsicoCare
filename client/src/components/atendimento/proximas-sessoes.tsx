@@ -41,15 +41,22 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
   const psicologoIdFinal = psicologoId || psicologoUsuario?.id;
 
   // Buscar próximos agendamentos do psicólogo
-  const { data: proximasConsultas, isLoading, error: agendamentosError } = useQuery({
-    queryKey: ['/api/atendimentos/psicologo', psicologoIdFinal],
+  const { data: agendamentos, isLoading, error: agendamentosError } = useQuery({
+    queryKey: ['/api/agendamentos/proximos', psicologoIdFinal],
     queryFn: async () => {
       if (!psicologoIdFinal) return [];
       
       console.log("Buscando agendamentos para o psicólogo ID:", psicologoIdFinal);
       
       try {
-        const res = await apiRequest("GET", `/api/atendimentos/psicologo/${psicologoIdFinal}`);
+        // Buscar os agendamentos a partir de hoje para este psicólogo
+        const hoje = new Date();
+        const dataHoje = hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        
+        // URL para buscar agendamentos
+        const url = `/api/agendamentos?dataInicio=${dataHoje}&psicologoId=${psicologoIdFinal}`;
+        
+        const res = await apiRequest("GET", url);
         
         // Verificar se a resposta é de fato um JSON
         const contentType = res.headers.get("content-type");
@@ -59,8 +66,35 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
         }
         
         const data = await res.json();
-        console.log("Dados recebidos:", data);
-        return data;
+        console.log("Agendamentos recebidos:", data.length);
+        
+        // Filtrar os agendamentos futuros e não cancelados
+        const agora = new Date();
+        const proximasConsultas = data.filter((agendamento: any) => {
+          const dataAgendamento = new Date(agendamento.data);
+          const [horaInicio, minutoInicio] = agendamento.horaInicio.split(':').map(Number);
+          dataAgendamento.setHours(horaInicio, minutoInicio, 0, 0);
+          
+          return (
+            dataAgendamento >= agora && 
+            agendamento.status !== 'cancelado' && 
+            agendamento.status !== 'realizado'
+          );
+        }).sort((a: any, b: any) => {
+          // Ordenar por data e hora
+          const dataA = new Date(a.data);
+          const [horaA, minutoA] = a.horaInicio.split(':').map(Number);
+          dataA.setHours(horaA, minutoA, 0, 0);
+          
+          const dataB = new Date(b.data);
+          const [horaB, minutoB] = b.horaInicio.split(':').map(Number);
+          dataB.setHours(horaB, minutoB, 0, 0);
+          
+          return dataA.getTime() - dataB.getTime();
+        });
+        
+        console.log("Próximas consultas filtradas:", proximasConsultas.length);
+        return proximasConsultas;
       } catch (error) {
         console.error('Erro ao buscar próximos agendamentos:', error);
         return [];
@@ -68,6 +102,9 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
     },
     enabled: !!psicologoIdFinal
   });
+  
+  // Próximas consultas filtradas
+  const proximasConsultas = agendamentos || [];
 
   const iniciarAtendimento = async (agendamentoId: number) => {
     try {
