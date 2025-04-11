@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout/layout";
 import { apiRequest } from "@/lib/queryClient";
-import AtendimentoForm from "@/components/atendimento/atendimento-form";
+// Removida importação do AtendimentoForm que não é usada nesta página
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { 
@@ -190,7 +190,7 @@ export default function Atendimentos() {
       if (atendimentosExistentes && atendimentosExistentes.length > 0) {
         // Se já existe um atendimento, redirecionar para a página do atendimento
         console.log("Atendimento já existente, redirecionando...");
-        window.location.href = `/atendimento/${agendamentoId}`;
+        setLocation(`/atendimento/${agendamentoId}`);
       } else {
         // Se não existe atendimento, criar um novo
         console.log("Criando novo atendimento para agendamento:", agendamentoId);
@@ -217,7 +217,7 @@ export default function Atendimentos() {
         console.log("Novo atendimento criado:", novoAtendimento);
         
         // Redirecionar para a página do atendimento
-        window.location.href = `/atendimento/${agendamentoId}`;
+        setLocation(`/atendimento/${agendamentoId}`);
       }
     } catch (error) {
       console.error("Erro ao iniciar atendimento:", error);
