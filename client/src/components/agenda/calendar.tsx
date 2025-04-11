@@ -189,16 +189,21 @@ export default function Calendar({
       params.append("psicologoId", userPsicologoId.toString());
     } 
     // Para admin/secretária, permite filtrar por psicólogo
-    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && selectedPsicologo !== "nenhum") {
+    else if (!isPsicologo && selectedPsicologo && selectedPsicologo !== "todos" && 
+             selectedPsicologo !== "nenhum" && selectedPsicologo !== "") {
       params.append("psicologoId", selectedPsicologo);
       console.log("Aplicando filtro de psicólogo:", selectedPsicologo);
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "todas" && selectedFilial !== "nenhuma") {
+    if (selectedFilial && selectedFilial !== "todas" && 
+        selectedFilial !== "nenhuma" && selectedFilial !== "") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
+    
+    // Registro para depuração
+    console.log("Filtros aplicados - Psicólogo:", selectedPsicologo, "Filial:", selectedFilial);
 
     console.log("Parâmetros de filtro completos:", Object.fromEntries(params.entries()));
     return params.toString();
@@ -243,7 +248,8 @@ export default function Calendar({
   // Se for admin/secretaria, busca com filtros ou busca todos
   const shouldFetchAgendamentos = isPsicologo ? 
     !!userPsicologoId : 
-    (selectedPsicologo !== "nenhum" || selectedFilial !== "nenhuma");
+    ((selectedPsicologo !== "nenhum" && selectedPsicologo !== "") || 
+     (selectedFilial !== "nenhuma" && selectedFilial !== ""));
 
   // Buscar agendamentos
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
