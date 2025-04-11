@@ -69,8 +69,57 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
     enabled: !!psicologoIdFinal
   });
 
-  const iniciarAtendimento = (agendamentoId: number) => {
-    setLocation(`/atendimento/${agendamentoId}`);
+  const iniciarAtendimento = async (agendamentoId: number) => {
+    try {
+      // Verificar se já existe um atendimento para este agendamento
+      console.log("Verificando atendimento existente para agendamento:", agendamentoId);
+      const verificacaoRes = await apiRequest("GET", `/api/atendimentos/agendamento/${agendamentoId}`);
+      
+      // Verificar se a resposta é JSON
+      const contentType = verificacaoRes.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("A resposta de verificação não é um JSON válido");
+        throw new Error("Erro ao verificar atendimento existente");
+      }
+      
+      const atendimentosExistentes = await verificacaoRes.json();
+      
+      if (atendimentosExistentes && atendimentosExistentes.length > 0) {
+        // Se já existe um atendimento, redirecionar para a página do atendimento
+        console.log("Atendimento já existente, redirecionando...");
+        setLocation(`/atendimento/${agendamentoId}`);
+      } else {
+        // Se não existe atendimento, criar um novo
+        console.log("Criando novo atendimento para agendamento:", agendamentoId);
+        
+        const dataAtual = new Date();
+        
+        // Dados para criar o atendimento
+        const dadosAtendimento = {
+          agendamentoId: agendamentoId,
+          dataAtendimento: dataAtual,
+          status: "em_andamento"
+        };
+        
+        const criacaoRes = await apiRequest("POST", "/api/atendimentos", dadosAtendimento);
+        
+        // Verificar se a resposta é JSON
+        const contentTypeCriacao = criacaoRes.headers.get("content-type");
+        if (!contentTypeCriacao || !contentTypeCriacao.includes("application/json")) {
+          console.error("A resposta de criação não é um JSON válido");
+          throw new Error("Erro ao criar atendimento");
+        }
+        
+        const novoAtendimento = await criacaoRes.json();
+        console.log("Novo atendimento criado:", novoAtendimento);
+        
+        // Redirecionar para a página do atendimento
+        setLocation(`/atendimento/${agendamentoId}`);
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar atendimento:", error);
+      alert("Houve um erro ao iniciar o atendimento. Tente novamente.");
+    }
   };
 
   return (
