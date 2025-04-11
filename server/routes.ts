@@ -1301,7 +1301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
       
-      if (agendamento.modalidade !== "teleconsulta") {
+      if (!agendamento.remoto) {
         return res.status(400).json({ mensagem: "Este agendamento não é uma teleconsulta" });
       }
       

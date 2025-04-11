@@ -341,7 +341,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
 
   const isAdmin = user?.tipo === 'admin';
   const isPsicologo = user?.tipo === 'psicologo';
-  const isTeleconsulta = agendamento.modalidade === 'teleconsulta';
+  const isTeleconsulta = agendamento.remoto === true;
   const atendimentoEmAndamento = sessaoIniciada;
   const dataFormatada = new Date(agendamento.data).toLocaleDateString('pt-BR');
   const horaInicio = agendamento.horaInicio;
