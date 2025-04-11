@@ -552,13 +552,14 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                     <FormLabel>Filial</FormLabel>
                     <Select
                       onValueChange={(value) => {
-                        field.onChange(value);
-                        // Se selecionou "remoto", marcar a opção remoto como true e limpar sala
+                        // Se selecionou "remoto", marcar a opção remoto como true e limpar sala/filial
                         if (value === "remoto") {
                           form.setValue("remoto", true);
                           form.setValue("salaId", undefined);
+                          form.setValue("filialId", undefined);
                         } else {
                           form.setValue("remoto", false);
+                          field.onChange(parseInt(value));
                         }
                       }}
                       value={form.watch("remoto") ? "remoto" : field.value?.toString()}
