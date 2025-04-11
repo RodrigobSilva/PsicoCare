@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Clock, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ProximasSessoesProps {
   psicologoId?: number;
@@ -26,8 +27,7 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
     queryFn: async () => {
       if (!user?.id || user?.tipo !== 'psicologo') return null;
       try {
-        const res = await fetch(`/api/psicologos/usuario/${user.id}`);
-        if (!res.ok) throw new Error('Erro ao buscar psicólogo do usuário');
+        const res = await apiRequest("GET", `/api/psicologos/usuario/${user.id}`);
         return res.json();
       } catch (error) {
         console.error('Erro ao buscar psicólogo do usuário:', error);
@@ -41,14 +41,18 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
   const psicologoIdFinal = psicologoId || psicologoUsuario?.id;
 
   // Buscar próximos agendamentos do psicólogo
-  const { data: proximasConsultas, isLoading } = useQuery({
+  const { data: proximasConsultas, isLoading, error: agendamentosError } = useQuery({
     queryKey: ['/api/atendimentos/psicologo', psicologoIdFinal],
     queryFn: async () => {
       if (!psicologoIdFinal) return [];
+      
+      console.log("Buscando agendamentos para o psicólogo ID:", psicologoIdFinal);
+      
       try {
-        const res = await fetch(`/api/atendimentos/psicologo/${psicologoIdFinal}`);
-        if (!res.ok) throw new Error('Erro ao buscar próximas sessões');
-        return res.json();
+        const res = await apiRequest("GET", `/api/atendimentos/psicologo/${psicologoIdFinal}`);
+        const data = await res.json();
+        console.log("Dados recebidos:", data);
+        return data;
       } catch (error) {
         console.error('Erro ao buscar próximos agendamentos:', error);
         return [];
@@ -74,7 +78,23 @@ export default function ProximasSessoes({ psicologoId }: ProximasSessoesProps) {
           <div className="flex justify-center p-4">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
-        ) : proximasConsultas?.length === 0 ? (
+        ) : agendamentosError ? (
+          <div className="py-6 text-center text-muted-foreground">
+            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+              <Calendar className="w-6 h-6 text-destructive" />
+            </div>
+            <p className="text-lg font-medium">Erro ao carregar sessões</p>
+            <p className="text-sm">Não foi possível carregar as próximas sessões.</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-3"
+              onClick={() => window.location.reload()}
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        ) : !proximasConsultas || proximasConsultas.length === 0 ? (
           <div className="py-6 text-center text-muted-foreground">
             <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
               <Calendar className="w-6 h-6 text-muted-foreground" />
