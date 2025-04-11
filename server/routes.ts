@@ -17,6 +17,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 import * as fs from 'fs';
+import crypto from 'crypto';
 import {
   insertPacienteSchema,
   insertPsicologoSchema,
@@ -1307,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Gerar um link único para a teleconsulta
       // Usando um ID aleatório para simular a criação de uma sala virtual segura
-      const randomId = randomBytes(8).toString('hex');
+      const randomId = crypto.randomBytes(8).toString('hex');
       const link = `${randomId}-${agendamentoId}`;
       
       // Em uma implementação real, aqui salvaria o link em uma tabela de teleconsultas
