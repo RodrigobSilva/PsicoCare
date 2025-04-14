@@ -593,15 +593,15 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                         // Se selecionou "remoto", marcar a opção remoto como true e limpar sala/filial
                         if (value === "remoto") {
                           form.setValue("remoto", true);
-                          form.setValue("salaId", undefined);
-                          form.setValue("filialId", undefined);
-                          field.onChange(undefined);
+                          form.setValue("salaId", null);
+                          form.setValue("filialId", null);
+                          field.onChange(null);
                         } else {
                           form.setValue("remoto", false);
-                          field.onChange(parseInt(value));
+                          field.onChange(value ? parseInt(value) : null);
                         }
                       }}
-                      value={form.watch("remoto") ? "remoto" : field.value?.toString()}
+                      value={form.watch("remoto") ? "remoto" : field.value ? field.value.toString() : ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -632,8 +632,8 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                   <FormItem>
                     <FormLabel>Sala</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value?.toString()}
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                      value={field.value ? field.value.toString() : ""}
                       disabled={!form.watch("filialId") || form.watch("remoto")}
                     >
                       <FormControl>
@@ -785,8 +785,8 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                       <FormItem>
                         <FormLabel>Plano de Saúde</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value?.toString()}
+                          onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          value={field.value ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>

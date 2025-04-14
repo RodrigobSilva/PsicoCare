@@ -277,109 +277,108 @@ export default function Calendar({
   const { data: agendamentos, isLoading: isLoadingAgendamentos } = useQuery({
     queryKey: ["/api/agendamentos", buildQueryKey()],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
-      const data = await res.json();
-
-      // Criar um Map para armazenar agendamentos únicos usando ID como chave
-      const uniqueAgendamentos = new Map();
-
-      // Verificar e registrar total de agendamentos recebidos
-      console.log("Total de agendamentos retornados pelo servidor:", data.length);
-      
-      data.forEach((ag: any) => {
-        // Validações de integridade
-        
-        // Verificar se a data é válida antes de processar
-        if (!ag.data) {
-          console.log(`Agendamento ${ag.id} ignorado: data inválida`);
-          return;
+      try {
+        const res = await apiRequest("GET", `/api/agendamentos?${buildQueryParams()}`);
+        if (!res.ok) {
+          throw new Error("Erro ao buscar agendamentos");
         }
         
-        try {
-          // Tentar analisar a data para garantir que é válida
-          const agendamentoDate = parseISO(ag.data);
-          if (isNaN(agendamentoDate.getTime())) {
-            console.log(`Agendamento ${ag.id} ignorado: formato de data inválido - ${ag.data}`);
+        const data = await res.json();
+
+        // Criar um Map para armazenar agendamentos únicos usando ID como chave
+        const uniqueAgendamentos = new Map();
+
+        // Log para depuração inicial
+        console.log("Total de agendamentos recebidos:", data.length);
+        console.log("Filtrando agendamentos a partir de:", format(currentDate, "yyyy-MM-dd"));
+        
+        // Log completo dos agendamentos no banco para depuração
+        if (data.length > 0) {
+          console.log("Total de agendamentos no banco:", data.length);
+          data.forEach((ag: any) => {
+            if (ag.data && ag.id) {
+              console.log(`Agendamento ${ag.id}, data: ${ag.data}, incluído: ${
+                currentView === "day" 
+                  ? ag.data === format(currentDate, "yyyy-MM-dd")
+                  : currentView === "week"
+                    ? isWithinInterval(parseISO(ag.data), {
+                        start: startOfWeek(currentDate, { weekStartsOn: 1 }),
+                        end: endOfWeek(currentDate, { weekStartsOn: 1 })
+                      })
+                    : isWithinInterval(parseISO(ag.data), {
+                        start: startOfMonth(currentDate),
+                        end: endOfMonth(currentDate)
+                      })
+              }`);
+            }
+          });
+        }
+        
+        // Processamento para garantir validade dos dados
+        data.forEach((ag: any) => {
+          // Verificações básicas
+          if (!ag.data || !ag.id) return;
+          
+          try {
+            // Converter string para data
+            const agendamentoDate = parseISO(ag.data);
+            
+            // Verificar se a data é válida
+            if (isNaN(agendamentoDate.getTime())) return;
+            
+            // Verificar se está no período correto com base na visão
+            let isInPeriod = false;
+            
+            if (currentView === "day") {
+              isInPeriod = isSameDay(agendamentoDate, currentDate);
+            } else if (currentView === "week") {
+              isInPeriod = isWithinInterval(agendamentoDate, {
+                start: startOfWeek(currentDate, { weekStartsOn: 1 }),
+                end: endOfWeek(currentDate, { weekStartsOn: 1 })
+              });
+            } else if (currentView === "month") {
+              isInPeriod = isWithinInterval(agendamentoDate, {
+                start: startOfMonth(currentDate),
+                end: endOfMonth(currentDate)
+              });
+            }
+            
+            if (!isInPeriod) return;
+            
+            // Aplicar filtros de psicólogo e filial
+            if (isPsicologo && userPsicologoId && ag.psicologoId !== userPsicologoId) return;
+            
+            if (!isPsicologo && selectedPsicologo !== "todos" && ag.psicologoId.toString() !== selectedPsicologo) return;
+            
+            if (selectedFilial !== "todas" && ag.filialId?.toString() !== selectedFilial) return;
+            
+            // Adicionar ao Map usando ID como chave para garantir unicidade
+            uniqueAgendamentos.set(ag.id, {
+              ...ag,
+              // Adicionar um objeto Date para facilitar comparações
+              dateObj: agendamentoDate
+            });
+            
+          } catch (error) {
+            console.error(`Erro ao processar agendamento ${ag.id}:`, error);
             return;
           }
-          
-          // Validar se está no intervalo de datas solicitado
-          if (currentView === "day") {
-            const targetDate = currentDate.toISOString().split('T')[0];
-            if (ag.data !== targetDate) {
-              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo solicitado ${targetDate}`);
-              return;
-            }
-          } else if (currentView === "week") {
-            const start = startOfWeek(currentDate, { weekStartsOn: 1 }).toISOString().split('T')[0];
-            const end = addDays(endOfWeek(currentDate, { weekStartsOn: 1 }), 1).toISOString().split('T')[0];
-            
-            if (ag.data < start || ag.data >= end) {
-              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo semanal ${start} - ${end}`);
-              return;
-            }
-          } else if (currentView === "month") {
-            const start = startOfMonth(currentDate).toISOString().split('T')[0];
-            const end = addDays(endOfMonth(currentDate), 1).toISOString().split('T')[0];
-            
-            if (ag.data < start || ag.data >= end) {
-              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo mensal ${start} - ${end}`);
-              return;
-            }
-          }
-        } catch (error) {
-          console.error(`Erro ao processar data do agendamento ${ag.id}:`, error);
-          return;
-        }
-        
-        // Verificar se o agendamento tem psicólogo válido
-        if (!ag.psicologo?.id) {
-          console.log(`Agendamento ${ag.id} ignorado: psicólogo não encontrado`);
-          return;
-        }
-        
-        // Verificar se o agendamento tem filial válida
-        if (!ag.filial?.id) {
-          console.log(`Agendamento ${ag.id} ignorado: filial não encontrada`);
-          return;
-        }
-        
-        // Verificação adicional para psicólogo logado (visualiza apenas seus agendamentos)
-        if (isPsicologo && userPsicologoId && ag.psicologo?.id !== userPsicologoId) {
-          console.log(`Agendamento ${ag.id} ignorado: pertence a outro psicólogo`);
-          return;
-        }
-        
-        // Filtro de psicólogo (se não for psicólogo)
-        if (!isPsicologo && selectedPsicologo !== "todos" && ag.psicologo?.id.toString() !== selectedPsicologo) {
-          console.log(`Agendamento ${ag.id} ignorado: filtro de psicólogo não corresponde`);
-          return;
-        }
-        
-        // Filtro de filial
-        if (selectedFilial !== "todas" && ag.filial?.id.toString() !== selectedFilial) {
-          console.log(`Agendamento ${ag.id} ignorado: filtro de filial não corresponde`);
-          return;
-        }
-
-        // Depuração para verificar o motivo de inclusão
-        console.log(`Agendamento ${ag.id} em ${ag.data} - Psicólogo: ${ag.psicologo?.id}, Filial: ${ag.filial?.id} - Incluído nos resultados`);
-
-        // Usar o ID como chave para garantir unicidade
-        if (!uniqueAgendamentos.has(ag.id)) {
-          uniqueAgendamentos.set(ag.id, ag);
-        }
-      });
-
-      // Converter Map de volta para array e ordenar por data e hora
-      return Array.from(uniqueAgendamentos.values())
-        .sort((a, b) => {
-          const dateCompare = a.data.localeCompare(b.data);
-          if (dateCompare === 0) {
-            return a.horaInicio.localeCompare(b.horaInicio);
-          }
-          return dateCompare;
         });
+        
+        // Converter Map para array e ordenar por data e hora
+        return Array.from(uniqueAgendamentos.values())
+          .sort((a, b) => {
+            // Ordenar primeiro por data, depois por hora
+            const dateCompare = compareAsc(a.dateObj, b.dateObj);
+            if (dateCompare === 0) {
+              return a.horaInicio.localeCompare(b.horaInicio);
+            }
+            return dateCompare;
+          });
+      } catch (error) {
+        console.error("Erro na busca de agendamentos:", error);
+        return [];
+      }
     },
     enabled: shouldFetchAgendamentos
   });
