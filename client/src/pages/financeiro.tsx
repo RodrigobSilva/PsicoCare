@@ -237,7 +237,7 @@ export default function Financeiro() {
                   </div>
                   <div className="mt-4 flex items-center">
                     <span className="text-warning text-sm font-medium">
-                      8 faturas
+                      {pagamentos?.filter((p: any) => p.status === "pendente")?.length || 0} faturas
                     </span>
                     <span className="text-neutral-500 text-sm ml-2">aguardando pagamento</span>
                   </div>
@@ -279,11 +279,9 @@ export default function Financeiro() {
                     </div>
                   </div>
                   <div className="mt-4 flex items-center">
-                    <span className="text-success text-sm font-medium">
-                      <ArrowUpRight className="inline h-3 w-3 mr-1" />
-                      5%
+                    <span className="text-neutral-500 text-sm">
+                      {formatarValor(estatisticas.totalRecebido - estatisticas.totalRepasses)} após repasses aos profissionais
                     </span>
-                    <span className="text-neutral-500 text-sm ml-2">em relação ao mês passado</span>
                   </div>
                 </CardContent>
               </Card>
