@@ -595,6 +595,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                           form.setValue("remoto", true);
                           form.setValue("salaId", undefined);
                           form.setValue("filialId", undefined);
+                          field.onChange(undefined);
                         } else {
                           form.setValue("remoto", false);
                           field.onChange(parseInt(value));
@@ -717,6 +718,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                           } else if (value === "sublocacao") {
                             form.setValue("particular", false);
                             form.setValue("sublocacao", true);
+                            form.setValue("planoSaudeId", undefined);
                           }
                         }}
                         value={
