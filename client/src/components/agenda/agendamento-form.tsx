@@ -593,12 +593,12 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                         // Se selecionou "remoto", marcar a opção remoto como true e limpar sala/filial
                         if (value === "remoto") {
                           form.setValue("remoto", true);
-                          form.setValue("salaId", null);
-                          form.setValue("filialId", null);
-                          field.onChange(null);
+                          form.setValue("salaId", undefined);
+                          form.setValue("filialId", undefined);
+                          field.onChange(undefined);
                         } else {
                           form.setValue("remoto", false);
-                          field.onChange(value ? parseInt(value) : null);
+                          field.onChange(value ? parseInt(value) : undefined);
                         }
                       }}
                       value={form.watch("remoto") ? "remoto" : field.value ? field.value.toString() : ""}

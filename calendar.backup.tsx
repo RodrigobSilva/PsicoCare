@@ -707,13 +707,28 @@ export default function Calendar({
     // Mostrar mensagem de carregamento
     if (isLoadingAgendamentos) {
       return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2">Carregando agendamentos...</span>
+        <div className="flex justify-center items-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       );
     }
 
+    // Para admin/secretaria, mostrar mensagem quando nenhum filtro estiver selecionado
+    if (!isPsicologo && (selectedPsicologo === "nenhum" || selectedPsicologo === "") && (selectedFilial === "nenhuma" || selectedFilial === "")) {
+      return (
+        <div className="flex justify-center items-center p-12 h-full">
+          <div className="text-center max-w-md p-6 bg-neutral-50 rounded-lg border border-neutral-200">
+            <CalendarIcon className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-700 mb-2">Selecione um filtro</h3>
+            <p className="text-neutral-500">
+              Para visualizar a agenda, selecione um psicólogo ou uma filial nos filtros acima.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Renderizar o calendário de acordo com a visualização
     if (currentView === "day") {
       return generateDayView();
     } else if (currentView === "week") {
@@ -726,129 +741,101 @@ export default function Calendar({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <Card className="h-full">
+      <CardHeader className="pb-4 flex flex-col space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle>{getCurrentPeriodTitle()}</CardTitle>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={goToPrevious}
-            >
-              <ChevronLeft className="w-4 h-4" />
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="icon" onClick={goToPrevious}>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={goToToday}
-            >
+            <Button variant="outline" size="sm" onClick={goToToday}>
               Hoje
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={goToNext}
-            >
-              <ChevronRight className="w-4 h-4" />
+            <Button variant="outline" size="icon" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
             <Select 
               value={currentView} 
               onValueChange={(value) => setCurrentView(value as "day" | "week" | "month")}
             >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
+              <SelectTrigger>
+                <SelectValue placeholder="Visualização" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Dia</SelectItem>
-                <SelectItem value="week">Semana</SelectItem>
-                <SelectItem value="month">Mês</SelectItem>
+                <SelectItem value="day">Diária</SelectItem>
+                <SelectItem value="week">Semanal</SelectItem>
+                <SelectItem value="month">Mensal</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        {/* Controles para filtrar por psicólogo e filial */}
-        {(!isPsicologo || isLoadingPsicologoUsuario) && (
-          <div className="flex flex-col md:flex-row gap-4 mt-4">
-            {/* Filtro de Psicólogo - apenas para admin/secretaria */}
-            {!isPsicologo && (
-              <div className="flex-1">
-                <Select 
-                  value={selectedPsicologo} 
-                  onValueChange={setSelectedPsicologo}
-                  disabled={isLoadingPsicologos}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um psicólogo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os psicólogos</SelectItem>
-                    {psicologos?.map((psicologo: any) => (
-                      <SelectItem 
-                        key={psicologo.id} 
-                        value={psicologo.id.toString()}
-                      >
-                        {psicologo.usuario?.nome || `Psicólogo #${psicologo.id}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <div>
+            {isPsicologo ? (
+              // Para psicólogos, mostrar apenas um rótulo estático indicando que são seus agendamentos
+              <div className="h-10 px-3 py-2 rounded-md border border-input flex items-center">
+                <span className="text-sm text-muted-foreground">Meus agendamentos</span>
               </div>
-            )}
-
-            {/* Filtro de Filial - para todos os usuários */}
-            <div className="flex-1">
+            ) : (
+              // Para admin e secretarias, permitir selecionar qualquer psicólogo
               <Select 
-                value={selectedFilial} 
-                onValueChange={setSelectedFilial}
-                disabled={isLoadingFiliais}
+                value={selectedPsicologo} 
+                onValueChange={(value) => {
+                  console.log("Selecionado psicólogo:", value);
+                  setSelectedPsicologo(value);
+                }}
+                disabled={isLoadingPsicologos}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma filial" />
+                  <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todas">Todas as filiais</SelectItem>
-                  {filiais?.map((filial: any) => (
+                  <SelectItem value="todos">Todos os psicólogos</SelectItem>
+                  {psicologos?.map((psicologo: any) => (
                     <SelectItem 
-                      key={filial.id} 
-                      value={filial.id.toString()}
+                      key={psicologo.id} 
+                      value={psicologo.id.toString()}
                     >
-                      {filial.nome}
+                      {psicologo.usuario.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            )}
           </div>
-        )}
-      </CardHeader>
-      
-      <CardContent>
-        <div className="rounded border border-neutral-200 overflow-hidden">
-          {renderCalendarContent()}
-        </div>
 
-        {/* Legenda dos status */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-orange-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Agendado</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Confirmado</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Realizado</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-red-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Cancelado</span>
+          <div>
+            <Select 
+              value={selectedFilial} 
+              onValueChange={(value) => {
+                console.log("Selecionada filial:", value);
+                setSelectedFilial(value);
+              }}
+              disabled={isLoadingFiliais}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma filial" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as filiais</SelectItem>
+                {filiais?.map((filial: any) => (
+                  <SelectItem key={filial.id} value={filial.id.toString()}>
+                    {filial.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
+      </CardHeader>
+
+      <CardContent className="p-0 overflow-y-auto max-h-[calc(100vh-320px)]">
+        {renderCalendarContent()}
       </CardContent>
     </Card>
   );
