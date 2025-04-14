@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Layout from "@/components/layout/layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -40,6 +41,11 @@ export default function PlanosSaude() {
   const [editingPlanoId, setEditingPlanoId] = useState<number | null>(null);
   const [selectedPlano, setSelectedPlano] = useState<any>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Verificar permissões de usuário
+  const isAdmin = user?.tipo === "admin";
+  const isSecretaria = user?.tipo === "secretaria";
 
   // Mutation para deletar plano
   const deleteMutation = useMutation({

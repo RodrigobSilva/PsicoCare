@@ -59,6 +59,10 @@ export default function Salas() {
   const [editingSalaId, setEditingSalaId] = useState<number | null>(null);
   const [selectedFilial, setSelectedFilial] = useState<any>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Verificar se o usuário é admin
+  const isAdmin = user?.tipo === "admin";
 
   // Carregar lista de filiais
   const { data: filiais, isLoading: isLoadingFiliais } = useQuery({
@@ -139,9 +143,11 @@ export default function Salas() {
           
           <div className="flex gap-2">
             {activeTab === "filiais" ? (
-              <Button onClick={() => setIsFilialModalOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Nova Filial
-              </Button>
+              isAdmin && (
+                <Button onClick={() => setIsFilialModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Nova Filial
+                </Button>
+              )
             ) : (
               <Button onClick={() => setIsSalaModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" /> Nova Sala
@@ -235,15 +241,17 @@ export default function Salas() {
                           <CardTitle>{selectedFilial.nome}</CardTitle>
                           <CardDescription>Detalhes da filial</CardDescription>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditFilial(selectedFilial.id)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {isAdmin && (
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditFilial(selectedFilial.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardHeader>
                     

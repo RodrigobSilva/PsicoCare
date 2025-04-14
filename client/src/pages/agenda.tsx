@@ -178,10 +178,11 @@ export default function Agenda() {
   const canRegisterAtendimento = () => {
     if (!user || !selectedAgendamento) return false;
     
-    // Admin e secretaria podem registrar atendimentos
-    if (user.tipo === "admin" || user.tipo === "secretaria") return true;
+    // Apenas admin pode registrar qualquer atendimento
+    if (user.tipo === "admin") return true;
     
     // Psicólogos podem registrar apenas seus próprios atendimentos
+    // Secretárias não podem registrar atendimentos (conforme solicitado)
     if (
       user.tipo === "psicologo" &&
       selectedAgendamento.psicologoId === psicologoUsuario?.id
