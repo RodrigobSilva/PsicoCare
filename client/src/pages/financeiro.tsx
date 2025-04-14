@@ -467,28 +467,33 @@ export default function Financeiro() {
                                 {formatarValor(pagamento.valor || 0)}
                               </TableCell>
                             <TableCell>
-                              {pagamento.metodoPagamento === "plano_saude" && (
+                              {pagamento?.metodoPagamento === "plano_saude" && (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                                  {pagamento.atendimento.planoSaude?.nome || "Plano de Saúde"}
+                                  {pagamento?.atendimento?.planoSaude?.nome || "Plano de Saúde"}
                                 </Badge>
                               )}
-                              {pagamento.metodoPagamento === "dinheiro" && (
+                              {pagamento?.metodoPagamento === "dinheiro" && (
                                 <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
                                   Dinheiro
                                 </Badge>
                               )}
-                              {pagamento.metodoPagamento === "cartão" && (
+                              {pagamento?.metodoPagamento === "cartão" && (
                                 <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
                                   Cartão
+                                </Badge>
+                              )}
+                              {!pagamento?.metodoPagamento && (
+                                <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                                  Não especificado
                                 </Badge>
                               )}
                             </TableCell>
                             <TableCell>
                               <Badge 
-                                variant={pagamento.status === "pago" ? "default" : "outline"}
-                                className={pagamento.status === "pago" ? "bg-success" : "text-warning"}
+                                variant={pagamento?.status === "pago" ? "default" : "outline"}
+                                className={pagamento?.status === "pago" ? "bg-success" : "text-warning"}
                               >
-                                {pagamento.status === "pago" ? "Pago" : "Pendente"}
+                                {pagamento?.status === "pago" ? "Pago" : "Pendente"}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -563,8 +568,8 @@ export default function Financeiro() {
                                   <TableCell className="text-right">{formatarValor(inss)}</TableCell>
                                   <TableCell className="text-right">{formatarValor(liquido)}</TableCell>
                                   <TableCell>
-                                    <Badge className={pagamento.status === "pago" ? "bg-success" : "bg-warning"}>
-                                      {pagamento.status === "pago" ? "Pago" : "Pendente"}
+                                    <Badge className={pagamento?.status === "pago" ? "bg-success" : "bg-warning"}>
+                                      {pagamento?.status === "pago" ? "Pago" : "Pendente"}
                                     </Badge>
                                   </TableCell>
                                 </TableRow>
