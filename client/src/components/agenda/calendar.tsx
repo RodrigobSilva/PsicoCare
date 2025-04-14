@@ -168,11 +168,15 @@ export default function Calendar({
     // Obter o intervalo de datas baseado na visualização
     if (currentView === "day") {
       // Formato ISO para data
-      params.append("data", currentDate.toISOString().split('T')[0]);
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      params.append("data", formattedDate);
+      console.log("Buscando agendamentos para o dia:", formattedDate);
     } else if (currentView === "week") {
       // Obter primeiro e último dia da semana com uma margem de segurança
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
-      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      const endDate = endOfWeek(currentDate, { weekStartsOn: 1 });
+      // Adicionar um dia extra ao final para garantir que toda a semana esteja incluída
+      const end = addDays(endDate, 1);
 
       // Adicionar logs para depuração
       console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
@@ -184,7 +188,9 @@ export default function Calendar({
       // Obter primeiro e último dia do mês com uma margem de segurança
       // Incluir a semana anterior e posterior para mostrar dias adjacentes
       const start = startOfMonth(currentDate);
-      const end = endOfMonth(currentDate);
+      const endDate = endOfMonth(currentDate);
+      // Adicionar um dia extra ao final para garantir que todo o mês esteja incluído
+      const end = addDays(endDate, 1);
 
       // Adicionar logs para depuração
       console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
@@ -225,14 +231,18 @@ export default function Calendar({
       dateParams = { data: currentDate.toISOString().split('T')[0] };
     } else if (currentView === "week") {
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
-      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      const endDate = endOfWeek(currentDate, { weekStartsOn: 1 });
+      // Adicionar um dia extra ao final para garantir que toda a semana esteja incluída
+      const end = addDays(endDate, 1);
       dateParams = { 
         dataInicio: start.toISOString().split('T')[0],
         dataFim: end.toISOString().split('T')[0]
       };
     } else if (currentView === "month") {
       const start = startOfMonth(currentDate);
-      const end = endOfMonth(currentDate);
+      const endDate = endOfMonth(currentDate);
+      // Adicionar um dia extra ao final para garantir que todo o mês esteja incluído
+      const end = addDays(endDate, 1);
       dateParams = { 
         dataInicio: start.toISOString().split('T')[0],
         dataFim: end.toISOString().split('T')[0]
