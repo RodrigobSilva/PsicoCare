@@ -2,10 +2,15 @@
 import Layout from "@/components/layout/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Server, Lock, BellRing, Mail, Users, UserPlus, User, Trash2, Edit, Save, X } from "lucide-react";
+import { 
+  Settings, Server, Lock, BellRing, Mail, Users, UserPlus, 
+  User, Trash2, Edit, Save, X, Send, Loader2 
+} from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -1100,28 +1105,14 @@ export default function Configuracoes() {
           </TabsContent>
 
           <TabsContent value="notificacoes">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-1">
               <Card>
                 <CardHeader>
                   <CardTitle>Notificações por Email</CardTitle>
-                  <CardDescription>Configuração de envio de emails</CardDescription>
+                  <CardDescription>Configuração de envio de emails para agendamentos e eventos</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-neutral-600">
-                    Configure as opções de envio de notificações por email.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lembretes e Alertas</CardTitle>
-                  <CardDescription>Configuração de lembretes</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-neutral-600">
-                    Configure as opções de lembretes e alertas do sistema.
-                  </p>
+                  <EmailConfigForm />
                 </CardContent>
               </Card>
             </div>
