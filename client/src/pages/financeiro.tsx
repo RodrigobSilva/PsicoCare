@@ -576,9 +576,13 @@ export default function Financeiro() {
                         ) : planosSaude?.length ? (
                           planosSaude.map((plano: any) => {
                             // Filtrar pagamentos deste plano
-                            const pagamentosPlano = pagamentos?.filter((p: any) => 
-                              p.atendimento.planoSaude?.id === plano.id
-                            ) || [];
+                            const pagamentosPlano = pagamentos?.filter((p: any) => {
+                              // Verifica se o atendimento e planoSaude existem
+                              if (!p.atendimento || !p.atendimento.planoSaude) return false;
+                              
+                              // Compara os IDs do plano
+                              return p.atendimento.planoSaude.id === plano.id;
+                            }) || [];
                             
                             const totalAtendimentos = pagamentosPlano.length;
                             const valorBruto = pagamentosPlano.reduce((sum: number, p: any) => sum + p.valor, 0);
