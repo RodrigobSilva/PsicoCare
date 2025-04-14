@@ -36,7 +36,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
         value: estatisticas?.novosPacientes || 0,
         icon: <UserPlus className="text-secondary" />,
         bgColor: "bg-secondary bg-opacity-10",
-        trend: null // Removendo a tendência estática e deixando apenas o valor real
+        trend: null
       },
       {
         title: "Faturamento Mensal",
@@ -44,7 +44,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
         valueFormatter: formatCurrency,
         icon: <DollarSign className="text-accent" />,
         bgColor: "bg-accent bg-opacity-10",
-        trend: { value: 18, label: "em relação ao mês passado", positive: true }
+        trend: null
       },
       {
         title: "Taxa de ocupação",
@@ -52,7 +52,7 @@ export default function StatisticCards({ estatisticas, isLoading, userType }: St
         valueFormatter: (value: number) => `${value}%`,
         icon: <TrendingUp className="text-info" />,
         bgColor: "bg-info bg-opacity-10",
-        trend: { value: 3, label: "em relação à semana passada", positive: false }
+        trend: null
       }
     ];
     

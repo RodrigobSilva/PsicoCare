@@ -134,8 +134,8 @@ export default function Calendar({
     }
   }, [isPsicologo, userPsicologoId, psicologoId]);
   
-  // Estado para a filial selecionada - inicializa corretamente
-  const [selectedFilial, setSelectedFilial] = useState<string>("nenhuma");
+  // Estado para a filial selecionada - inicializa com "todas"
+  const [selectedFilial, setSelectedFilial] = useState<string>("todas");
   
   // Atualizar o filtro de filial quando receber como prop
   useEffect(() => {
@@ -211,7 +211,7 @@ export default function Calendar({
     }
 
     // Adicionar filtro de filial - certifique-se de que é um valor válido
-    if (selectedFilial && selectedFilial !== "nenhuma") {
+    if (selectedFilial && selectedFilial !== "todas") {
       params.append("filialId", selectedFilial);
       console.log("Aplicando filtro de filial:", selectedFilial);
     }
