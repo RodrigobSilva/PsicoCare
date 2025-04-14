@@ -11,6 +11,7 @@ import OpenAI from "openai";
 import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import * as schema from "@shared/schema";
+import { emailService, EmailConfig } from "./services/email";
 
 // Inicializar cliente OpenAI
 const openai = new OpenAI({
@@ -56,6 +57,53 @@ const verificarNivelAcesso = (tiposPermitidos: string[]) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configura a autenticação
   setupAuth(app);
+
+  // Rotas de configuração de email
+  app.get("/api/config/email", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const config = await emailService.getConfig();
+      
+      // Por segurança, não retornar a senha
+      const { emailPassword, ...configSemSenha } = config;
+      
+      res.json(configSemSenha);
+    } catch (error) {
+      console.error("Erro ao buscar configuração de email:", error);
+      res.status(500).json({ mensagem: "Erro ao buscar configuração de email" });
+    }
+  });
+  
+  app.post("/api/config/email", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const config = req.body;
+      await emailService.saveConfig(config);
+      
+      // Por segurança, não retornar a senha
+      const { emailPassword, ...configSemSenha } = config;
+      
+      res.json(configSemSenha);
+    } catch (error) {
+      console.error("Erro ao salvar configuração de email:", error);
+      res.status(500).json({ mensagem: "Erro ao salvar configuração de email" });
+    }
+  });
+  
+  app.post("/api/config/email/test", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const config = req.body;
+      
+      // Atualizar configuração antes do teste
+      await emailService.saveConfig(config);
+      
+      // Enviar email de teste
+      await emailService.sendTestEmail();
+      
+      res.json({ mensagem: "Email de teste enviado com sucesso" });
+    } catch (error) {
+      console.error("Erro ao enviar email de teste:", error);
+      res.status(500).json({ mensagem: "Erro ao enviar email de teste: " + error.message });
+    }
+  });
 
   // Rotas de acesso a usuários
   // Rotas de gerenciamento de usuários
@@ -903,6 +951,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertAgendamentoSchema.parse(req.body);
       const novoAgendamento = await storage.createAgendamento(validatedData);
+      
+      // Obter dados completos do agendamento para notificação
+      try {
+        const agendamentoCompleto = await storage.getAgendamento(novoAgendamento.id);
+        if (agendamentoCompleto) {
+          // Obter paciente para enviar email
+          const paciente = await storage.getPaciente(agendamentoCompleto.pacienteId);
+          if (paciente) {
+            const usuario = await storage.getUser(paciente.usuarioId);
+            if (usuario && usuario.email) {
+              // Enviar notificação de email usando o serviço de email
+              emailService.sendAppointmentNotification(usuario.email, agendamentoCompleto)
+                .then(() => {
+                  console.log(`Email de confirmação enviado para ${usuario.email}`);
+                })
+                .catch(err => {
+                  console.error(`Erro ao enviar email de confirmação: ${err.message}`);
+                });
+            }
+          }
+        }
+      } catch (emailError) {
+        // Apenas logar o erro, não interromper o fluxo principal
+        console.error("Erro ao enviar notificação de email:", emailError);
+      }
 
       res.status(201).json(novoAgendamento);
     } catch (error) {
@@ -934,6 +1007,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const agendamento = await storage.getAgendamento(id);
       if (!agendamento) {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      // Obter informações completas do agendamento para notificação de cancelamento
+      try {
+        // Obter paciente para enviar email
+        const paciente = await storage.getPaciente(agendamento.pacienteId);
+        if (paciente) {
+          const usuario = await storage.getUser(paciente.usuarioId);
+          if (usuario && usuario.email) {
+            // Buscar informações adicionais para enriquecer a notificação
+            const psicologo = await storage.getPsicologo(agendamento.psicologoId);
+            const psicologoUsuario = psicologo ? await storage.getUser(psicologo.usuarioId) : null;
+            
+            const agendamentoEnriquecido = {
+              ...agendamento,
+              paciente: {
+                ...paciente,
+                usuario
+              },
+              psicologo: psicologo ? {
+                ...psicologo,
+                usuario: psicologoUsuario
+              } : undefined
+            };
+            
+            // Enviar notificação de email de cancelamento
+            emailService.sendCancellationNotification(usuario.email, agendamentoEnriquecido)
+              .then(() => {
+                console.log(`Email de cancelamento enviado para ${usuario.email}`);
+              })
+              .catch(err => {
+                console.error(`Erro ao enviar email de cancelamento: ${err.message}`);
+              });
+          }
+        }
+      } catch (emailError) {
+        // Apenas logar o erro, não interromper o fluxo principal
+        console.error("Erro ao enviar notificação de cancelamento:", emailError);
       }
 
       // Verificar e deletar atendimentos associados ao agendamento

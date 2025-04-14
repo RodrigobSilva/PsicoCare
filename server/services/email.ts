@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { drizzle } from 'drizzle-orm/postgres-js';
 import { db } from '../db';
+import * as schema from '@shared/schema';
 
 // Interface para configurações de email
 export interface EmailConfig {
@@ -41,41 +41,31 @@ export class EmailService {
   // Carregar configurações do banco ou variáveis de ambiente
   async loadConfig() {
     try {
-      // Obter configurações do banco
-      const configTable = await db.query.systemConfigs.findFirst({
-        where: (configs, { eq }) => eq(configs.chave, CONFIG_KEY)
-      });
+      // Usar variáveis de ambiente se disponíveis
+      const host = process.env.EMAIL_HOST;
+      const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587;
+      const user = process.env.EMAIL_USER;
+      const pass = process.env.EMAIL_PASSWORD;
+      const from = process.env.EMAIL_FROM;
       
-      if (configTable?.valor) {
-        this.config = JSON.parse(configTable.valor as string);
-        // Tentar inicializar o transporter se habilitado
-        if (this.config.emailEnabled) {
-          this.initializeTransporter();
-        }
-      } else {
-        // Usar variáveis de ambiente se disponíveis
-        const host = process.env.EMAIL_HOST;
-        const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587;
-        const user = process.env.EMAIL_USER;
-        const pass = process.env.EMAIL_PASSWORD;
-        const from = process.env.EMAIL_FROM;
-        
-        if (host && user && pass && from) {
-          this.config = {
-            emailHost: host,
-            emailPort: port,
-            emailUser: user,
-            emailPassword: pass,
-            emailFrom: from,
-            emailEnabled: true,
-            notificarAgendamento: true,
-            notificarCancelamento: true,
-            notificarLembrete: true,
-            notificarPagamento: true
-          };
-          this.initializeTransporter();
-        }
+      if (host && user && pass && from) {
+        this.config = {
+          emailHost: host,
+          emailPort: port,
+          emailUser: user,
+          emailPassword: pass,
+          emailFrom: from,
+          emailEnabled: true,
+          notificarAgendamento: true,
+          notificarCancelamento: true,
+          notificarLembrete: true,
+          notificarPagamento: true
+        };
+        this.initializeTransporter();
       }
+      
+      // Como não temos a tabela systemConfigs, vamos manter os dados em memória
+      // Em uma implementação completa, seria necessário criar essa tabela no banco
     } catch (error) {
       console.error('Erro ao carregar configurações de email:', error);
     }
@@ -99,22 +89,15 @@ export class EmailService {
     }
   }
   
-  // Salvar configurações no banco
+  // Salvar configurações (em memória)
   async saveConfig(config: EmailConfig) {
     try {
       // Atualizar configuração na memória
       this.config = config;
       
-      // Criar ou atualizar no banco
-      await db.insert(db.table('systemConfigs'))
-        .values({
-          chave: CONFIG_KEY,
-          valor: JSON.stringify(config)
-        })
-        .onConflictDoUpdate({
-          target: [db.column('chave')],
-          set: { valor: JSON.stringify(config) }
-        });
+      // Em uma implementação completa, salvaríamos no banco
+      // Como não temos a tabela, vamos apenas registrar no console
+      console.log('Configurações de email salvas:', JSON.stringify(config));
       
       // Reinicializar o transporter se necessário
       if (config.emailEnabled) {
