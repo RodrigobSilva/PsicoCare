@@ -210,10 +210,12 @@ export default function PlanosSaude() {
                           <Button 
                             variant="ghost" 
                             size="icon"
+                            className={plano.ativo ? "text-green-600 hover:text-green-700" : "text-red-500 hover:text-red-600"}
                             onClick={() => toggleStatusMutation.mutate({
                               id: plano.id,
                               ativo: !plano.ativo
                             })}
+                            title={plano.ativo ? "Desativar plano" : "Ativar plano"}
                           >
                             <PowerIcon className="h-4 w-4" />
                           </Button>
@@ -389,12 +391,29 @@ export default function PlanosSaude() {
                 Fechar
               </Button>
               {selectedPlano && (
-                <Button onClick={() => {
-                  setIsDetailsOpen(false);
-                  handleEditPlano(selectedPlano.id);
-                }}>
-                  Editar Plano
-                </Button>
+                <>
+                  <Button 
+                    variant="outline"
+                    className={selectedPlano.ativo ? "text-red-500 border-red-300" : "text-green-600 border-green-300"}
+                    onClick={() => {
+                      toggleStatusMutation.mutate({
+                        id: selectedPlano.id,
+                        ativo: !selectedPlano.ativo
+                      });
+                      setSelectedPlano({...selectedPlano, ativo: !selectedPlano.ativo});
+                    }}
+                  >
+                    <PowerIcon className="h-4 w-4 mr-2" />
+                    {selectedPlano.ativo ? "Desativar Plano" : "Ativar Plano"}
+                  </Button>
+                  <Button onClick={() => {
+                    setIsDetailsOpen(false);
+                    handleEditPlano(selectedPlano.id);
+                  }}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar Plano
+                  </Button>
+                </>
               )}
             </DialogFooter>
           </DialogContent>
