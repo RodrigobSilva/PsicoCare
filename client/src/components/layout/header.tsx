@@ -54,12 +54,14 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        {/* Notificações temporariamente removidas 
         <button className="relative text-neutral-600">
           <Bell size={20} />
           <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
             3
           </span>
         </button>
+        */}
         <div className="hidden md:block">
           <DropdownMenu>
             <DropdownMenuTrigger className="focus:outline-none">
