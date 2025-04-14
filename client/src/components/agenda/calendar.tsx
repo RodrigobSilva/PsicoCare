@@ -283,9 +283,54 @@ export default function Calendar({
       // Criar um Map para armazenar agendamentos únicos usando ID como chave
       const uniqueAgendamentos = new Map();
 
+      // Verificar e registrar total de agendamentos recebidos
+      console.log("Total de agendamentos retornados pelo servidor:", data.length);
+      
       data.forEach((ag: any) => {
-        // Não precisamos filtrar novamente aqui porque já estamos enviando os filtros para o servidor
-        // Adicionamos apenas validação adicional
+        // Validações de integridade
+        
+        // Verificar se a data é válida antes de processar
+        if (!ag.data) {
+          console.log(`Agendamento ${ag.id} ignorado: data inválida`);
+          return;
+        }
+        
+        try {
+          // Tentar analisar a data para garantir que é válida
+          const agendamentoDate = parseISO(ag.data);
+          if (isNaN(agendamentoDate.getTime())) {
+            console.log(`Agendamento ${ag.id} ignorado: formato de data inválido - ${ag.data}`);
+            return;
+          }
+          
+          // Validar se está no intervalo de datas solicitado
+          if (currentView === "day") {
+            const targetDate = currentDate.toISOString().split('T')[0];
+            if (ag.data !== targetDate) {
+              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo solicitado ${targetDate}`);
+              return;
+            }
+          } else if (currentView === "week") {
+            const start = startOfWeek(currentDate, { weekStartsOn: 1 }).toISOString().split('T')[0];
+            const end = addDays(endOfWeek(currentDate, { weekStartsOn: 1 }), 1).toISOString().split('T')[0];
+            
+            if (ag.data < start || ag.data >= end) {
+              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo semanal ${start} - ${end}`);
+              return;
+            }
+          } else if (currentView === "month") {
+            const start = startOfMonth(currentDate).toISOString().split('T')[0];
+            const end = addDays(endOfMonth(currentDate), 1).toISOString().split('T')[0];
+            
+            if (ag.data < start || ag.data >= end) {
+              console.log(`Agendamento ${ag.id} ignorado: data ${ag.data} fora do intervalo mensal ${start} - ${end}`);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error(`Erro ao processar data do agendamento ${ag.id}:`, error);
+          return;
+        }
         
         // Verificar se o agendamento tem psicólogo válido
         if (!ag.psicologo?.id) {
@@ -301,10 +346,23 @@ export default function Calendar({
         
         // Verificação adicional para psicólogo logado (visualiza apenas seus agendamentos)
         if (isPsicologo && userPsicologoId && ag.psicologo?.id !== userPsicologoId) {
+          console.log(`Agendamento ${ag.id} ignorado: pertence a outro psicólogo`);
+          return;
+        }
+        
+        // Filtro de psicólogo (se não for psicólogo)
+        if (!isPsicologo && selectedPsicologo !== "todos" && ag.psicologo?.id.toString() !== selectedPsicologo) {
+          console.log(`Agendamento ${ag.id} ignorado: filtro de psicólogo não corresponde`);
+          return;
+        }
+        
+        // Filtro de filial
+        if (selectedFilial !== "todas" && ag.filial?.id.toString() !== selectedFilial) {
+          console.log(`Agendamento ${ag.id} ignorado: filtro de filial não corresponde`);
           return;
         }
 
-        // Depuração para verificar o motivo de inclusão/exclusão
+        // Depuração para verificar o motivo de inclusão
         console.log(`Agendamento ${ag.id} em ${ag.data} - Psicólogo: ${ag.psicologo?.id}, Filial: ${ag.filial?.id} - Incluído nos resultados`);
 
         // Usar o ID como chave para garantir unicidade

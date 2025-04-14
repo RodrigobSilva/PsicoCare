@@ -26,6 +26,410 @@ const formSchema = z.object({
   whatsappEnabled: z.boolean()
 });
 
+// Esquema para configurações de email
+const emailConfigSchema = z.object({
+  emailHost: z.string().min(1, "O servidor SMTP é obrigatório"),
+  emailPort: z.coerce.number().int().min(1, "A porta deve ser um número válido"),
+  emailUser: z.string().min(1, "O usuário é obrigatório"),
+  emailPassword: z.string().min(1, "A senha é obrigatória"),
+  emailFrom: z.string().email("Email inválido").min(1, "O email de envio é obrigatório"),
+  emailEnabled: z.boolean().default(false),
+  notificarAgendamento: z.boolean().default(true),
+  notificarCancelamento: z.boolean().default(true),
+  notificarLembrete: z.boolean().default(true),
+  notificarPagamento: z.boolean().default(true),
+});
+
+type EmailConfigFormValues = z.infer<typeof emailConfigSchema>;
+
+// Componente para configuração de notificações por email
+function EmailConfigForm() {
+  const { toast } = useToast();
+  
+  // Buscar configurações atuais
+  const { data: emailConfig, isLoading } = useQuery({
+    queryKey: ["/api/config/email"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/config/email");
+        if (!res.ok) throw new Error("Falha ao buscar configurações de email");
+        return await res.json();
+      } catch (error) {
+        console.error("Erro ao buscar configurações de email:", error);
+        return {
+          emailHost: "",
+          emailPort: 587,
+          emailUser: "",
+          emailPassword: "",
+          emailFrom: "",
+          emailEnabled: false,
+          notificarAgendamento: true,
+          notificarCancelamento: true,
+          notificarLembrete: true,
+          notificarPagamento: true
+        };
+      }
+    }
+  });
+  
+  // Formulário
+  const form = useForm<EmailConfigFormValues>({
+    resolver: zodResolver(emailConfigSchema),
+    defaultValues: {
+      emailHost: "",
+      emailPort: 587,
+      emailUser: "",
+      emailPassword: "",
+      emailFrom: "",
+      emailEnabled: false,
+      notificarAgendamento: true,
+      notificarCancelamento: true,
+      notificarLembrete: true,
+      notificarPagamento: true
+    }
+  });
+  
+  // Atualizar formulário quando os dados forem carregados
+  useEffect(() => {
+    if (emailConfig) {
+      form.reset({
+        emailHost: emailConfig.emailHost || "",
+        emailPort: emailConfig.emailPort || 587,
+        emailUser: emailConfig.emailUser || "",
+        emailPassword: emailConfig.emailPassword || "",
+        emailFrom: emailConfig.emailFrom || "",
+        emailEnabled: emailConfig.emailEnabled || false,
+        notificarAgendamento: emailConfig.notificarAgendamento ?? true,
+        notificarCancelamento: emailConfig.notificarCancelamento ?? true,
+        notificarLembrete: emailConfig.notificarLembrete ?? true,
+        notificarPagamento: emailConfig.notificarPagamento ?? true
+      });
+    }
+  }, [emailConfig, form]);
+  
+  // Mutação para salvar configurações
+  const salvarConfigMutation = useMutation({
+    mutationFn: async (data: EmailConfigFormValues) => {
+      const res = await apiRequest("POST", "/api/config/email", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Erro ao salvar configurações de email");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configurações salvas",
+        description: "As configurações de email foram salvas com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Enviar email de teste
+  const testarEmailMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/config/email/test", form.getValues());
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Erro ao enviar email de teste");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Email de teste enviado",
+        description: "Verifique sua caixa de entrada para confirmar o recebimento.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const onSubmit = (data: EmailConfigFormValues) => {
+    salvarConfigMutation.mutate(data);
+  };
+  
+  const testarEmail = () => {
+    if (form.formState.isValid) {
+      testarEmailMutation.mutate();
+    } else {
+      toast({
+        title: "Formulário inválido",
+        description: "Preencha corretamente todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Configurações do Servidor SMTP</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="emailHost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Servidor SMTP</FormLabel>
+                  <FormControl>
+                    <Input placeholder="smtp.gmail.com" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Endereço do servidor de email
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="emailPort"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Porta</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="587" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Geralmente 587 (TLS) ou 465 (SSL)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="emailUser"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Usuário</FormLabel>
+                  <FormControl>
+                    <Input placeholder="seu.email@gmail.com" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Email ou nome de usuário
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="emailPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Senha ou chave de aplicativo
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="emailFrom"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email de Envio</FormLabel>
+                <FormControl>
+                  <Input placeholder="clinica@seudominio.com.br" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Endereço que aparecerá como remetente
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="emailEnabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Ativar notificações por email</FormLabel>
+                  <FormDescription>
+                    Ative para enviar emails automáticos
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <Separator />
+        
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Tipos de Notificações</h3>
+          <div className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="notificarAgendamento"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Confirmação de agendamento
+                    </FormLabel>
+                    <FormDescription>
+                      Enviar email quando um novo agendamento for criado
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="notificarCancelamento"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Cancelamento de agendamento
+                    </FormLabel>
+                    <FormDescription>
+                      Enviar email quando um agendamento for cancelado
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="notificarLembrete"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Lembretes de consultas
+                    </FormLabel>
+                    <FormDescription>
+                      Enviar email de lembrete antes das consultas agendadas
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="notificarPagamento"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Comprovantes de pagamento
+                    </FormLabel>
+                    <FormDescription>
+                      Enviar email com comprovante após pagamentos realizados
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-4 justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={testarEmail}
+            disabled={testarEmailMutation.isPending}
+          >
+            {testarEmailMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Enviar Email de Teste
+              </>
+            )}
+          </Button>
+          
+          <Button
+            type="submit"
+            disabled={salvarConfigMutation.isPending}
+          >
+            {salvarConfigMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Configurações
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
 // Schema de formulário para novo usuário
 const usuarioSchema = z.object({
   nome: z.string().min(3, "O nome deve ter no mínimo 3 caracteres"),
