@@ -62,16 +62,16 @@ export default function Financeiro() {
   // Carregar lista de pagamentos
   const { data: pagamentos, isLoading: isLoadingPagamentos } = useQuery({
     queryKey: ["/api/pagamentos", { 
-      dateFrom: dateRange.from?.toISOString(),
-      dateTo: dateRange.to?.toISOString()
+      dateFrom: dateRange?.from?.toISOString(),
+      dateTo: dateRange?.to?.toISOString()
     }],
     queryFn: async () => {
       // Construir parâmetros de filtro para a requisição
       const params = new URLSearchParams();
-      if (dateRange.from) {
+      if (dateRange?.from) {
         params.append("dateFrom", dateRange.from.toISOString());
       }
-      if (dateRange.to) {
+      if (dateRange?.to) {
         params.append("dateTo", dateRange.to.toISOString());
       }
       
@@ -215,11 +215,9 @@ export default function Financeiro() {
                     </div>
                   </div>
                   <div className="mt-4 flex items-center">
-                    <span className="text-success text-sm font-medium">
-                      <ArrowUpRight className="inline h-3 w-3 mr-1" />
-                      12%
+                    <span className="text-neutral-500 text-sm">
+                      {pagamentos?.filter((p: any) => p.status === "pago")?.length || 0} pagamentos recebidos no período
                     </span>
-                    <span className="text-neutral-500 text-sm ml-2">em relação ao mês passado</span>
                   </div>
                 </CardContent>
               </Card>
@@ -404,7 +402,7 @@ export default function Financeiro() {
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableCaption>Lista de pagamentos {dateRange.from && dateRange.to ? `de ${format(dateRange.from, 'dd/MM/yyyy')} até ${format(dateRange.to, 'dd/MM/yyyy')}` : ''}</TableCaption>
+                    <TableCaption>Lista de pagamentos {dateRange?.from && dateRange?.to ? `de ${format(dateRange.from, 'dd/MM/yyyy')} até ${format(dateRange.to, 'dd/MM/yyyy')}` : ''}</TableCaption>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Paciente</TableHead>
@@ -499,36 +497,48 @@ export default function Financeiro() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">Dr. Carlos Mendes</TableCell>
-                          <TableCell>12</TableCell>
-                          <TableCell className="text-right">R$ 1.680,00</TableCell>
-                          <TableCell className="text-right">R$ 184,80</TableCell>
-                          <TableCell className="text-right">R$ 1.495,20</TableCell>
-                          <TableCell>
-                            <Badge className="bg-warning">Pendente</Badge>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Dra. Maria Silva</TableCell>
-                          <TableCell>15</TableCell>
-                          <TableCell className="text-right">R$ 2.100,00</TableCell>
-                          <TableCell className="text-right">R$ 231,00</TableCell>
-                          <TableCell className="text-right">R$ 1.869,00</TableCell>
-                          <TableCell>
-                            <Badge className="bg-success">Pago</Badge>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Dr. André Costa</TableCell>
-                          <TableCell>8</TableCell>
-                          <TableCell className="text-right">R$ 1.120,00</TableCell>
-                          <TableCell className="text-right">R$ 123,20</TableCell>
-                          <TableCell className="text-right">R$ 996,80</TableCell>
-                          <TableCell>
-                            <Badge className="bg-warning">Pendente</Badge>
-                          </TableCell>
-                        </TableRow>
+                        {isLoadingPagamentos ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6">
+                              <div className="flex justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                              </div>
+                              <p className="text-neutral-500 mt-2">Carregando repasses...</p>
+                            </TableCell>
+                          </TableRow>
+                        ) : pagamentos?.length ? (
+                          pagamentos
+                            .filter((p: any) => p.repassePsicologo > 0)
+                            .map((pagamento: any) => {
+                              const valorTotal = pagamento.valor;
+                              const repasse = pagamento.repassePsicologo || 0;
+                              const inss = Math.round(repasse * 0.11);
+                              const liquido = repasse - inss;
+                              
+                              return (
+                                <TableRow key={pagamento.id}>
+                                  <TableCell className="font-medium">
+                                    {pagamento.atendimento.psicologo.usuario?.nome || "Psicólogo não identificado"}
+                                  </TableCell>
+                                  <TableCell>1</TableCell>
+                                  <TableCell className="text-right">{formatarValor(valorTotal)}</TableCell>
+                                  <TableCell className="text-right">{formatarValor(inss)}</TableCell>
+                                  <TableCell className="text-right">{formatarValor(liquido)}</TableCell>
+                                  <TableCell>
+                                    <Badge className={pagamento.status === "pago" ? "bg-success" : "bg-warning"}>
+                                      {pagamento.status === "pago" ? "Pago" : "Pendente"}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6 text-neutral-500">
+                              Nenhum repasse encontrado no período selecionado.
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -556,34 +566,45 @@ export default function Financeiro() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">Unimed</TableCell>
-                          <TableCell className="text-right">18</TableCell>
-                          <TableCell className="text-right">R$ 2.160,00</TableCell>
-                          <TableCell className="text-right">R$ 1.512,00</TableCell>
-                          <TableCell className="text-right">R$ 648,00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Amil</TableCell>
-                          <TableCell className="text-right">12</TableCell>
-                          <TableCell className="text-right">R$ 1.440,00</TableCell>
-                          <TableCell className="text-right">R$ 1.008,00</TableCell>
-                          <TableCell className="text-right">R$ 432,00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">SulAmérica</TableCell>
-                          <TableCell className="text-right">8</TableCell>
-                          <TableCell className="text-right">R$ 960,00</TableCell>
-                          <TableCell className="text-right">R$ 672,00</TableCell>
-                          <TableCell className="text-right">R$ 288,00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Bradesco Saúde</TableCell>
-                          <TableCell className="text-right">5</TableCell>
-                          <TableCell className="text-right">R$ 600,00</TableCell>
-                          <TableCell className="text-right">R$ 420,00</TableCell>
-                          <TableCell className="text-right">R$ 180,00</TableCell>
-                        </TableRow>
+                        {isLoadingPlanosSaude || isLoadingPagamentos ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-6">
+                              <div className="flex justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                              </div>
+                              <p className="text-neutral-500 mt-2">Carregando dados dos planos de saúde...</p>
+                            </TableCell>
+                          </TableRow>
+                        ) : planosSaude?.length ? (
+                          planosSaude.map((plano: any) => {
+                            // Filtrar pagamentos deste plano
+                            const pagamentosPlano = pagamentos?.filter((p: any) => 
+                              p.atendimento.planoSaude?.id === plano.id
+                            ) || [];
+                            
+                            const totalAtendimentos = pagamentosPlano.length;
+                            const valorBruto = pagamentosPlano.reduce((sum: number, p: any) => sum + p.valor, 0);
+                            const valorRepasse = pagamentosPlano.reduce((sum: number, p: any) => sum + (p.repassePsicologo || 0), 0);
+                            const receitaLiquida = valorBruto - valorRepasse;
+                            
+                            // Só mostrar se tiver pagamentos
+                            return totalAtendimentos > 0 ? (
+                              <TableRow key={plano.id}>
+                                <TableCell className="font-medium">{plano.nome}</TableCell>
+                                <TableCell className="text-right">{totalAtendimentos}</TableCell>
+                                <TableCell className="text-right">{formatarValor(valorBruto)}</TableCell>
+                                <TableCell className="text-right">{formatarValor(valorRepasse)}</TableCell>
+                                <TableCell className="text-right">{formatarValor(receitaLiquida)}</TableCell>
+                              </TableRow>
+                            ) : null;
+                          }).filter(Boolean)
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-6 text-neutral-500">
+                              Nenhum plano de saúde cadastrado ou sem pagamentos no período.
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </div>
