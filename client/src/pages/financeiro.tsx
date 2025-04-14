@@ -78,6 +78,14 @@ export default function Financeiro() {
       try {
         console.log("Buscando pagamentos com filtros:", Object.fromEntries(params.entries()));
         const res = await apiRequest("GET", `/api/pagamentos?${params.toString()}`);
+        if (!res.ok) {
+          // Se houver erro de autenticação, retornar array vazio
+          if (res.status === 401) {
+            console.error("Usuário não autenticado ao buscar pagamentos");
+            return [];
+          }
+          throw new Error(`Erro ao buscar pagamentos: ${res.status} ${res.statusText}`);
+        }
         return await res.json();
       } catch (error) {
         console.error("Erro ao buscar pagamentos:", error);
@@ -97,10 +105,19 @@ export default function Financeiro() {
 
   // Filtrar pagamentos
   const filteredPagamentos = pagamentos?.filter((pagamento: any) => {
-    // Filtro de busca
+    // Verifica se o pagamento e o atendimento têm as propriedades necessárias
+    if (!pagamento || !pagamento.atendimento || 
+        !pagamento.atendimento.paciente || !pagamento.atendimento.paciente.usuario ||
+        !pagamento.atendimento.psicologo || !pagamento.atendimento.psicologo.usuario) {
+      return false;
+    }
+    
+    // Filtro de busca - com verificações de segurança
+    const pacienteNome = pagamento.atendimento.paciente.usuario.nome || '';
+    const psicologoNome = pagamento.atendimento.psicologo.usuario.nome || '';
     const searchMatch = (
-      pagamento.atendimento.paciente.usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pagamento.atendimento.psicologo.usuario.nome.toLowerCase().includes(searchTerm.toLowerCase())
+      pacienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      psicologoNome.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     // Filtro de status
@@ -121,7 +138,7 @@ export default function Financeiro() {
 
   // Calcular estatísticas financeiras
   const calcularEstatisticas = () => {
-    if (!pagamentos) return {
+    if (!pagamentos || !Array.isArray(pagamentos)) return {
       totalRecebido: 0,
       totalPendente: 0,
       totalRepasses: 0,
@@ -130,14 +147,14 @@ export default function Financeiro() {
     
     const totalRecebido = pagamentos
       .filter((p: any) => p.status === "pago")
-      .reduce((sum: number, p: any) => sum + p.valor, 0);
+      .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
       
     const totalPendente = pagamentos
       .filter((p: any) => p.status === "pendente")
-      .reduce((sum: number, p: any) => sum + p.valor, 0);
+      .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
       
     const totalRepasses = pagamentos
-      .reduce((sum: number, p: any) => sum + p.repassePsicologo, 0);
+      .reduce((sum: number, p: any) => sum + (p.repassePsicologo || 0), 0);
       
     return {
       totalRecebido,
