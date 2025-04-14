@@ -366,18 +366,7 @@ export default function PlanosSaude() {
                         <span className="text-xl font-semibold">36</span>
                       </div>
                       
-                      <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                            <DollarSign className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">Faturamento</h3>
-                            <p className="text-sm text-neutral-500">no último mês</p>
-                          </div>
-                        </div>
-                        <span className="text-xl font-semibold">R$ 4.680,00</span>
-                      </div>
+{/* Removido faturamento conforme solicitado */}
                     </div>
                   </CardContent>
                 </Card>
