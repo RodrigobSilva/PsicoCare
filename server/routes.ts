@@ -1053,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rotas para Pagamentos
-  app.get("/api/pagamentos", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+  app.get("/api/pagamentos", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       // Filtros de data
       const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Obter estatísticas de pagamentos para o dashboard financeiro
-  app.get("/api/pagamentos/estatisticas", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+  app.get("/api/pagamentos/estatisticas", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       // Filtros de data
       const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
