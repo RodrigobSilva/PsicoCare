@@ -328,39 +328,55 @@ export default function Financeiro() {
                 </CardHeader>
                 <CardContent className="p-0 max-h-[400px] overflow-y-auto">
                   <div className="divide-y divide-neutral-100">
-                    {pagamentos?.slice(0, 5).map((pagamento: any) => (
-                      <div key={pagamento.id} className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-neutral-800">
-                              {pagamento.atendimento.paciente.usuario.nome}
-                            </p>
-                            <p className="text-sm text-neutral-500">
-                              {pagamento.atendimento.psicologo.usuario.nome}
-                            </p>
+                    {pagamentos && Array.isArray(pagamentos) && pagamentos.length > 0 ? 
+                      pagamentos.slice(0, 5).map((pagamento: any) => {
+                        if (!pagamento) return null;
+                        
+                        // Verifica se todos os dados necessários existem
+                        const pacienteNome = pagamento?.atendimento?.paciente?.usuario?.nome || "Paciente não identificado";
+                        const psicologoNome = pagamento?.atendimento?.psicologo?.usuario?.nome || "Psicólogo não identificado";
+                        const dataRegistro = pagamento?.dataRegistro || "";
+                        const metodoPagamento = pagamento?.metodoPagamento || "";
+                        
+                        return (
+                          <div key={pagamento.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-neutral-800">
+                                  {pacienteNome}
+                                </p>
+                                <p className="text-sm text-neutral-500">
+                                  {psicologoNome}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium text-neutral-800">
+                                  {formatarValor(pagamento.valor || 0)}
+                                </p>
+                                <Badge 
+                                  variant={pagamento.status === "pago" ? "default" : "outline"}
+                                  className={pagamento.status === "pago" ? "bg-success" : "text-warning"}
+                                >
+                                  {pagamento.status === "pago" ? "Pago" : "Pendente"}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center mt-2 text-xs text-neutral-500">
+                              <span>{formatarData(dataRegistro)}</span>
+                              <span>
+                                {metodoPagamento === "plano_saude" && "Plano de Saúde"}
+                                {metodoPagamento === "dinheiro" && "Dinheiro"}
+                                {metodoPagamento === "cartão" && "Cartão"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-neutral-800">
-                              {formatarValor(pagamento.valor)}
-                            </p>
-                            <Badge 
-                              variant={pagamento.status === "pago" ? "default" : "outline"}
-                              className={pagamento.status === "pago" ? "bg-success" : "text-warning"}
-                            >
-                              {pagamento.status === "pago" ? "Pago" : "Pendente"}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-2 text-xs text-neutral-500">
-                          <span>{formatarData(pagamento.dataRegistro)}</span>
-                          <span>
-                            {pagamento.metodoPagamento === "plano_saude" && "Plano de Saúde"}
-                            {pagamento.metodoPagamento === "dinheiro" && "Dinheiro"}
-                            {pagamento.metodoPagamento === "cartão" && "Cartão"}
-                          </span>
-                        </div>
+                        );
+                      })
+                    : (
+                      <div className="p-4 text-center text-neutral-500">
+                        Nenhum pagamento registrado no período.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -430,20 +446,26 @@ export default function Financeiro() {
                     </TableHeader>
                     <TableBody>
                       {filteredPagamentos && filteredPagamentos.length > 0 ? (
-                        filteredPagamentos.map((pagamento: any) => (
-                          <TableRow key={pagamento.id}>
-                            <TableCell className="font-medium">
-                              {pagamento.atendimento.paciente.usuario.nome}
-                            </TableCell>
-                            <TableCell>
-                              {pagamento.atendimento.psicologo.usuario.nome}
-                            </TableCell>
-                            <TableCell>
-                              {formatarData(pagamento.atendimento.dataAtendimento)}
-                            </TableCell>
-                            <TableCell>
-                              {formatarValor(pagamento.valor)}
-                            </TableCell>
+                        filteredPagamentos.map((pagamento: any) => {
+                          // Verifica as propriedades necessárias
+                          const pacienteNome = pagamento?.atendimento?.paciente?.usuario?.nome || "Paciente não identificado";
+                          const psicologoNome = pagamento?.atendimento?.psicologo?.usuario?.nome || "Psicólogo não identificado";
+                          const dataAtendimento = pagamento?.atendimento?.dataAtendimento || "";
+                          
+                          return (
+                            <TableRow key={pagamento.id}>
+                              <TableCell className="font-medium">
+                                {pacienteNome}
+                              </TableCell>
+                              <TableCell>
+                                {psicologoNome}
+                              </TableCell>
+                              <TableCell>
+                                {formatarData(dataAtendimento)}
+                              </TableCell>
+                              <TableCell>
+                                {formatarValor(pagamento.valor || 0)}
+                              </TableCell>
                             <TableCell>
                               {pagamento.metodoPagamento === "plano_saude" && (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
@@ -470,7 +492,8 @@ export default function Financeiro() {
                               </Badge>
                             </TableCell>
                           </TableRow>
-                        ))
+                        );
+                      })
                       ) : (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-4 text-neutral-500">
