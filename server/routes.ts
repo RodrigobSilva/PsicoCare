@@ -1243,6 +1243,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Criar novo pagamento
+  app.post("/api/pagamentos", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
+    try {
+      const validatedData = insertPagamentoSchema.parse(req.body);
+      const novoPagamento = await storage.createPagamento(validatedData);
+      
+      // Enviar email de comprovante de pagamento se configurado
+      try {
+        // Primeiro obter o atendimento relacionado
+        const atendimento = await storage.getAtendimento(novoPagamento.atendimentoId);
+        if (atendimento) {
+          // Obter dados do paciente para o email
+          const paciente = await storage.getPaciente(atendimento.pacienteId);
+          if (paciente) {
+            const usuario = await storage.getUser(paciente.usuarioId);
+            if (usuario && usuario.email) {
+              // Preparar dados para notificação
+              const pagamentoDetalhado = {
+                ...novoPagamento,
+                paciente: {
+                  ...paciente,
+                  usuario
+                }
+              };
+              
+              // Enviar email de comprovante
+              emailService.sendPaymentReceipt(usuario.email, pagamentoDetalhado)
+                .then(() => {
+                  console.log(`Email de comprovante de pagamento enviado para ${usuario.email}`);
+                })
+                .catch(err => {
+                  console.error(`Erro ao enviar comprovante de pagamento: ${err.message}`);
+                });
+            }
+          }
+        }
+      } catch (emailError) {
+        // Apenas logar o erro, não interromper o fluxo principal
+        console.error("Erro ao enviar notificação de pagamento:", emailError);
+      }
+      
+      res.status(201).json(novoPagamento);
+    } catch (error) {
+      res.status(400).json({ mensagem: "Erro ao criar pagamento", erro: error });
+    }
+  });
+  
   // Obter estatísticas de pagamentos para o dashboard financeiro
   app.get("/api/pagamentos/estatisticas", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
