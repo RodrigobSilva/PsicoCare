@@ -269,15 +269,18 @@ export default function Calendar({
       const uniqueAgendamentos = new Map();
 
       data.forEach((ag: any) => {
-        // Filtrar agendamentos por psicólogo se um psicólogo específico for selecionado
-        if (selectedPsicologo && selectedPsicologo !== "todos" && 
-            ag.psicologo?.id.toString() !== selectedPsicologo) {
+        // Não precisamos filtrar novamente aqui porque já estamos enviando os filtros para o servidor
+        // Adicionamos apenas validação adicional
+        
+        // Verificar se o agendamento tem psicólogo válido
+        if (!ag.psicologo?.id) {
+          console.log(`Agendamento ${ag.id} ignorado: psicólogo não encontrado`);
           return;
         }
         
-        // Filtrar agendamentos por filial se uma filial específica for selecionada
-        if (selectedFilial && selectedFilial !== "nenhuma" &&
-            ag.filial?.id.toString() !== selectedFilial) {
+        // Verificar se o agendamento tem filial válida
+        if (!ag.filial?.id) {
+          console.log(`Agendamento ${ag.id} ignorado: filial não encontrada`);
           return;
         }
         
@@ -405,7 +408,17 @@ export default function Calendar({
       // Encontrar agendamentos neste horário
       const agendamentosNoHorario = agendamentos?.filter((a: Agendamento) => {
         const horaInicio = a.horaInicio?.substring(0, 5);
-        return horaInicio === horario && isSameDay(parseISO(a.data), currentDate);
+        
+        // Certifique-se de que a data é válida antes de tentar analisar
+        if (!a.data) return false;
+        
+        try {
+          const agendamentoDate = parseISO(a.data);
+          return horaInicio === horario && isSameDay(agendamentoDate, currentDate);
+        } catch (error) {
+          console.error(`Erro ao processar data do agendamento ${a.id}:`, error);
+          return false;
+        }
       });
 
       return (
@@ -471,8 +484,17 @@ export default function Calendar({
               // Encontrar agendamentos neste dia e horário
               const agendamentosNaHora = agendamentos?.filter((a: Agendamento) => {
                 const horaInicio = a.horaInicio?.substring(0, 5);
-                return horaInicio === horario && 
-                       isSameDay(parseISO(a.data), day);
+                
+                // Certifique-se de que a data é válida antes de tentar analisar
+                if (!a.data) return false;
+                
+                try {
+                  const agendamentoDate = parseISO(a.data);
+                  return horaInicio === horario && isSameDay(agendamentoDate, day);
+                } catch (error) {
+                  console.error(`Erro ao processar data do agendamento ${a.id}:`, error);
+                  return false;
+                }
               });
 
               return (
@@ -544,9 +566,18 @@ export default function Calendar({
             <div key={weekIndex} className="grid grid-cols-7 border-b border-neutral-200">
               {week.map((day) => {
                 // Encontrar agendamentos para este dia
-                const dayAgendamentos = agendamentos?.filter((a: Agendamento) => 
-                  isSameDay(parseISO(a.data), day)
-                );
+                const dayAgendamentos = agendamentos?.filter((a: Agendamento) => {
+                  // Certifique-se de que a data é válida antes de tentar analisar
+                  if (!a.data) return false;
+                  
+                  try {
+                    const agendamentoDate = parseISO(a.data);
+                    return isSameDay(agendamentoDate, day);
+                  } catch (error) {
+                    console.error(`Erro ao processar data do agendamento ${a.id}:`, error);
+                    return false;
+                  }
+                });
 
                 return (
                   <div 
@@ -688,7 +719,6 @@ export default function Calendar({
                   <SelectValue placeholder="Selecione um psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nenhum">Selecione um psicólogo</SelectItem>
                   <SelectItem value="todos">Todos os psicólogos</SelectItem>
                   {psicologos?.map((psicologo: any) => (
                     <SelectItem 
@@ -716,7 +746,6 @@ export default function Calendar({
                 <SelectValue placeholder="Selecione uma filial" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="nenhuma">Selecione uma filial</SelectItem>
                 <SelectItem value="todas">Todas as filiais</SelectItem>
                 {filiais?.map((filial: any) => (
                   <SelectItem key={filial.id} value={filial.id.toString()}>

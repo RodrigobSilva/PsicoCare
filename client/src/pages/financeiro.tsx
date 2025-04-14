@@ -561,7 +561,7 @@ export default function Financeiro() {
                               return (
                                 <TableRow key={pagamento.id}>
                                   <TableCell className="font-medium">
-                                    {pagamento.atendimento.psicologo.usuario?.nome || "Psicólogo não identificado"}
+                                    {pagamento?.atendimento?.psicologo?.usuario?.nome || "Psicólogo não identificado"}
                                   </TableCell>
                                   <TableCell>1</TableCell>
                                   <TableCell className="text-right">{formatarValor(valorTotal)}</TableCell>
