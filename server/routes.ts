@@ -1865,6 +1865,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Rotas para gerenciamento de configurações de email
+  app.get("/api/email/config", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const config = await emailService.getConfig();
+      // Não retornar a senha do email para o frontend
+      const safeConfig = {
+        ...config,
+        emailPassword: "" // Não enviar a senha para o frontend
+      };
+      res.json(safeConfig);
+    } catch (error) {
+      console.error("Erro ao buscar configurações de email:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao buscar configurações de email", 
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post("/api/email/config", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      const configData = req.body;
+      
+      // Se a senha estiver vazia, manter a senha atual
+      if (!configData.emailPassword) {
+        const currentConfig = await emailService.getConfig();
+        configData.emailPassword = currentConfig.emailPassword;
+      }
+      
+      await emailService.saveConfig(configData);
+      
+      // Retornar a configuração salva, mas sem a senha
+      const safeConfig = {
+        ...configData,
+        emailPassword: "" // Não enviar a senha para o frontend
+      };
+      
+      res.json({ 
+        mensagem: "Configurações de email atualizadas com sucesso",
+        config: safeConfig
+      });
+    } catch (error) {
+      console.error("Erro ao salvar configurações de email:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao salvar configurações de email", 
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.post("/api/email/test", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      await emailService.sendTestEmail();
+      res.json({ mensagem: "Email de teste enviado com sucesso" });
+    } catch (error) {
+      console.error("Erro ao enviar email de teste:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao enviar email de teste", 
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   // Inicializar o servidor HTTP
   const httpServer = createServer(app);
