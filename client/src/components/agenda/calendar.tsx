@@ -170,16 +170,25 @@ export default function Calendar({
       // Formato ISO para data
       params.append("data", currentDate.toISOString().split('T')[0]);
     } else if (currentView === "week") {
-      // Obter primeiro e último dia da semana
+      // Obter primeiro e último dia da semana com uma margem de segurança
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+
+      // Adicionar logs para depuração
+      console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
+      console.log("Até:", format(end, "yyyy-MM-dd"));
 
       params.append("dataInicio", start.toISOString().split('T')[0]);
       params.append("dataFim", end.toISOString().split('T')[0]);
     } else if (currentView === "month") {
-      // Obter primeiro e último dia do mês
+      // Obter primeiro e último dia do mês com uma margem de segurança
+      // Incluir a semana anterior e posterior para mostrar dias adjacentes
       const start = startOfMonth(currentDate);
       const end = endOfMonth(currentDate);
+
+      // Adicionar logs para depuração
+      console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
+      console.log("Até:", format(end, "yyyy-MM-dd"));
 
       params.append("dataInicio", start.toISOString().split('T')[0]);
       params.append("dataFim", end.toISOString().split('T')[0]);

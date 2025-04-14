@@ -347,6 +347,10 @@ export class DatabaseStorage implements IStorage {
   async getPagamentosByAtendimento(atendimentoId: number): Promise<Pagamento[]> {
     return await db.select().from(pagamentos).where(eq(pagamentos.atendimentoId, atendimentoId));
   }
+  
+  async getAllPagamentos(): Promise<Pagamento[]> {
+    return await db.select().from(pagamentos);
+  }
 
   async createPagamento(pagamento: InsertPagamento): Promise<Pagamento> {
     const [createdPagamento] = await db.insert(pagamentos).values(pagamento).returning();

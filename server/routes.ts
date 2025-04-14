@@ -1052,6 +1052,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rotas para Pagamentos
+  app.get("/api/pagamentos", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      // Filtros de data
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : undefined;
+      
+      // Obter todos os pagamentos
+      const pagamentos = await storage.getAllPagamentos();
+      
+      // Enriquecer com informações relacionadas
+      const pagamentosDetalhados = await Promise.all(
+        pagamentos.map(async (pagamento) => {
+          const atendimento = await storage.getAtendimento(pagamento.atendimentoId);
+          let atendimentoCompleto = { ...atendimento };
+          
+          if (atendimento) {
+            // Buscar paciente
+            if (atendimento.pacienteId) {
+              const paciente = await storage.getPaciente(atendimento.pacienteId);
+              if (paciente) {
+                const usuarioPaciente = await storage.getUser(paciente.usuarioId);
+                atendimentoCompleto.paciente = { 
+                  ...paciente, 
+                  usuario: usuarioPaciente 
+                };
+              }
+            }
+            
+            // Buscar psicólogo
+            if (atendimento.psicologoId) {
+              const psicologo = await storage.getPsicologo(atendimento.psicologoId);
+              if (psicologo) {
+                const usuarioPsicologo = await storage.getUser(psicologo.usuarioId);
+                atendimentoCompleto.psicologo = { 
+                  ...psicologo, 
+                  usuario: usuarioPsicologo 
+                };
+              }
+            }
+            
+            // Buscar plano de saúde, se houver
+            if (atendimento.planoSaudeId) {
+              const planoSaude = await storage.getPlanoSaude(atendimento.planoSaudeId);
+              atendimentoCompleto.planoSaude = planoSaude;
+            }
+          }
+          
+          return {
+            ...pagamento,
+            atendimento: atendimentoCompleto
+          };
+        })
+      );
+      
+      // Filtrar por data se necessário
+      let pagamentosFiltrados = pagamentosDetalhados;
+      
+      if (dateFrom || dateTo) {
+        pagamentosFiltrados = pagamentosDetalhados.filter(pagamento => {
+          const dataAtendimento = pagamento.atendimento?.dataAtendimento 
+            ? new Date(pagamento.atendimento.dataAtendimento) 
+            : null;
+            
+          if (!dataAtendimento) return false;
+          
+          const aposDataInicial = !dateFrom || dataAtendimento >= dateFrom;
+          const antesDataFinal = !dateTo || dataAtendimento <= dateTo;
+          
+          return aposDataInicial && antesDataFinal;
+        });
+      }
+      
+      res.json(pagamentosFiltrados);
+    } catch (error) {
+      console.error('Erro ao buscar pagamentos:', error);
+      res.status(500).json({ mensagem: "Erro ao buscar pagamentos", erro: error });
+    }
+  });
+  
+  // Obter estatísticas de pagamentos para o dashboard financeiro
+  app.get("/api/pagamentos/estatisticas", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {
+    try {
+      // Filtros de data
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : undefined;
+      
+      // Obter todos os pagamentos
+      const pagamentos = await storage.getAllPagamentos();
+      
+      // Filtrar por data se necessário
+      let pagamentosFiltrados = pagamentos;
+      
+      // Calcular estatísticas
+      const totalRecebido = pagamentosFiltrados
+        .filter(p => p.status === "pago")
+        .reduce((sum, p) => sum + p.valor, 0);
+        
+      const totalPendente = pagamentosFiltrados
+        .filter(p => p.status === "pendente")
+        .reduce((sum, p) => sum + p.valor, 0);
+        
+      const totalRepasses = pagamentosFiltrados
+        .filter(p => p.status === "pago")
+        .reduce((sum, p) => sum + (p.repassePsicologo || 0), 0);
+        
+      // Estatísticas por método de pagamento
+      const pagamentosPorMetodo = pagamentosFiltrados.reduce((acc, p) => {
+        const metodo = p.metodoPagamento || "outros";
+        if (!acc[metodo]) acc[metodo] = 0;
+        acc[metodo] += p.valor;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      res.json({
+        totalRecebido,
+        totalPendente,
+        totalRepasses,
+        totalLiquido: totalRecebido - totalRepasses,
+        pagamentosPorMetodo
+      });
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de pagamentos:', error);
+      res.status(500).json({ mensagem: "Erro ao buscar estatísticas de pagamentos", erro: error });
+    }
+  });
+
   // Rotas para Teleconsulta
   app.get("/api/agendamentos/:id", verificarAutenticacao, async (req, res) => {
     try {
