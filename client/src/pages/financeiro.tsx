@@ -47,13 +47,14 @@ import {
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
 
 export default function Financeiro() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterPlanoSaude, setFilterPlanoSaude] = useState("todos");
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),
   });
@@ -61,82 +62,27 @@ export default function Financeiro() {
   // Carregar lista de pagamentos
   const { data: pagamentos, isLoading: isLoadingPagamentos } = useQuery({
     queryKey: ["/api/pagamentos", { 
-      dateFrom: dateRange.from.toISOString(),
-      dateTo: dateRange.to.toISOString()
+      dateFrom: dateRange.from?.toISOString(),
+      dateTo: dateRange.to?.toISOString()
     }],
     queryFn: async () => {
-      // Em uma implementação real, usaríamos os parâmetros de data
-      // Mockamos dados para demonstração
-      return [
-        { 
-          id: 1, 
-          atendimentoId: 1,
-          valor: 15000, // 150,00
-          metodoPagamento: "plano_saude",
-          status: "pago",
-          dataRegistro: "2023-08-10T14:30:00Z",
-          dataRecebimento: "2023-08-15T10:00:00Z",
-          repassePsicologo: 10500, // 105,00
-          atendimento: {
-            paciente: { usuario: { nome: "Maria Silva" } },
-            psicologo: { usuario: { nome: "Dr. Carlos Mendes" } },
-            dataAtendimento: "2023-08-10T14:00:00Z",
-            tipoAtendimento: "Sessão Regular",
-            planoSaude: { nome: "Unimed" }
-          }
-        },
-        { 
-          id: 2, 
-          atendimentoId: 2,
-          valor: 18000, // 180,00
-          metodoPagamento: "dinheiro",
-          status: "pago",
-          dataRegistro: "2023-08-12T10:30:00Z",
-          dataRecebimento: "2023-08-12T10:30:00Z",
-          repassePsicologo: 12600, // 126,00
-          atendimento: {
-            paciente: { usuario: { nome: "João Batista" } },
-            psicologo: { usuario: { nome: "Dra. Maria Silva" } },
-            dataAtendimento: "2023-08-12T10:00:00Z",
-            tipoAtendimento: "Primeira Consulta",
-            planoSaude: null
-          }
-        },
-        { 
-          id: 3, 
-          atendimentoId: 3,
-          valor: 16000, // 160,00
-          metodoPagamento: "cartão",
-          status: "pendente",
-          dataRegistro: "2023-08-14T09:30:00Z",
-          dataRecebimento: null,
-          repassePsicologo: 11200, // 112,00
-          atendimento: {
-            paciente: { usuario: { nome: "Sofia Pereira" } },
-            psicologo: { usuario: { nome: "Dr. André Costa" } },
-            dataAtendimento: "2023-08-14T09:00:00Z",
-            tipoAtendimento: "Sessão Regular",
-            planoSaude: null
-          }
-        },
-        { 
-          id: 4, 
-          atendimentoId: 4,
-          valor: 14000, // 140,00
-          metodoPagamento: "plano_saude",
-          status: "pendente",
-          dataRegistro: "2023-08-15T16:30:00Z",
-          dataRecebimento: null,
-          repassePsicologo: 9800, // 98,00
-          atendimento: {
-            paciente: { usuario: { nome: "Ricardo Almeida" } },
-            psicologo: { usuario: { nome: "Dra. Patricia Santos" } },
-            dataAtendimento: "2023-08-15T16:00:00Z",
-            tipoAtendimento: "Avaliação",
-            planoSaude: { nome: "Amil" }
-          }
-        },
-      ];
+      // Construir parâmetros de filtro para a requisição
+      const params = new URLSearchParams();
+      if (dateRange.from) {
+        params.append("dateFrom", dateRange.from.toISOString());
+      }
+      if (dateRange.to) {
+        params.append("dateTo", dateRange.to.toISOString());
+      }
+      
+      try {
+        console.log("Buscando pagamentos com filtros:", Object.fromEntries(params.entries()));
+        const res = await apiRequest("GET", `/api/pagamentos?${params.toString()}`);
+        return await res.json();
+      } catch (error) {
+        console.error("Erro ao buscar pagamentos:", error);
+        return [];
+      }
     },
   });
 

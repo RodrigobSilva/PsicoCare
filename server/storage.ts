@@ -97,6 +97,7 @@ export interface IStorage {
   // Pagamentos
   getPagamento(id: number): Promise<Pagamento | undefined>;
   getPagamentosByAtendimento(atendimentoId: number): Promise<Pagamento[]>;
+  getAllPagamentos(): Promise<Pagamento[]>;
   createPagamento(pagamento: InsertPagamento): Promise<Pagamento>;
   updatePagamento(id: number, pagamento: Partial<InsertPagamento>): Promise<Pagamento | undefined>;
   deletePagamento(id: number): Promise<boolean>;
@@ -566,6 +567,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.pagamentos.values()).filter(
       (pagamento) => pagamento.atendimentoId === atendimentoId
     );
+  }
+  
+  async getAllPagamentos(): Promise<Pagamento[]> {
+    return Array.from(this.pagamentos.values());
   }
 
   async createPagamento(pagamento: InsertPagamento): Promise<Pagamento> {
