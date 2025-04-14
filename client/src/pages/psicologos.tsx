@@ -25,7 +25,7 @@ import PsicologoForm from "@/components/psicologos/psicologo-form";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useMutation } from "@tanstack/react-query";
-import type { PsicologoFormValues } from "@/components/psicologos/psicologo-form";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export default function Psicologos() {
@@ -34,6 +34,11 @@ export default function Psicologos() {
   const [editing, setEditing] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Verificar se o usuário é admin ou secretaria
+  const isAdmin = user?.tipo === "admin";
+  const isSecretaria = user?.tipo === "secretaria";
 
   const { data: psicologos, isLoading } = useQuery({
     queryKey: ["/api/psicologos"],
@@ -134,29 +139,32 @@ export default function Psicologos() {
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(psicologo.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-red-500"
-                            onClick={async () => {
-                              try {
-                                await apiRequest("DELETE", `/api/psicologos/${psicologo.id}`);
-                                queryClient.invalidateQueries({ queryKey: ["/api/psicologos"] });
-                                toast({
-                                  title: "Psicólogo removido",
-                                  description: "O psicólogo foi removido com sucesso.",
-                                });
-                              } catch (error) {
-                                toast({
-                                  variant: "destructive",
-                                  title: "Erro ao remover psicólogo",
-                                  description: "Não foi possível remover o psicólogo.",
-                                });
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {isAdmin && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-red-500"
+                              onClick={async () => {
+                                if (!confirm('Tem certeza que deseja excluir este psicólogo?')) return;
+                                try {
+                                  await apiRequest("DELETE", `/api/psicologos/${psicologo.id}`);
+                                  queryClient.invalidateQueries({ queryKey: ["/api/psicologos"] });
+                                  toast({
+                                    title: "Psicólogo removido",
+                                    description: "O psicólogo foi removido com sucesso.",
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Erro ao remover psicólogo",
+                                    description: "Não foi possível remover o psicólogo.",
+                                  });
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
