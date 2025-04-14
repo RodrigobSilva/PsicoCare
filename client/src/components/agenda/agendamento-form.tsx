@@ -208,8 +208,27 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
   // Mutation para salvar o agendamento
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof agendamentoFormSchema>) => {
-      // Formatar data ISO 8601
-      const dataFormatada = format(values.data, "yyyy-MM-dd");
+      // Formatar data ISO 8601 com validação para evitar erros
+      let dataFormatada;
+      try {
+        if (values.data instanceof Date && !isNaN(values.data.getTime())) {
+          dataFormatada = format(values.data, "yyyy-MM-dd");
+        } else if (typeof values.data === 'string') {
+          // Se já for string, verificar se é uma data válida
+          const parsedDate = parse(values.data, "yyyy-MM-dd", new Date());
+          if (isValid(parsedDate)) {
+            dataFormatada = values.data;
+          } else {
+            dataFormatada = format(new Date(), "yyyy-MM-dd");
+          }
+        } else {
+          // Fallback para data atual
+          dataFormatada = format(new Date(), "yyyy-MM-dd");
+        }
+      } catch (error) {
+        console.error("Erro ao formatar data:", error);
+        dataFormatada = format(new Date(), "yyyy-MM-dd");
+      }
 
       // Criar objeto de agendamento para enviar ao servidor
       const agendamentoData = {
@@ -320,8 +339,27 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
     if (values.status === "cancelado") {
       // Chamar a função de mutação diretamente
       try {
-        // Formatar data ISO 8601
-        const dataFormatada = format(values.data, "yyyy-MM-dd");
+        // Formatar data ISO 8601 com validação para evitar erros
+        let dataFormatada;
+        try {
+          if (values.data instanceof Date && !isNaN(values.data.getTime())) {
+            dataFormatada = format(values.data, "yyyy-MM-dd");
+          } else if (typeof values.data === 'string') {
+            // Se já for string, verificar se é uma data válida
+            const parsedDate = parse(values.data, "yyyy-MM-dd", new Date());
+            if (isValid(parsedDate)) {
+              dataFormatada = values.data;
+            } else {
+              dataFormatada = format(new Date(), "yyyy-MM-dd");
+            }
+          } else {
+            // Fallback para data atual
+            dataFormatada = format(new Date(), "yyyy-MM-dd");
+          }
+        } catch (error) {
+          console.error("Erro ao formatar data:", error);
+          dataFormatada = format(new Date(), "yyyy-MM-dd");
+        }
 
         // Criar objeto de agendamento para enviar ao servidor
         const agendamentoData = {
