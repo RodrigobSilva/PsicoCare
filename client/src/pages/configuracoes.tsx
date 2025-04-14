@@ -51,6 +51,7 @@ function GerenciamentoUsuarios() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "inativos">("todos");
+  const [filtroTipo, setFiltroTipo] = useState<"todos" | "admin" | "secretaria" | "psicologo" | "paciente">("todos");
   
   // Buscar lista de usuários
   const { data: usuarios, isLoading, refetch } = useQuery<Usuario[]>({
@@ -62,12 +63,39 @@ function GerenciamentoUsuarios() {
     }
   });
 
-  // Filtrar usuários por status
-  const usuariosFiltrados = usuarios?.filter(usuario => {
-    if (filtroStatus === "ativos") return usuario.ativo !== false;
-    if (filtroStatus === "inativos") return usuario.ativo === false;
-    return true;
-  });
+  // Função para ordenar usuários por tipo
+  const ordenarUsuariosPorTipo = (users: Usuario[]) => {
+    const ordemTipos = { admin: 1, secretaria: 2, psicologo: 3, paciente: 4 };
+    
+    return [...users].sort((a, b) => {
+      // Primeiro ordenar por tipo de usuário
+      const tipoA = a.tipo as keyof typeof ordemTipos;
+      const tipoB = b.tipo as keyof typeof ordemTipos;
+      const ordemA = ordemTipos[tipoA] || 999;
+      const ordemB = ordemTipos[tipoB] || 999;
+      
+      if (ordemA !== ordemB) {
+        return ordemA - ordemB;
+      }
+      
+      // Em caso de empate no tipo, ordenar por nome
+      return a.nome.localeCompare(b.nome);
+    });
+  };
+
+  // Filtrar usuários por status e tipo
+  const usuariosFiltrados = usuarios ? ordenarUsuariosPorTipo(
+    usuarios.filter(usuario => {
+      // Filtrar por status
+      if (filtroStatus === "ativos" && usuario.ativo === false) return false;
+      if (filtroStatus === "inativos" && usuario.ativo !== false) return false;
+      
+      // Filtrar por tipo
+      if (filtroTipo !== "todos" && usuario.tipo !== filtroTipo) return false;
+      
+      return true;
+    })
+  ) : [];
   
   // Formulário para novo usuário
   const form = useForm<UsuarioFormValues>({
@@ -236,18 +264,36 @@ function GerenciamentoUsuarios() {
             Novo Usuário
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Filtrar por status:</span>
-          <Select value={filtroStatus} onValueChange={(value: "todos" | "ativos" | "inativos") => setFiltroStatus(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione o status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="ativos">Ativos</SelectItem>
-              <SelectItem value="inativos">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center gap-2 space-y-2 sm:space-y-0">
+          <div className="flex items-center gap-2 mr-4">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Select value={filtroStatus} onValueChange={(value: "todos" | "ativos" | "inativos") => setFiltroStatus(value)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="ativos">Ativos</SelectItem>
+                <SelectItem value="inativos">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Tipo:</span>
+            <Select value={filtroTipo} onValueChange={(value: "todos" | "admin" | "secretaria" | "psicologo" | "paciente") => setFiltroTipo(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
+                <SelectItem value="admin">Administradores</SelectItem>
+                <SelectItem value="secretaria">Secretárias</SelectItem>
+                <SelectItem value="psicologo">Psicólogos</SelectItem>
+                <SelectItem value="paciente">Pacientes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

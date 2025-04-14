@@ -128,9 +128,14 @@ export default function Calendar({
   // ou quando a prop psicologoId mudar
   useEffect(() => {
     if (isPsicologo && userPsicologoId) {
+      // Psicólogo só pode ver seus próprios agendamentos
       setSelectedPsicologo(userPsicologoId.toString());
     } else if (psicologoId) {
+      // Se recebemos o ID do psicólogo como prop, usar esse valor
       setSelectedPsicologo(psicologoId.toString());
+    } else {
+      // Por padrão, mostrar todos os psicólogos para admin/secretaria
+      setSelectedPsicologo("todos");
     }
   }, [isPsicologo, userPsicologoId, psicologoId]);
   
