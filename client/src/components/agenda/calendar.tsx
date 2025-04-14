@@ -187,12 +187,16 @@ export default function Calendar({
       // Adicionar um dia extra ao final para garantir que toda a semana esteja incluída
       const end = addDays(endDate, 1);
 
-      // Adicionar logs para depuração
-      console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
-      console.log("Até:", format(end, "yyyy-MM-dd"));
+      // Usar formato ISO para as datas
+      const startFormatted = format(start, "yyyy-MM-dd");
+      const endFormatted = format(end, "yyyy-MM-dd");
 
-      params.append("dataInicio", start.toISOString().split('T')[0]);
-      params.append("dataFim", end.toISOString().split('T')[0]);
+      // Adicionar logs para depuração
+      console.log("Buscando agendamentos a partir de:", startFormatted);
+      console.log("Até:", endFormatted);
+
+      params.append("dataInicio", startFormatted);
+      params.append("dataFim", endFormatted);
     } else if (currentView === "month") {
       // Obter primeiro e último dia do mês com uma margem de segurança
       // Incluir a semana anterior e posterior para mostrar dias adjacentes
@@ -201,12 +205,16 @@ export default function Calendar({
       // Adicionar um dia extra ao final para garantir que todo o mês esteja incluído
       const end = addDays(endDate, 1);
 
-      // Adicionar logs para depuração
-      console.log("Buscando agendamentos a partir de:", format(start, "yyyy-MM-dd"));
-      console.log("Até:", format(end, "yyyy-MM-dd"));
+      // Usar formato ISO para as datas
+      const startFormatted = format(start, "yyyy-MM-dd");
+      const endFormatted = format(end, "yyyy-MM-dd");
 
-      params.append("dataInicio", start.toISOString().split('T')[0]);
-      params.append("dataFim", end.toISOString().split('T')[0]);
+      // Adicionar logs para depuração
+      console.log("Buscando agendamentos a partir de:", startFormatted);
+      console.log("Até:", endFormatted);
+
+      params.append("dataInicio", startFormatted);
+      params.append("dataFim", endFormatted);
     }
 
     // Se for psicólogo, sempre usa apenas seus próprios agendamentos
@@ -237,15 +245,15 @@ export default function Calendar({
     let dateParams = {};
 
     if (currentView === "day") {
-      dateParams = { data: currentDate.toISOString().split('T')[0] };
+      dateParams = { data: format(currentDate, "yyyy-MM-dd") };
     } else if (currentView === "week") {
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const endDate = endOfWeek(currentDate, { weekStartsOn: 1 });
       // Adicionar um dia extra ao final para garantir que toda a semana esteja incluída
       const end = addDays(endDate, 1);
       dateParams = { 
-        dataInicio: start.toISOString().split('T')[0],
-        dataFim: end.toISOString().split('T')[0]
+        dataInicio: format(start, "yyyy-MM-dd"),
+        dataFim: format(end, "yyyy-MM-dd")
       };
     } else if (currentView === "month") {
       const start = startOfMonth(currentDate);
@@ -253,8 +261,8 @@ export default function Calendar({
       // Adicionar um dia extra ao final para garantir que todo o mês esteja incluído
       const end = addDays(endDate, 1);
       dateParams = { 
-        dataInicio: start.toISOString().split('T')[0],
-        dataFim: end.toISOString().split('T')[0]
+        dataInicio: format(start, "yyyy-MM-dd"),
+        dataFim: format(end, "yyyy-MM-dd")
       };
     }
 
@@ -729,7 +737,27 @@ export default function Calendar({
     <Card className="w-full">
       <CardHeader className="pb-2">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <CardTitle>{getCurrentPeriodTitle()}</CardTitle>
+          <div>
+            <CardTitle>{getCurrentPeriodTitle()}</CardTitle>
+            {/* Exibição dos filtros selecionados */}
+            <div className="text-sm text-neutral-500 mt-1">
+              {selectedPsicologo !== "todos" && psicologos ? (
+                <span className="inline-flex items-center mr-2">
+                  Psicólogo: {psicologos.find((p: any) => p.id.toString() === selectedPsicologo)?.usuario?.nome || "Carregando..."}
+                </span>
+              ) : !isPsicologo ? (
+                <span className="inline-flex items-center mr-2">Psicólogo: Todos</span>
+              ) : null}
+              
+              {selectedFilial !== "todas" && filiais ? (
+                <span className="inline-flex items-center">
+                  Filial: {filiais.find((f: any) => f.id.toString() === selectedFilial)?.nome || "Carregando..."}
+                </span>
+              ) : (
+                <span className="inline-flex items-center">Filial: Todas</span>
+              )}
+            </div>
+          </div>
           
           <div className="flex items-center gap-2">
             <Button 
