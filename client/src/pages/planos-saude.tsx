@@ -154,9 +154,11 @@ export default function PlanosSaude() {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-neutral-800">Planos de Saúde</h1>
-          <Button onClick={handleNewPlano}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Plano
-          </Button>
+          {isAdmin && (
+            <Button onClick={handleNewPlano}>
+              <Plus className="mr-2 h-4 w-4" /> Novo Plano
+            </Button>
+          )}
         </div>
         
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
@@ -207,36 +209,42 @@ export default function PlanosSaude() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
+                          {/* Todos os usuários podem ver detalhes */}
                           <Button variant="ghost" size="icon" onClick={() => handleViewDetails(plano)}>
                             <FileText className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleEditPlano(plano.id)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className={plano.ativo ? "text-green-600 hover:text-green-700" : "text-red-500 hover:text-red-600"}
-                            onClick={() => toggleStatusMutation.mutate({
-                              id: plano.id,
-                              ativo: !plano.ativo
-                            })}
-                            title={plano.ativo ? "Desativar plano" : "Ativar plano"}
-                          >
-                            <PowerIcon className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-red-500"
-                            onClick={() => {
-                              if (confirm('Tem certeza que deseja excluir este plano?')) {
-                                deleteMutation.mutate(plano.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {/* Apenas admin pode editar, ativar/desativar e excluir */}
+                          {isAdmin && (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => handleEditPlano(plano.id)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className={plano.ativo ? "text-green-600 hover:text-green-700" : "text-red-500 hover:text-red-600"}
+                                onClick={() => toggleStatusMutation.mutate({
+                                  id: plano.id,
+                                  ativo: !plano.ativo
+                                })}
+                                title={plano.ativo ? "Desativar plano" : "Ativar plano"}
+                              >
+                                <PowerIcon className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-red-500"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja excluir este plano?')) {
+                                    deleteMutation.mutate(plano.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
@@ -396,7 +404,7 @@ export default function PlanosSaude() {
               <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
                 Fechar
               </Button>
-              {selectedPlano && (
+              {selectedPlano && isAdmin && (
                 <>
                   <Button 
                     variant="outline"
