@@ -10,7 +10,8 @@ import {
   FileHeart, 
   FileText, 
   Settings, 
-  LogOut 
+  LogOut,
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +88,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       label: "Relatórios", 
       icon: <FileText className="w-5 text-center" />,
       roles: ["admin", "secretaria"]
+    },
+    { 
+      href: "/assistente-ia", 
+      label: "Assistente IA", 
+      icon: <Brain className="w-5 text-center" />,
+      roles: ["admin", "secretaria", "psicologo"]
     },
     { 
       href: "/configuracoes", 

@@ -15,6 +15,7 @@ import Teleconsulta from "@/pages/teleconsulta";
 import Atendimentos from "@/pages/atendimentos";
 import Atendimento from "@/pages/atendimento";
 import Perfil from "@/pages/perfil";
+import AIAssistant from "@/pages/ai-assistant";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { OnboardingProvider } from "./hooks/use-onboarding";
@@ -91,6 +92,12 @@ function Router() {
       <ProtectedRoute
         path="/perfil"
         component={Perfil}
+      />
+      
+      <ProtectedRoute
+        path="/assistente-ia"
+        component={AIAssistant}
+        allowedRoles={["admin", "secretaria", "psicologo"]}
       />
       
       <Route component={NotFound} />
