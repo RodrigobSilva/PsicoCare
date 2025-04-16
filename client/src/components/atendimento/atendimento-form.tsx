@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { OnboardingTip } from "@/components/onboarding/onboarding-tip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -358,8 +359,27 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <div>
+            <div className="flex items-center">
               <CardTitle>Atendimento</CardTitle>
+              
+              {/* Dica de onboarding para sessão de atendimento */}
+              <OnboardingTip
+                id="atendimento-session"
+                title="Gerenciamento de Sessão"
+                side="right"
+                className="ml-2"
+              >
+                <p>
+                  Esta é a tela de atendimento onde você gerencia a sessão terapêutica.
+                </p>
+                <p className="mt-1">
+                  Aqui você pode iniciar e finalizar a sessão, registrar observações, gerar um resumo da consulta e acessar teleconsultas quando aplicável.
+                </p>
+                <p className="mt-1">
+                  Todas as informações registradas serão salvas automaticamente no prontuário do paciente.
+                </p>
+              </OnboardingTip>
+              
               <CardDescription>Gerenciamento da sessão terapêutica</CardDescription>
             </div>
             <div className="flex flex-col gap-2">

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import Layout from "@/components/layout/layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { OnboardingTip } from "@/components/onboarding/onboarding-tip";
 import { 
   Table, 
   TableBody, 
@@ -129,7 +130,36 @@ export default function Pacientes() {
     <Layout>
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-neutral-800">Gerenciamento de Pacientes</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-semibold text-neutral-800">Gerenciamento de Pacientes</h1>
+            
+            {/* Dica de onboarding para gerenciamento de pacientes */}
+            <OnboardingTip
+              id="pacientes-management"
+              title="Gerenciamento de Pacientes"
+              side="right"
+              className="ml-2"
+              delayMs={1000}
+            >
+              <p>
+                Aqui você pode cadastrar, editar e gerenciar todos os pacientes da clínica.
+              </p>
+              <p className="mt-1">
+                Use a barra de pesquisa para encontrar pacientes específicos por nome, email ou CPF.
+              </p>
+              {isAdminOrSecretaria && (
+                <p className="mt-1">
+                  Como {user?.tipo === "admin" ? "administrador" : "secretária"}, você pode adicionar novos pacientes, editar informações e alterar o status.
+                </p>
+              )}
+              {isPsicologo && (
+                <p className="mt-1">
+                  Como psicólogo, você pode visualizar a lista de pacientes para consulta.
+                </p>
+              )}
+            </OnboardingTip>
+          </div>
+          
           {isAdminOrSecretaria && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setImportOpen(true)}>
