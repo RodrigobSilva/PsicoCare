@@ -17,6 +17,7 @@ import Atendimento from "@/pages/atendimento";
 import Perfil from "@/pages/perfil";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
+import { OnboardingProvider } from "./hooks/use-onboarding";
 
 function Router() {
   return (
@@ -100,8 +101,10 @@ function Router() {
 function App() {
   return (
     <AuthProvider>
-      <Router />
-      <Toaster />
+      <OnboardingProvider>
+        <Router />
+        <Toaster />
+      </OnboardingProvider>
     </AuthProvider>
   );
 }
