@@ -371,7 +371,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                    isLoadingFiliais || isLoadingSalas || isLoadingPlanosSaude;
 
   return (
-    <div className="space-y-4 py-2 pb-4">
+    <div className="space-y-4 py-2 pb-4 max-h-[85vh] overflow-y-auto">
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
