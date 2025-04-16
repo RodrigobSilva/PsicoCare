@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Card,
   CardContent,
   CardFooter,
@@ -12,13 +12,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  Phone, 
-  MessageSquare, 
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Phone,
+  MessageSquare,
   MonitorSmartphone,
   Users,
   Timer
@@ -32,7 +32,7 @@ interface VideoCallInterfaceProps {
   isHost: boolean;
 }
 
-export default function VideoCallInterface({ 
+export default function VideoCallInterface({
   sessionId,
   pacienteId,
   psicologoId,
@@ -71,26 +71,25 @@ export default function VideoCallInterface({
           video: true,
           audio: true
         });
-        
+
         userMediaStream.current = stream;
-        
+
         // Configurar o vídeo local
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
-        
-        // Simular conexão estabelecida após 2 segundos
+
         setTimeout(() => {
           setIsConnecting(false);
           setIsConnected(true);
           startTimeRef.current = Date.now();
-          
+
           // Iniciar o cronômetro da chamada
           timerRef.current = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
             setElapsedTime(elapsed);
           }, 1000);
-          
+
           // Registrar início de sessão (simulado)
           logSessionActivity("inicio");
         }, 2000);
@@ -104,19 +103,19 @@ export default function VideoCallInterface({
         });
       }
     }
-    
+
     startMedia();
-    
+
     // Cleanup na desmontagem
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      
+
       if (userMediaStream.current) {
         userMediaStream.current.getTracks().forEach(track => track.stop());
       }
-      
+
       logSessionActivity("encerramento");
     };
   }, [toast]);
@@ -139,7 +138,7 @@ export default function VideoCallInterface({
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -178,19 +177,19 @@ export default function VideoCallInterface({
     }
 
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ 
-        video: { cursor: "always" } 
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: "always" }
       });
-      
+
       if (screenShareRef.current) {
         screenShareRef.current.srcObject = stream;
         setIsScreenSharing(true);
-        
+
         // Tratar o término do compartilhamento pelo usuário
         stream.getVideoTracks()[0].onended = () => {
           setIsScreenSharing(false);
         };
-        
+
         logSessionActivity("compartilhamento_tela_inicio");
       }
     } catch (error) {
@@ -206,17 +205,17 @@ export default function VideoCallInterface({
   // Enviar mensagem de chat
   const sendMessage = () => {
     if (messageText.trim() === "") return;
-    
+
     const newMessage = {
       id: chatMessages.length + 1,
       sender: user?.nome || "Você",
       text: messageText,
       time: new Date().toLocaleTimeString().substring(0, 5)
     };
-    
+
     setChatMessages([...chatMessages, newMessage]);
     setMessageText("");
-    
+
     // Em uma implementação real, enviaríamos a mensagem via WebSocket
     logSessionActivity("mensagem_enviada");
   };
@@ -229,7 +228,7 @@ export default function VideoCallInterface({
         usuarioId: user?.id,
         timestamp: new Date().toISOString()
       });
-      
+
       toast({
         title: "Anotações salvas",
         description: "Suas anotações foram salvas com sucesso."
@@ -250,20 +249,20 @@ export default function VideoCallInterface({
     if (userMediaStream.current) {
       userMediaStream.current.getTracks().forEach(track => track.stop());
     }
-    
+
     if (screenShareRef.current && screenShareRef.current.srcObject) {
       const tracks = (screenShareRef.current.srcObject as MediaStream).getTracks();
       tracks.forEach(track => track.stop());
     }
-    
+
     // Limpar o cronômetro
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     // Registrar término da chamada
     logSessionActivity("encerramento");
-    
+
     // Voltar para a página anterior
     onEndCall();
   };
@@ -286,15 +285,15 @@ export default function VideoCallInterface({
               {/* Compartilhamento de tela (quando ativo) */}
               {isScreenSharing && (
                 <div className="absolute inset-0 bg-black">
-                  <video 
+                  <video
                     ref={screenShareRef}
                     className="w-full h-full object-contain"
-                    autoPlay 
+                    autoPlay
                     playsInline
                   />
                 </div>
               )}
-              
+
               {/* Vídeo remoto (sempre presente quando não há compartilhamento) */}
               {!isScreenSharing && (
                 <div className="absolute inset-0">
@@ -315,14 +314,14 @@ export default function VideoCallInterface({
                   </div>
                 </div>
               )}
-              
+
               {/* Vídeo local (miniatura) */}
               <div className="absolute bottom-4 right-4 w-32 h-24 bg-neutral-700 rounded overflow-hidden border-2 border-neutral-600 shadow-lg">
                 {!isVideoOff ? (
-                  <video 
+                  <video
                     ref={localVideoRef}
                     className="w-full h-full object-cover"
-                    autoPlay 
+                    autoPlay
                     playsInline
                     muted
                   />
@@ -332,7 +331,7 @@ export default function VideoCallInterface({
                   </div>
                 )}
               </div>
-              
+
               {/* Indicador de duração da chamada */}
               <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center">
                 <Timer className="h-4 w-4 mr-2" />
@@ -346,8 +345,8 @@ export default function VideoCallInterface({
                   <VideoOff className="h-8 w-8 text-destructive" />
                 </div>
                 <p>Não foi possível estabelecer a conexão</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4 text-white border-white hover:bg-white/10"
                   onClick={onEndCall}
                 >
@@ -357,144 +356,142 @@ export default function VideoCallInterface({
             </div>
           )}
         </div>
-        
+
         {/* Painel lateral com abas */}
         <div className="flex flex-col">
           <Card className="flex-grow overflow-hidden">
-            <Tabs value={currentTab} onValueChange={setCurrentTab}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle>Teleconsulta</CardTitle>
-                  <TabsList>
-                    <TabsTrigger value="info" className="text-xs">Info</TabsTrigger>
-                    <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
-                    <TabsTrigger value="notas" className="text-xs">Notas</TabsTrigger>
-                  </TabsList>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="overflow-auto h-[calc(100%-4rem)]">
-                <TabsContent value="info" className="m-0 h-full">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-neutral-500 mb-1">ID da Sessão</h3>
-                      <p className="font-mono text-sm bg-neutral-100 p-2 rounded">{sessionId}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-neutral-500 mb-1">
-                        {user?.tipo === "psicologo" ? "Paciente" : "Psicólogo"}
-                      </h3>
-                      <p>
-                        {user?.tipo === "psicologo" 
-                          ? `ID do Paciente: ${pacienteId || "N/A"}` 
-                          : `ID do Psicólogo: ${psicologoId || "N/A"}`}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-neutral-500 mb-1">Duração</h3>
-                      <p>{formatElapsedTime(elapsedTime)}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-neutral-500 mb-1">Status</h3>
-                      <div className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
-                        <p>{isConnected ? "Conectado" : "Desconectado"}</p>
-                      </div>
-                    </div>
-                    
-                    {isHost && (
-                      <div className="pt-4">
-                        <h3 className="text-sm font-medium text-neutral-500 mb-2">Ações do Anfitrião</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
-                            <Users className="h-4 w-4" />
-                            <span className="text-xs">Convidar</span>
-                          </Button>
-                          <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
-                            <Phone className="h-4 w-4" />
-                            <span className="text-xs">Desconectar</span>
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle>Teleconsulta</CardTitle>
+                <TabsList>
+                  <TabsTrigger value="info" className="text-xs">Info</TabsTrigger>
+                  <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
+                  <TabsTrigger value="notas" className="text-xs">Notas</TabsTrigger>
+                </TabsList>
+              </div>
+            </CardHeader>
+
+            <CardContent className="overflow-auto h-[calc(100%-4rem)]">
+              <TabsContent value="info" className="m-0 h-full">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-500 mb-1">ID da Sessão</h3>
+                    <p className="font-mono text-sm bg-neutral-100 p-2 rounded">{sessionId}</p>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="chat" className="m-0 h-full flex flex-col">
-                  <div className="flex-grow overflow-y-auto mb-4 space-y-3">
-                    {chatMessages.length === 0 ? (
-                      <div className="text-center text-neutral-500 py-6">
-                        <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
-                        <p>Nenhuma mensagem ainda</p>
-                      </div>
-                    ) : (
-                      chatMessages.map(msg => (
-                        <div key={msg.id} className="bg-neutral-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium text-sm">{msg.sender}</span>
-                            <span className="text-neutral-500 text-xs">{msg.time}</span>
-                          </div>
-                          <p className="text-sm">{msg.text}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Textarea 
-                      value={messageText} 
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Digite sua mensagem..." 
-                      className="min-h-[60px] resize-none"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                    />
-                    <Button 
-                      onClick={sendMessage} 
-                      size="icon"
-                      disabled={messageText.trim() === ""}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="notas" className="m-0 h-full flex flex-col">
-                  <div className="mb-2">
-                    <p className="text-sm text-neutral-500 mb-2">
-                      Suas anotações são privadas e só ficam visíveis para você.
+
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-500 mb-1">
+                      {user?.tipo === "psicologo" ? "Paciente" : "Psicólogo"}
+                    </h3>
+                    <p>
+                      {user?.tipo === "psicologo"
+                        ? `ID do Paciente: ${pacienteId || "N/A"}`
+                        : `ID do Psicólogo: ${psicologoId || "N/A"}`}
                     </p>
                   </div>
-                  
-                  <Textarea 
-                    value={anotacoes}
-                    onChange={(e) => setAnotacoes(e.target.value)}
-                    placeholder="Faça anotações durante a consulta..."
-                    className="flex-grow resize-none min-h-[200px]"
-                  />
-                  
-                  <div className="mt-4 flex justify-end">
-                    <Button 
-                      onClick={salvarAnotacoes}
-                      disabled={anotacoes.trim() === ""}
-                    >
-                      Salvar Anotações
-                    </Button>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-500 mb-1">Duração</h3>
+                    <p>{formatElapsedTime(elapsedTime)}</p>
                   </div>
-                </TabsContent>
-              </CardContent>
-            </Tabs>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-neutral-500 mb-1">Status</h3>
+                    <div className="flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+                      <p>{isConnected ? "Conectado" : "Desconectado"}</p>
+                    </div>
+                  </div>
+
+                  {isHost && (
+                    <div className="pt-4">
+                      <h3 className="text-sm font-medium text-neutral-500 mb-2">Ações do Anfitrião</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span className="text-xs">Convidar</span>
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center justify-center gap-1">
+                          <Phone className="h-4 w-4" />
+                          <span className="text-xs">Desconectar</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="chat" className="m-0 h-full flex flex-col">
+                <div className="flex-grow overflow-y-auto mb-4 space-y-3">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-center text-neutral-500 py-6">
+                      <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                      <p>Nenhuma mensagem ainda</p>
+                    </div>
+                  ) : (
+                    chatMessages.map(msg => (
+                      <div key={msg.id} className="bg-neutral-50 p-3 rounded-lg">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium text-sm">{msg.sender}</span>
+                          <span className="text-neutral-500 text-xs">{msg.time}</span>
+                        </div>
+                        <p className="text-sm">{msg.text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Textarea
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Digite sua mensagem..."
+                    className="min-h-[60px] resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    size="icon"
+                    disabled={messageText.trim() === ""}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="notas" className="m-0 h-full flex flex-col">
+                <div className="mb-2">
+                  <p className="text-sm text-neutral-500 mb-2">
+                    Suas anotações são privadas e só ficam visíveis para você.
+                  </p>
+                </div>
+
+                <Textarea
+                  value={anotacoes}
+                  onChange={(e) => setAnotacoes(e.target.value)}
+                  placeholder="Faça anotações durante a consulta..."
+                  className="flex-grow resize-none min-h-[200px]"
+                />
+
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={salvarAnotacoes}
+                    disabled={anotacoes.trim() === ""}
+                  >
+                    Salvar Anotações
+                  </Button>
+                </div>
+              </TabsContent>
+            </CardContent>
           </Card>
         </div>
       </div>
-      
+
       {/* Controles da chamada */}
       <div className="mt-4 bg-white p-4 rounded-lg shadow-md">
         <div className="flex justify-center space-x-4">
@@ -507,7 +504,7 @@ export default function VideoCallInterface({
           >
             {isMicMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </Button>
-          
+
           <Button
             variant={isVideoOff ? "outline" : "default"}
             size="lg"
@@ -517,7 +514,7 @@ export default function VideoCallInterface({
           >
             {isVideoOff ? <VideoOff className="h-6 w-6" /> : <Video className="h-6 w-6" />}
           </Button>
-          
+
           <Button
             variant={isScreenSharing ? "default" : "outline"}
             size="lg"
@@ -527,7 +524,7 @@ export default function VideoCallInterface({
           >
             <MonitorSmartphone className="h-6 w-6" />
           </Button>
-          
+
           <Button
             variant={currentTab === "chat" ? "default" : "outline"}
             size="lg"
@@ -536,7 +533,7 @@ export default function VideoCallInterface({
           >
             <MessageSquare className="h-6 w-6" />
           </Button>
-          
+
           <Button
             variant="destructive"
             size="lg"

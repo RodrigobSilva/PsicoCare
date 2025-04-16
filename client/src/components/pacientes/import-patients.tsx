@@ -7,7 +7,7 @@ import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -65,14 +65,14 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    
+
     if (!selectedFile) {
       return;
     }
 
     // Verificar extensão do arquivo
     const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
-    
+
     if (fileExt !== 'csv') {
       toast({
         title: "Formato inválido",
@@ -89,7 +89,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
   // Parse CSV file
   const parseFile = (file: File) => {
     setProcessing(true);
-    
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -116,56 +116,32 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
   const validateData = (data: ImportPatientData[]) => {
     const validationResults = data.map(row => {
       const errors: string[] = [];
-      
-      // Validar campos obrigatórios
+
       if (!row.nome || row.nome.trim() === "") {
         errors.push("Nome é obrigatório");
       }
-      
+
       if (!row.email || row.email.trim() === "") {
         errors.push("Email é obrigatório");
       } else if (!isValidEmail(row.email)) {
         errors.push("Email inválido");
       }
-      
-      // Validar CPF, se fornecido
-      if (row.cpf && !isValidCPF(row.cpf)) {
-        errors.push("CPF inválido");
+
+
+      if (row.planoSaudeNome && !row.numeroCarteirinha) {
+        errors.push("Número da carteirinha é obrigatório quando plano de saúde é informado");
       }
-      
-      // Validar data de nascimento, se fornecida
-      if (row.dataNascimento && !isValidDate(row.dataNascimento)) {
-        errors.push("Data de nascimento inválida");
+
+      if (row.planoSaudeNome && !isValidDate(row.dataValidade)) {
+        errors.push("Data de validade do plano inválida");
       }
-      
-      // Validar plano de saúde, se fornecido
-      if (row.planoSaudeNome) {
-        const planoExists = planosSaude.find(p => 
-          p.nome.toLowerCase() === row.planoSaudeNome?.toLowerCase()
-        );
-        
-        if (!planoExists) {
-          errors.push(`Plano de saúde "${row.planoSaudeNome}" não encontrado`);
-        }
-        
-        // Se tem plano, precisa ter carteirinha e validade
-        if (!row.numeroCarteirinha) {
-          errors.push("Número da carteirinha é obrigatório quando plano de saúde é informado");
-        }
-        
-        if (!row.dataValidade) {
-          errors.push("Data de validade é obrigatória quando plano de saúde é informado");
-        } else if (!isValidDate(row.dataValidade)) {
-          errors.push("Data de validade do plano inválida");
-        }
-      }
-      
+
       return {
         valid: errors.length === 0,
         errors
       };
     });
-    
+
     setValidationResults(validationResults);
   };
 
@@ -173,7 +149,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
   const downloadTemplate = () => {
     const headers = "nome,email,telefone,cpf,dataNascimento,genero,endereco,cidade,estado,cep,observacoes,planoSaudeNome,numeroCarteirinha,dataValidade\n";
     const sampleRow = "Maria Silva,maria@email.com,(11)98765-4321,12345678900,1990-05-15,Feminino,Rua das Flores 123,São Paulo,SP,01234-567,Observações gerais,Unimed,123456789,2025-12-31\n";
-    
+
     const csv = headers + sampleRow;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, 'modelo_importacao_pacientes.csv');
@@ -188,7 +164,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
           // Verificar se tem plano de saúde
           let planoSaudeId = null;
           if (patientData.planoSaudeNome) {
-            const plano = planosSaude.find(p => 
+            const plano = planosSaude.find(p =>
               p.nome.toLowerCase() === patientData.planoSaudeNome?.toLowerCase()
             );
             if (plano) {
@@ -230,7 +206,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
 
           // Enviar para API
           const res = await apiRequest("POST", "/api/pacientes", payload);
-          
+
           if (!res.ok) {
             const errorData = await res.json();
             results.failed++;
@@ -248,7 +224,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
 
       // Aguardar conclusão de todas as importações
       await Promise.all(importPromises);
-      
+
       return results;
     },
     onSuccess: (results) => {
@@ -279,7 +255,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
 
     // Verificar se todos os dados são válidos
     const hasInvalidData = validationResults.some(result => !result.valid);
-    
+
     if (hasInvalidData) {
       toast({
         title: "Dados inválidos",
@@ -347,12 +323,12 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
             <div className="flex flex-col gap-4">
               <div>
                 <Label htmlFor="file-upload">Selecione um arquivo CSV ou Excel</Label>
-                <Input 
-                  id="file-upload" 
-                  type="file" 
+                <Input
+                  id="file-upload"
+                  type="file"
                   ref={fileInputRef}
-                  accept=".csv,.xlsx,.xls" 
-                  onChange={handleFileUpload} 
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileUpload}
                   disabled={processing}
                   className="mt-1"
                 />
@@ -382,7 +358,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
                   <h3 className="text-lg font-medium">
                     {parsedData.length} {parsedData.length === 1 ? 'registro' : 'registros'} encontrados
                   </h3>
-                  
+
                   <Badge variant={validationResults.some(r => !r.valid) ? "destructive" : "default"}>
                     {validationResults.filter(r => !r.valid).length} com erros
                   </Badge>
@@ -428,7 +404,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
                     <AlertDescription>
                       <p>Os seguintes erros foram encontrados:</p>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
-                        {validationResults.map((result, index) => 
+                        {validationResults.map((result, index) =>
                           !result.valid && result.errors.map((error, errorIndex) => (
                             <li key={`${index}-${errorIndex}`}>
                               Linha {index + 1}: {error}
@@ -452,9 +428,9 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
-              
+
               <h3 className="text-xl font-semibold text-center">Importação Concluída</h3>
-              
+
               <div className="grid grid-cols-3 gap-4 mt-4 w-full max-w-md">
                 <div className="p-4 rounded-lg bg-neutral-100 text-center">
                   <div className="text-2xl font-bold">{importStats.total}</div>
@@ -469,7 +445,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
                   <div className="text-sm text-red-600">Falhas</div>
                 </div>
               </div>
-              
+
               {importStats.failed > 0 && (
                 <Alert variant="destructive" className="mt-4">
                   <AlertTitle>Alguns registros não foram importados</AlertTitle>
@@ -488,7 +464,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
               <DialogClose asChild>
                 <Button variant="outline" onClick={handleClose}>Cancelar</Button>
               </DialogClose>
-              <Button 
+              <Button
                 disabled={!file || processing}
                 onClick={() => setActiveTab("review")}
               >
@@ -500,7 +476,7 @@ export default function ImportPatients({ open, onOpenChange, planosSaude = [], o
           {activeTab === "review" && (
             <>
               <Button variant="outline" onClick={() => setActiveTab("upload")}>Voltar</Button>
-              <Button 
+              <Button
                 disabled={parsedData.length === 0 || importMutation.isPending || validationResults.some(r => !r.valid)}
                 onClick={handleImport}
               >
