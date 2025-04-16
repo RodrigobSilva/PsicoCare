@@ -875,28 +875,41 @@ export default function Calendar({
       </CardHeader>
       
       <CardContent>
-        <div className="rounded border border-neutral-200 overflow-hidden">
+        <div className="rounded-lg border border-neutral-200 overflow-hidden shadow-sm">
           {renderCalendarContent()}
         </div>
 
-        {/* Legenda dos status */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-orange-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Agendado</span>
+        <div className="mt-6 flex justify-between items-center">
+          {/* Legenda dos status */}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
+              <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-600">Agendado</span>
+            </div>
+            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-600">Confirmado</span>
+            </div>
+            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-600">Realizado</span>
+            </div>
+            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
+              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-600">Cancelado</span>
+            </div>
           </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Confirmado</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Realizado</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-red-500 rounded mr-1"></div>
-            <span className="text-xs text-neutral-600">Cancelado</span>
-          </div>
+
+          {/* Google Calendar Integration */}
+          <Button variant="outline" className="flex items-center gap-2">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 4H5C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Sincronizar com Google Calendar
+          </Button>
         </div>
       </CardContent>
     </Card>

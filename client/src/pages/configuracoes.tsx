@@ -1164,11 +1164,48 @@ export default function Configuracoes() {
               <Card>
                 <CardHeader>
                   <CardTitle>Google Calendar</CardTitle>
-                  <CardDescription>Sincronização de agenda</CardDescription>
+                  <CardDescription>Sincronização automática de agendamentos com Google Calendar</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-neutral-600">
-                    Configure a sincronização de agendamentos com o Google Calendar.
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Status da Sincronização</h4>
+                      <p className="text-sm text-neutral-600">Não conectado ao Google Calendar</p>
+                    </div>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 4H5C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Conectar Calendário
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="font-medium">Configurações de Sincronização</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-new" />
+                        <label htmlFor="sync-new" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Sincronizar novos agendamentos automaticamente
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-changes" />
+                        <label htmlFor="sync-changes" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Sincronizar alterações em agendamentos existentes
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-cancellations" />
+                        <label htmlFor="sync-cancellations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Sincronizar cancelamentos
+                        </label>
+                      </div>
+                    </div>
+                  </div> com o Google Calendar.
                   </p>
                 </CardContent>
               </Card>
