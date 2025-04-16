@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OnboardingTip } from "@/components/onboarding/onboarding-tip";
 import { 
   Select, 
   SelectContent, 
@@ -756,6 +757,26 @@ export default function Calendar({
               ) : (
                 <span className="inline-flex items-center">Filial: Todas</span>
               )}
+              
+              {/* Dica de onboarding para a agenda */}
+              <OnboardingTip
+                id="agenda-scheduling"
+                title="Gerenciamento de Agenda"
+                side="bottom"
+                align="start"
+                delayMs={1500}
+                className="ml-3"
+              >
+                <p>
+                  Aqui você pode visualizar e gerenciar todos os agendamentos.
+                </p>
+                <p className="mt-1">
+                  Use os controles acima para navegar entre os dias, semanas ou meses, e os filtros para encontrar agendamentos específicos.
+                </p>
+                <p className="mt-1">
+                  Clique em um agendamento para visualizar seus detalhes ou editá-lo.
+                </p>
+              </OnboardingTip>
             </div>
           </div>
           

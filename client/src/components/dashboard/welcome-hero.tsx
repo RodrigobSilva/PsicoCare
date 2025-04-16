@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { OnboardingTip } from "@/components/onboarding/onboarding-tip";
 
 // Tipos das propriedades do componente
 interface WelcomeHeroProps {
@@ -84,7 +85,7 @@ export default function WelcomeHero({ userName }: WelcomeHeroProps) {
       <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-primary opacity-10"></div>
       <div className="absolute -left-8 -bottom-8 w-28 h-28 rounded-full bg-primary opacity-10"></div>
 
-      <div className="relative z-10 flex items-center justify-between"> {/* Added flexbox for better layout */}
+      <div className="relative z-10 flex items-center justify-between">
         <div>
           <motion.div variants={itemVariants} className="text-sm text-primary-700 font-medium mb-1">
             {dataFormatada}
@@ -98,6 +99,22 @@ export default function WelcomeHero({ userName }: WelcomeHeroProps) {
           <motion.p variants={itemVariants} className="text-primary-700 mt-2 max-w-xl">
             {message}
           </motion.p>
+          
+          {/* Dica de onboarding para novos usuários */}
+          <OnboardingTip
+            id="dashboard-welcome"
+            title="Bem-vindo ao Sistema de Gestão de Clínica"
+            side="bottom"
+            delayMs={1000}
+            showAnchor={false}
+          >
+            <p>
+              Este é o seu painel principal, onde você encontrará informações importantes e acesso rápido às funcionalidades mais utilizadas.
+            </p>
+            <p className="mt-1">
+              Explore as diferentes seções no menu lateral para gerenciar pacientes, agenda, atendimentos e muito mais!
+            </p>
+          </OnboardingTip>
         </div>
         <motion.div variants={itemVariants} className="mt-4 md:mt-0">
           <button
