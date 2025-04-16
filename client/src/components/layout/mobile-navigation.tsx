@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { ChartBarStacked, Calendar, User, Coins, MoreHorizontal } from "lucide-react";
+import { ChartBarStacked, Calendar, User, Coins, MoreHorizontal, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -48,6 +48,13 @@ export default function MobileNavigation() {
         icon={<User className="text-lg" />} 
         label="Pacientes" 
         active={location === "/pacientes"} 
+      />
+      <NavItem 
+        href="/assistente-ia" 
+        icon={<Brain className="text-lg" />} 
+        label="IA" 
+        active={location === "/assistente-ia"}
+        hidden={user.tipo === "paciente"}
       />
       <NavItem 
         href="/financeiro" 
