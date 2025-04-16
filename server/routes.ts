@@ -1556,6 +1556,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     fs.mkdirSync('./uploads/teleconsultas', { recursive: true });
   }
   
+  // Endpoint para o Assistente de IA - Chat
+  app.post("/api/ai/assistant/chat", verificarAutenticacao, async (req, res) => {
+    try {
+      const { message, userId } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ mensagem: "Mensagem não fornecida" });
+      }
+      
+      // Verificar se OPENAI_API_KEY está configurada
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ mensagem: "API key da OpenAI não configurada" });
+      }
+      
+      // Obter informações do usuário para personalização
+      const user = await storage.getUser(userId);
+      const userRole = user ? user.tipo : "desconhecido";
+      
+      // Configurar contexto adequado com base no papel do usuário
+      let systemPrompt = "Você é um assistente especializado em psicologia clínica. ";
+      
+      if (userRole === "psicologo") {
+        systemPrompt += "Você está conversando com um profissional de psicologia e deve fornecer suporte especializado, " +
+                       "incluindo informações sobre técnicas terapêuticas, interpretações clínicas baseadas em evidências, " +
+                       "e recomendações profissionais. Use linguagem técnica apropriada.";
+      } else if (userRole === "admin" || userRole === "secretaria") {
+        systemPrompt += "Você está conversando com um administrador da clínica. Forneça suporte relacionado à " +
+                       "gestão de uma clínica de psicologia, incluindo melhores práticas administrativas, " +
+                       "otimização de agendamentos e atendimento a pacientes.";
+      } else {
+        systemPrompt += "Forneça informações úteis e baseadas em evidências sobre psicologia, saúde mental, " +
+                       "e práticas terapêuticas. Evite dar diagnósticos ou recomendações médicas diretas.";
+      }
+      
+      // Log da utilização
+      logger.info(`Assistente IA: Consulta de usuário ${userId}`);
+      
+      // Consultar a OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+      });
+      
+      // Extrair e enviar a resposta
+      const assistantResponse = completion.choices[0].message.content;
+      res.json({ message: assistantResponse });
+      
+    } catch (error) {
+      console.error("Erro na comunicação com assistente IA:", error);
+      res.status(500).json({ 
+        mensagem: "Ocorreu um erro ao processar sua mensagem",
+        erro: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Endpoints relacionados à OpenAI API
   app.post("/api/openai/gerar-resumo", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo"]), async (req, res) => {
     try {
