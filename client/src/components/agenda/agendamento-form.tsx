@@ -216,6 +216,11 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
         ...values,
         data: dataFormatada,
       };
+      
+      // Garantir que existe um filialId válido mesmo para agendamentos remotos
+      if (values.remoto && !values.filialId && filiais && filiais.length > 0) {
+        agendamentoData.filialId = filiais[0].id;
+      }
 
       if (agendamentoId) {
         // Editar existente
@@ -328,6 +333,11 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
           ...values,
           data: dataFormatada,
         };
+        
+        // Garantir que existe um filialId válido mesmo para agendamentos remotos
+        if (values.remoto && !values.filialId && filiais && filiais.length > 0) {
+          agendamentoData.filialId = filiais[0].id;
+        }
 
         if (agendamentoId) {
           // Editar existente
@@ -556,8 +566,12 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                         if (value === "remoto") {
                           form.setValue("remoto", true);
                           form.setValue("salaId", undefined);
-                          form.setValue("filialId", undefined);
-                          field.onChange(undefined);
+                          // Para atendimentos remotos, usamos a primeira filial como valor padrão (ou mantemos a selecionada)
+                          if (filiais && filiais.length > 0 && !form.watch("filialId")) {
+                            const primeiraFilialId = filiais[0].id;
+                            form.setValue("filialId", primeiraFilialId);
+                            field.onChange(primeiraFilialId);
+                          }
                         } else {
                           form.setValue("remoto", false);
                           const numValue = parseInt(value);
