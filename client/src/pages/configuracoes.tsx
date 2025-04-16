@@ -1205,8 +1205,10 @@ export default function Configuracoes() {
                         </label>
                       </div>
                     </div>
-                  </div> com o Google Calendar.
-                  </p>
+                    <p className="text-sm text-neutral-600 mt-4">
+                      Integração com o Google Calendar.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
