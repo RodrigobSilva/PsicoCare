@@ -1789,6 +1789,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para criar um novo atendimento
+  app.post("/api/atendimentos", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo", "secretaria"]), async (req, res) => {
+    try {
+      const { agendamentoId, dataAtendimento, status, psicologoId, observacoes, resumo } = req.body;
+      
+      if (!agendamentoId) {
+        return res.status(400).json({ mensagem: "ID do agendamento é obrigatório" });
+      }
+      
+      // Verificar se o agendamento existe
+      const agendamento = await storage.getAgendamento(agendamentoId);
+      if (!agendamento) {
+        return res.status(404).json({ mensagem: "Agendamento não encontrado" });
+      }
+      
+      // Criar novo atendimento
+      const novoAtendimento = await storage.createAtendimento({
+        agendamentoId,
+        dataAtendimento: dataAtendimento || new Date(),
+        status: status || "em_andamento",
+        psicologoId: psicologoId || agendamento.psicologoId,
+        observacoes,
+        resumo
+      });
+      
+      res.status(201).json(novoAtendimento);
+    } catch (error) {
+      console.error("Erro ao criar atendimento:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao criar atendimento", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
   // Rota para buscar atendimentos de um agendamento específico
   app.get("/api/atendimentos/agendamento/:id", verificarAutenticacao, async (req, res) => {
     try {
@@ -1805,6 +1840,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Erro ao buscar atendimentos do agendamento:", error);
       res.status(500).json({ 
         mensagem: "Erro ao buscar atendimentos", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
+  // Rota para buscar um atendimento específico por ID
+  app.get("/api/atendimentos/:id", verificarAutenticacao, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ mensagem: "ID de atendimento inválido" });
+      }
+      
+      const atendimento = await storage.getAtendimento(id);
+      
+      if (!atendimento) {
+        return res.status(404).json({ mensagem: "Atendimento não encontrado" });
+      }
+      
+      res.json(atendimento);
+    } catch (error) {
+      console.error("Erro ao buscar atendimento:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao buscar atendimento", 
+        erro: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
+  // Rota para atualizar um atendimento
+  app.put("/api/atendimentos/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "psicologo"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ mensagem: "ID de atendimento inválido" });
+      }
+      
+      const atendimento = await storage.getAtendimento(id);
+      
+      if (!atendimento) {
+        return res.status(404).json({ mensagem: "Atendimento não encontrado" });
+      }
+      
+      // Atualizar o atendimento
+      const atendimentoAtualizado = await storage.updateAtendimento(id, req.body);
+      
+      res.json(atendimentoAtualizado);
+    } catch (error) {
+      console.error("Erro ao atualizar atendimento:", error);
+      res.status(500).json({ 
+        mensagem: "Erro ao atualizar atendimento", 
         erro: error instanceof Error ? error.message : String(error) 
       });
     }
