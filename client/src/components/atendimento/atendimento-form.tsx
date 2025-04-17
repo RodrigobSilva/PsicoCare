@@ -302,7 +302,7 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
 
   // Acessar sala virtual
   const handleAcessarSalaVirtual = useCallback(() => {
-    if (!linkTeleconsulta) {
+    if (!linkTeleconsulta || !agendamentoId) {
       toast({
         title: "Link não gerado",
         description: "É necessário gerar um link antes de acessar a sala virtual.",
@@ -311,8 +311,9 @@ export default function AtendimentoForm({ agendamentoId, onSuccess }: Atendiment
       return;
     }
 
-    setLocation(`/teleconsulta?room=${encodeURIComponent(linkTeleconsulta)}`);
-  }, [linkTeleconsulta, setLocation, toast]);
+    // Navegando para a página de teleconsulta com o ID do agendamento
+    setLocation(`/teleconsulta/${agendamentoId}`);
+  }, [linkTeleconsulta, agendamentoId, setLocation, toast]);
 
   if (isLoadingAgendamento || isLoadingAtendimentos || isLoadingPsicologos) {
     return (
