@@ -154,9 +154,13 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
         disponibilidades: data.disponibilidade
       };
 
+      // Se for edição, use PUT, senão use POST
+      const method = psicologoId ? "PUT" : "POST";
+      const endpoint = psicologoId ? `/api/psicologos/${psicologoId}` : "/api/psicologos";
+      
       const psicologoResponse = await apiRequest(
-        "POST",
-        "/api/psicologos",
+        method,
+        endpoint,
         payload
       );
 
