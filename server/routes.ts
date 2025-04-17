@@ -488,6 +488,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ mensagem: "Psicólogo não encontrado" });
       }
 
+      // Se a senha estiver sendo alterada, fazer o hash
+      if (usuario.senha) {
+        const { hashPassword } = await import('./auth');
+        usuario.senha = await hashPassword(usuario.senha);
+        console.log("Senha do psicólogo criptografada com sucesso");
+      }
+
       await storage.updateUser(psicologoExistente.usuarioId, usuario);
       const psicologoAtualizado = await storage.updatePsicologo(id, psicologo);
 
