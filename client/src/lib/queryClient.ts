@@ -1,7 +1,6 @@
 
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-
-const API_BASE_URL = ""; // URL base da API - usando path relativo
+import { API_BASE_URL } from "./api-config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

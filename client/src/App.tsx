@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import CustomRouter from "@/components/layout/custom-router";
 import Dashboard from "@/pages/dashboard";
 import Pacientes from "@/pages/pacientes";
 import Psicologos from "@/pages/psicologos";
@@ -109,8 +110,10 @@ function App() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <Router />
-        <Toaster />
+        <CustomRouter>
+          <Router />
+          <Toaster />
+        </CustomRouter>
       </OnboardingProvider>
     </AuthProvider>
   );
