@@ -47,12 +47,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       icon: <Calendar className="w-5 text-center" />,
       roles: ["admin", "secretaria", "psicologo", "paciente"]
     },
-    { 
-      href: "/atendimentos", 
-      label: "Atendimentos", 
-      icon: <FileText className="w-5 text-center" />,
-      roles: ["admin", "secretaria", "psicologo"]
-    },
+
     { 
       href: "/pacientes", 
       label: "Pacientes", 

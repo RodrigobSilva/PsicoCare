@@ -14,8 +14,6 @@ import PlanosSaude from "@/pages/planos-saude";
 import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
 import Teleconsulta from "@/pages/teleconsulta";
-import Atendimentos from "@/pages/atendimentos";
-import Atendimento from "@/pages/atendimento";
 import Perfil from "@/pages/perfil";
 import AIAssistant from "@/pages/ai-assistant";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -69,12 +67,6 @@ function Router() {
       />
       
       <ProtectedRoute 
-        path="/atendimentos" 
-        component={Atendimentos}
-        allowedRoles={["admin", "secretaria", "psicologo"]}
-      />
-      
-      <ProtectedRoute 
         path="/configuracoes" 
         component={Configuracoes}
         allowedRoles={["admin"]}
@@ -83,12 +75,6 @@ function Router() {
       <ProtectedRoute
         path="/teleconsulta/:id"
         component={Teleconsulta}
-      />
-
-      <ProtectedRoute
-        path="/atendimento/:id"
-        component={Atendimento}
-        allowedRoles={["admin", "psicologo"]}
       />
       
       <ProtectedRoute
