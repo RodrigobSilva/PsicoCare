@@ -64,16 +64,21 @@ export default function QuickAccess({ userType }: QuickAccessProps) {
       </CardHeader>
       <CardContent className="p-6">
         <div className="grid grid-cols-2 gap-4">
-          {quickAccessItems.map((item, index) => (
-            <Link key={index} href={item.href}>
-              <a className={`flex flex-col items-center justify-center p-4 ${item.bgColor} rounded-lg hover:bg-opacity-20 transition-colors`}>
+          {quickAccessItems.map((item, index) => {
+            // Usando div clicável no lugar de aninhamento de links
+            return (
+              <div 
+                key={index} 
+                className={`flex flex-col items-center justify-center p-4 ${item.bgColor} rounded-lg hover:bg-opacity-20 transition-colors cursor-pointer`}
+                onClick={() => window.location.href = item.href}
+              >
                 <div className={`w-10 h-10 rounded-full ${item.iconBgColor} text-white flex items-center justify-center mb-2`}>
                   {item.icon}
                 </div>
                 <span className="text-sm text-neutral-700 text-center">{item.label}</span>
-              </a>
-            </Link>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

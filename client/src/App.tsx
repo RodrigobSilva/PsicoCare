@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import CustomRouter from "@/components/layout/custom-router";
+import ErrorBoundary from "@/pages/error-boundary";
 import Dashboard from "@/pages/dashboard";
 import Pacientes from "@/pages/pacientes";
 import Psicologos from "@/pages/psicologos";
@@ -110,10 +111,12 @@ function App() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <CustomRouter>
-          <Router />
-          <Toaster />
-        </CustomRouter>
+        <ErrorBoundary>
+          <CustomRouter>
+            <Router />
+            <Toaster />
+          </CustomRouter>
+        </ErrorBoundary>
       </OnboardingProvider>
     </AuthProvider>
   );
