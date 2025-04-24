@@ -93,18 +93,22 @@ function NavItem({ href, icon, label, active, id, hidden, onClick }: NavItemProp
   if (hidden) return null;
   
   return (
-    <Link href={href}>
-      <a 
-        className={cn(
-          "flex flex-col items-center py-1 px-3",
-          active ? "text-primary" : "text-neutral-600"
-        )}
-        id={id}
-        onClick={onClick}
-      >
-        {icon}
-        <span className="text-xs mt-1">{label}</span>
-      </a>
-    </Link>
+    <div 
+      className={cn(
+        "flex flex-col items-center py-1 px-3 cursor-pointer",
+        active ? "text-primary" : "text-neutral-600"
+      )}
+      id={id}
+      onClick={(e) => {
+        if (onClick) {
+          onClick(e);
+        } else {
+          const navigate = window.location.href = href;
+        }
+      }}
+    >
+      {icon}
+      <span className="text-xs mt-1">{label}</span>
+    </div>
   );
 }

@@ -45,7 +45,7 @@ export default function Agenda() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedAgendamento, setSelectedAgendamento] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showAtendimentoForm, setShowAtendimentoForm] = useState(false);
+
   const { user } = useAuth();
   const { toast } = useToast();
   const query = useSearchParams();
@@ -174,23 +174,7 @@ export default function Agenda() {
     }
   };
   
-  // Verificar se o usuário pode registrar atendimento
-  const canRegisterAtendimento = () => {
-    if (!user || !selectedAgendamento) return false;
-    
-    // Apenas admin pode registrar qualquer atendimento
-    if (user.tipo === "admin") return true;
-    
-    // Psicólogos podem registrar apenas seus próprios atendimentos
-    // Secretárias não podem registrar atendimentos (conforme solicitado)
-    if (
-      user.tipo === "psicologo" &&
-      selectedAgendamento.psicologoId === psicologoUsuario?.id
-    )
-      return true;
-      
-    return false;
-  };
+
 
   // Obter rótulo de status do agendamento
   const getStatusLabel = (status: string) => {
@@ -420,11 +404,7 @@ export default function Agenda() {
                       </Button>
                     )}
                     
-                    {canRegisterAtendimento() && selectedAgendamento?.status === "confirmado" && (
-                      <Button onClick={() => setShowAtendimentoForm(true)}>
-                        Registrar Atendimento
-                      </Button>
-                    )}
+
                     
                     {canDeleteAgendamento() && (
                       <Button variant="destructive" onClick={handleDeleteAgendamento}>
@@ -438,34 +418,7 @@ export default function Agenda() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Registro de Atendimento */}
-        <Dialog
-          open={showAtendimentoForm}
-          onOpenChange={setShowAtendimentoForm}
-        >
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Registro de Atendimento</DialogTitle>
-              <DialogDescription>
-                Registre os dados do atendimento realizado
-              </DialogDescription>
-            </DialogHeader>
-            {selectedAgendamento && (
-              <AtendimentoForm
-                agendamentoId={selectedAgendamento.id}
-                onSuccess={() => {
-                  setShowAtendimentoForm(false);
-                  queryClient.invalidateQueries({
-                    queryKey: ["/api/agendamentos"],
-                  });
-                  // Toast será mostrado apenas quando o atendimento for realmente registrado
-                  // não quando for cancelado, pois o cancelamento é tratado pelo botão "Cancelar"
-                  // no próprio formulário de atendimento
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+
       </div>
     </Layout>
   );
