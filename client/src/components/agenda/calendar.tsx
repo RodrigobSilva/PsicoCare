@@ -507,14 +507,20 @@ export default function Calendar({
       });
 
       return (
-        <div key={horario} className="flex border-b border-neutral-200 min-h-[80px]">
-          <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200">
-            {horario}
+        <div key={horario} className="flex border-b border-neutral-200 min-h-[80px] hover:bg-neutral-50/50 transition-colors duration-150">
+          <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200 flex items-center justify-center bg-neutral-50/50">
+            <span className="rounded-full px-2 py-1">{horario}</span>
           </div>
           <div className="flex-1 p-2">
             {agendamentosNoHorario && agendamentosNoHorario.length > 0 ? (
               agendamentosNoHorario.map(renderAgendamentoCard)
-            ) : null}
+            ) : (
+              <div className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-30 transition-opacity">
+                <svg className="w-5 h-5 text-teal-500/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -559,9 +565,9 @@ export default function Calendar({
 
         {/* Linha para cada horário */}
         {horarios.map((horario) => (
-          <div key={horario} className="flex border-b border-neutral-200 min-h-[100px]">
-            <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200">
-              {horario}
+          <div key={horario} className="flex border-b border-neutral-200 min-h-[100px] hover:bg-neutral-50/30 transition-colors duration-150">
+            <div className="w-20 p-2 font-medium text-neutral-500 text-sm border-r border-neutral-200 flex items-center justify-center bg-neutral-50/50">
+              <span className="rounded-full px-2 py-1">{horario}</span>
             </div>
 
             {/* Coluna para cada dia */}
@@ -586,13 +592,19 @@ export default function Calendar({
                 <div 
                   key={day.toISOString()}
                   className={cn(
-                    "flex-1 p-2 border-l border-neutral-200",
-                    isToday(day) ? "bg-primary-light/5" : ""
+                    "flex-1 p-2 border-l border-neutral-200 transition-colors",
+                    isToday(day) ? "bg-teal-50/40" : ""
                   )}
                 >
                   {agendamentosNaHora && agendamentosNaHora.length > 0 ? (
                     agendamentosNaHora.map(renderAgendamentoCard)
-                  ) : null}
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-20 transition-opacity">
+                      <svg className="w-5 h-5 text-teal-500/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -668,17 +680,28 @@ export default function Calendar({
                   <div 
                     key={day.toISOString()} 
                     className={cn(
-                      "min-h-[120px] p-1 border-r border-neutral-200 last:border-r-0",
-                      !isSameMonth(day, currentDate) ? "bg-neutral-50" : "",
-                      isToday(day) ? "bg-primary-light/5" : ""
+                      "min-h-[120px] p-1 border-r border-neutral-200 last:border-r-0 transition-colors hover:bg-neutral-50/50",
+                      !isSameMonth(day, currentDate) ? "bg-neutral-50/70" : "",
+                      isToday(day) ? "bg-teal-50/30" : ""
                     )}
                   >
                     <div className={cn(
-                      "text-right p-1 mb-1",
-                      isSameMonth(day, currentDate) ? "font-medium" : "text-neutral-400",
-                      isToday(day) ? "bg-primary-light text-white rounded-full w-7 h-7 flex items-center justify-center ml-auto" : ""
+                      "p-1 mb-1 flex justify-end",
+                      isSameMonth(day, currentDate) ? "font-medium" : "text-neutral-400"
                     )}>
-                      {getDate(day)}
+                      {isToday(day) ? (
+                        <span className="bg-teal-500 text-white rounded-full w-7 h-7 flex items-center justify-center">
+                          {getDate(day)}
+                        </span>
+                      ) : (
+                        <span className={cn(
+                          "w-7 h-7 flex items-center justify-center rounded-full",
+                          !isSameMonth(day, currentDate) ? "text-neutral-400" : "",
+                          "hover:bg-teal-100/50"
+                        )}>
+                          {getDate(day)}
+                        </span>
+                      )}
                     </div>
 
                     <div className="space-y-1 overflow-y-auto max-h-[80px]">
@@ -687,7 +710,7 @@ export default function Calendar({
                           key={agendamento.id}
                           onClick={() => onSelectAgendamento?.(agendamento)}
                           className={cn(
-                            "px-1 py-0.5 text-xs rounded cursor-pointer truncate",
+                            "px-1.5 py-0.5 text-xs rounded cursor-pointer truncate shadow-sm",
                             getStatusColor(agendamento.status)
                           )}
                         >
@@ -696,7 +719,7 @@ export default function Calendar({
                       ))}
 
                       {dayAgendamentos && dayAgendamentos.length > 3 && (
-                        <div className="text-xs text-center text-neutral-500">
+                        <div className="text-xs text-center bg-neutral-100 rounded py-0.5 text-neutral-600 font-medium">
                           +{dayAgendamentos.length - 3} mais
                         </div>
                       )}
@@ -785,6 +808,7 @@ export default function Calendar({
               variant="outline" 
               size="sm" 
               onClick={goToPrevious}
+              className="rounded-full w-9 h-9 p-0 shadow-sm border-neutral-200 hover:bg-teal-50 hover:text-teal-600"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -792,6 +816,7 @@ export default function Calendar({
               variant="outline" 
               size="sm" 
               onClick={goToToday}
+              className="rounded-full px-4 shadow-sm border-neutral-200 hover:bg-teal-50 hover:text-teal-600 font-medium"
             >
               Hoje
             </Button>
@@ -799,6 +824,7 @@ export default function Calendar({
               variant="outline" 
               size="sm" 
               onClick={goToNext}
+              className="rounded-full w-9 h-9 p-0 shadow-sm border-neutral-200 hover:bg-teal-50 hover:text-teal-600"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -806,8 +832,11 @@ export default function Calendar({
               value={currentView} 
               onValueChange={(value) => setCurrentView(value as "day" | "week" | "month")}
             >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
+              <SelectTrigger className="w-[140px] shadow-sm rounded-full border-neutral-200 hover:border-teal-300">
+                <div className="flex items-center">
+                  <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
+                  <SelectValue />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="day">Dia</SelectItem>
@@ -829,8 +858,13 @@ export default function Calendar({
                   onValueChange={setSelectedPsicologo}
                   disabled={isLoadingPsicologos}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um psicólogo" />
+                  <SelectTrigger className="shadow-sm border-neutral-200 focus:ring-teal-500 focus:border-teal-300">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <SelectValue placeholder="Selecione um psicólogo" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos os psicólogos</SelectItem>
@@ -854,8 +888,13 @@ export default function Calendar({
                 onValueChange={setSelectedFilial}
                 disabled={isLoadingFiliais}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma filial" />
+                <SelectTrigger className="shadow-sm border-neutral-200 focus:ring-teal-500 focus:border-teal-300">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <SelectValue placeholder="Selecione uma filial" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas as filiais</SelectItem>
