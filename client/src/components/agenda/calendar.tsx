@@ -543,19 +543,19 @@ export default function Calendar({
       <div className="w-full border-collapse">
         {/* Cabeçalho com os dias da semana */}
         <div className="flex border-b border-neutral-200">
-          <div className="w-20 p-2 font-medium text-neutral-500 text-sm"></div>
+          <div className="w-20 p-2 font-medium text-neutral-500 text-sm bg-teal-50/70 flex items-center justify-center"></div>
           {weekDays.map((day) => (
             <div 
               key={day.toISOString()} 
               className={cn(
                 "flex-1 p-2 text-center border-l border-neutral-200",
-                isToday(day) ? "bg-primary-light/10" : ""
+                isToday(day) ? "bg-teal-100/50" : "bg-teal-50/50"
               )}
             >
-              <div className="font-medium">{format(day, "EEE", { locale: ptBR })}</div>
+              <div className="font-medium text-teal-700">{format(day, "EEE", { locale: ptBR })}</div>
               <div className={cn(
                 "text-sm", 
-                isToday(day) ? "text-primary-light font-medium" : "text-neutral-500"
+                isToday(day) ? "text-teal-600 font-medium" : "text-teal-600/80"
               )}>
                 {format(day, "dd/MM")}
               </div>
@@ -649,9 +649,9 @@ export default function Calendar({
     return (
       <div className="w-full border-collapse">
         {/* Cabeçalho com os dias da semana */}
-        <div className="grid grid-cols-7 border-b border-neutral-200">
+        <div className="grid grid-cols-7 border-b border-neutral-200 bg-teal-50/50">
           {weekDayNames.map((name) => (
-            <div key={name} className="p-2 text-center font-medium text-neutral-500">
+            <div key={name} className="p-2 text-center font-medium text-teal-700">
               {name}
             </div>
           ))}
