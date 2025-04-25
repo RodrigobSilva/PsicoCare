@@ -50,15 +50,28 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieConfig: session.CookieOptions = {
+    maxAge: 24 * 60 * 60 * 1000, // 1 dia
+    httpOnly: true,
+    secure: isProduction, // Habilita em produção
+    sameSite: isProduction ? 'none' : 'lax' // 'none' para permitir cross-domain
+  };
+
+  // Em produção, precisamos definir o domínio
+  if (isProduction) {
+    // Para funcionar com Netlify
+    cookieConfig.domain = process.env.COOKIE_DOMAIN || '.onrender.com';
+  }
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "psisystem-session-secret",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 1 dia
-      httpOnly: true
-    }
+    cookie: cookieConfig,
+    // Aumentar o nome do cookie para não conflitar
+    name: 'psisystem.session'
   };
 
   app.set("trust proxy", 1);
@@ -155,7 +168,21 @@ export function setupAuth(app: Express) {
         
         req.login(user, (err) => {
           if (err) return next(err);
-          return res.json(user);
+          
+          // Criar um token de autenticação JWT como alternativa aos cookies
+          const token = JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            tipo: user.tipo,
+            timestamp: Date.now()
+          });
+          
+          // Para sites em cross-domain, envie o token junto com a resposta
+          // O cliente pode armazenar em localStorage e enviar no Header Authorization
+          return res.json({
+            ...user,
+            token: Buffer.from(token).toString('base64')
+          });
         });
       })(req, res, next);
     } catch (error) {
