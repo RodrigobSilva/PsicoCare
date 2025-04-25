@@ -9,7 +9,7 @@ npm install
 # Build apenas do frontend
 echo "Configurando variáveis de ambiente de produção..."
 export NODE_ENV=production
-export VITE_API_URL=${API_BACKEND_URL:-https://sua-api-backend.com}
+export VITE_API_URL=${API_BACKEND_URL:-https://api-clinica-psicologia.onrender.com}
 
 # Executar vite build
 echo "Executando vite build..."

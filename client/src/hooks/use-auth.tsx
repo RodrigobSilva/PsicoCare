@@ -131,25 +131,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      try {
+        // Tentar fazer o logout no servidor
+        await apiRequest("POST", "/api/logout");
+      } catch (error) {
+        console.warn("Erro ao tentar desconectar do servidor:", error);
+        // Continuamos mesmo com erro para pelo menos limpar os dados locais
+      }
     },
     onSuccess: () => {
       // Remover o token do localStorage
       localStorage.removeItem('authToken');
       
+      // Limpar o cache do React Query
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries(); // Invalidar todas as queries
+      
       toast({
         title: "Logout realizado com sucesso",
         description: "Você foi desconectado do sistema.",
       });
+      
+      // Redirecionar para a página de login
       window.location.href = "/auth";
     },
     onError: (error: Error) => {
+      // Mesmo com erro, tentar limpar dados locais
+      localStorage.removeItem('authToken');
+      queryClient.setQueryData(["/api/user"], null);
+      
       toast({
-        title: "Falha ao realizar logout",
-        description: error.message,
-        variant: "destructive",
+        title: "Aviso sobre logout",
+        description: "Houve um problema ao desconectar no servidor, mas você foi desconectado localmente.",
       });
+      
+      window.location.href = "/auth";
     },
   });
   
