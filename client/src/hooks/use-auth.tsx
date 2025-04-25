@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import React, { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -28,6 +28,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
   const {
     data: user,
     error,
@@ -36,6 +37,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Aplicar o token de autenticação se disponível (execute apenas uma vez na inicialização)
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    
+    if (token) {
+      console.log("Token encontrado no localStorage, aplicando a todas as requisições");
+      
+      // Adicionar o token ao header para todas as requisições
+      const originalFetch = window.fetch;
+      window.fetch = function(url: RequestInfo | URL, options: RequestInit = {}) {
+        const newOptions = { ...options };
+        newOptions.headers = {
+          ...newOptions.headers,
+          'Authorization': `Bearer ${token}`
+        };
+        return originalFetch(url, newOptions);
+      };
+    }
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -46,12 +67,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (user: Usuario) => {
+    onSuccess: (response: any) => {
+      const user = response as Usuario;
+      
+      // Armazenar o token para uso posterior (no localStorage)
+      if (response.token) {
+        console.log("Token recebido e armazenado");
+        localStorage.setItem('authToken', response.token);
+        
+        // Adicionar o token ao header para futuras requisições
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            options.headers = {
+              ...options.headers,
+              'Authorization': `Bearer ${token}`
+            };
+          }
+          return originalFetch(url, options);
+        };
+      }
+      
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo(a), ${user.nome}!`,
       });
+      
       // Redireciona baseado no tipo de usuário
       const redirectPath = user.tipo === "psicologo" ? "/agenda" : "/";
       window.location.href = redirectPath;
@@ -91,6 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Remover o token do localStorage
+      localStorage.removeItem('authToken');
+      
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logout realizado com sucesso",

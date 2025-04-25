@@ -203,11 +203,59 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
-      logger.info("Acesso não autenticado à rota /api/user");
+  // Middleware para verificar token de autenticação
+  const verificarToken = async (req: Request, res: Response, next: NextFunction) => {
+    // Se o usuário já está autenticado pela sessão, prosseguir
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    
+    // Verificar token no cabeçalho Authorization
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7); // Remover 'Bearer '
+        const decodedToken = JSON.parse(Buffer.from(token, 'base64').toString());
+        
+        // Verificar se o token é válido (não está expirado)
+        const agora = Date.now();
+        const tempoMaximo = 24 * 60 * 60 * 1000; // 1 dia em milissegundos
+        
+        if (!decodedToken.timestamp || agora - decodedToken.timestamp > tempoMaximo) {
+          logger.info("Token expirado");
+          return res.status(401).json({ mensagem: "Token expirado" });
+        }
+        
+        // Buscar usuário pelo ID no token
+        const user = await storage.getUser(decodedToken.userId);
+        
+        if (!user) {
+          logger.info("Usuário do token não encontrado");
+          return res.status(401).json({ mensagem: "Usuário não encontrado" });
+        }
+        
+        // Usuário encontrado, fazer login
+        req.login(user, (err) => {
+          if (err) {
+            logger.error("Erro ao fazer login com token:", err);
+            return res.status(500).json({ mensagem: "Erro interno do servidor" });
+          }
+          next();
+        });
+        
+      } catch (error) {
+        logger.error("Erro ao decodificar token:", error);
+        return res.status(401).json({ mensagem: "Token inválido" });
+      }
+    } else {
+      logger.info("Acesso não autenticado à rota /api/user (sem token)");
       return res.status(401).json({ mensagem: "Usuário não autenticado" });
     }
+  };
+
+  app.get("/api/user", verificarToken, (req, res) => {
+    // Se chegou aqui, o usuário está autenticado (seja por sessão ou token)
     res.json(req.user);
   });
 
