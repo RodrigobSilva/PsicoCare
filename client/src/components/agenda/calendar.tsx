@@ -446,15 +446,15 @@ export default function Calendar({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "agendado":
-        return "bg-orange-500 text-white hover:bg-orange-600";
+        return "bg-amber-500 text-white hover:bg-amber-600 shadow-sm";
       case "confirmado":
-        return "bg-blue-500 text-white hover:bg-blue-600";
+        return "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm";
       case "cancelado":
-        return "bg-red-500 text-white hover:bg-red-600";
+        return "bg-rose-500 text-white hover:bg-rose-600 shadow-sm";
       case "realizado":
-        return "bg-green-500 text-white hover:bg-green-600";
+        return "bg-teal-500 text-white hover:bg-teal-600 shadow-sm";
       default:
-        return "bg-gray-500 text-white hover:bg-gray-600";
+        return "bg-slate-500 text-white hover:bg-slate-600 shadow-sm";
     }
   };
 
@@ -879,30 +879,30 @@ export default function Calendar({
           {renderCalendarContent()}
         </div>
 
-        <div className="mt-6 flex justify-between items-center">
+        <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           {/* Legenda dos status */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
-              <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-              <span className="text-sm text-neutral-600">Agendado</span>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-white shadow-sm border border-neutral-200">
+              <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-700">Agendado</span>
             </div>
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
-              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-              <span className="text-sm text-neutral-600">Confirmado</span>
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-white shadow-sm border border-neutral-200">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-700">Confirmado</span>
             </div>
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-              <span className="text-sm text-neutral-600">Realizado</span>
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-white shadow-sm border border-neutral-200">
+              <div className="w-3 h-3 bg-teal-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-700">Realizado</span>
             </div>
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border">
-              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span className="text-sm text-neutral-600">Cancelado</span>
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-white shadow-sm border border-neutral-200">
+              <div className="w-3 h-3 bg-rose-500 rounded-full mr-2"></div>
+              <span className="text-sm text-neutral-700">Cancelado</span>
             </div>
           </div>
 
           {/* Google Calendar Integration */}
-          <Button variant="outline" className="flex items-center gap-2">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <Button variant="outline" className="flex items-center gap-2 shadow-sm">
+            <svg className="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 4H5C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
