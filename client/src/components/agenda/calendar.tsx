@@ -452,7 +452,7 @@ export default function Calendar({
       case "cancelado":
         return "bg-rose-500 text-white hover:bg-rose-600 shadow-sm";
       case "realizado":
-        return "bg-teal-500 text-white hover:bg-teal-600 shadow-sm";
+        return "bg-blue-500 text-white hover:bg-blue-600 shadow-sm";
       default:
         return "bg-slate-500 text-white hover:bg-slate-600 shadow-sm";
     }
