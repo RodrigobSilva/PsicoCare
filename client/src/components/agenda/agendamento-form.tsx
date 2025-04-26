@@ -318,13 +318,33 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
     }
   }, [form.watch("horaInicio"), form]);
 
+  // Hook para toast
+  const { toast } = useToast();
+  
+  // Mutation para validar disponibilidade de horário
+  const validarMutation = useMutation({
+    mutationFn: async (values: any) => {
+      const { data, horaInicio, horaFim, psicologoId } = values;
+      const dataFormatada = format(data, "yyyy-MM-dd");
+      
+      const res = await apiRequest("POST", "/api/agendamentos/validar", {
+        data: dataFormatada,
+        horaInicio,
+        horaFim,
+        psicologoId,
+        agendamentoId
+      });
+      
+      return res.json();
+    }
+  });
+  
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof agendamentoFormSchema>) => {
     setIsSaving(true);
     
-    // Se o status for "cancelado", não mostrar popup de sucesso
+    // Se o status for "cancelado", não precisa validar disponibilidade
     if (values.status === "cancelado") {
-      // Chamar a função de mutação diretamente
       try {
         // Formatar data ISO 8601
         const dataFormatada = format(values.data, "yyyy-MM-dd");
@@ -351,19 +371,77 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
         // Invalidar consultas e fechar o modal
         queryClient.invalidateQueries({ queryKey: ["/api/agendamentos"] });
         setIsSaving(false);
+        
         // Se o status for cancelado, sempre usar onCanceled para não mostrar toast
         if (values.status === "cancelado" && onCanceled) {
           onCanceled();
         } else {
           onSuccess({ status: values.status });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao salvar agendamento:", error);
+        
+        // Mostrar erro específico do servidor se disponível
+        if (error.response) {
+          try {
+            const errorData = await error.response.json();
+            toast({
+              title: "Erro ao salvar agendamento",
+              description: errorData.mensagem || "Ocorreu um erro ao salvar o agendamento.",
+              variant: "destructive"
+            });
+          } catch {
+            toast({
+              title: "Erro ao salvar agendamento",
+              description: "Ocorreu um erro ao salvar o agendamento.",
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Erro ao salvar agendamento",
+            description: "Ocorreu um erro ao salvar o agendamento.",
+            variant: "destructive"
+          });
+        }
+        
         setIsSaving(false);
       }
     } else {
-      // Para outros status, usar o fluxo normal com toast
-      mutation.mutate(values);
+      // Para outros status, validar disponibilidade antes de salvar
+      try {
+        // Validar disponibilidade
+        const validacao = await validarMutation.mutateAsync({
+          data: values.data,
+          horaInicio: values.horaInicio,
+          horaFim: values.horaFim,
+          psicologoId: values.psicologoId
+        });
+        
+        if (!validacao.valido) {
+          // Mostrar mensagem de erro
+          toast({
+            title: "Horário indisponível",
+            description: validacao.mensagem,
+            variant: "destructive"
+          });
+          setIsSaving(false);
+          return;
+        }
+        
+        // Se disponível, salvar o agendamento
+        mutation.mutate(values);
+      } catch (error: any) {
+        console.error("Erro ao validar disponibilidade:", error);
+        
+        toast({
+          title: "Erro ao validar disponibilidade",
+          description: "Não foi possível verificar a disponibilidade do horário.",
+          variant: "destructive"
+        });
+        
+        setIsSaving(false);
+      }
     }
   };
 
