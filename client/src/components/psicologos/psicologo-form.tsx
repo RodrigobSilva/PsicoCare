@@ -27,15 +27,15 @@ const dadosPessoaisSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("Email inválido"),
   senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  telefone: z.string().min(10, "Telefone inválido").optional().nullable(),
-  cpf: z.string().min(11, "CPF inválido").optional().nullable(),
+  telefone: z.string().min(10, "Telefone inválido").optional().default(""),
+  cpf: z.string().min(11, "CPF inválido").optional().default(""),
 });
 
 // Esquema de validação para informações profissionais
 const informacoesProfissionaisSchema = z.object({
   crp: z.string().min(4, "CRP inválido"),
-  especialidade: z.string().optional().nullable(),
-  formacao: z.string().optional().nullable(),
+  especialidade: z.string().optional().default(""),
+  formacao: z.string().optional().default(""),
 });
 
 // Esquema de validação para disponibilidade
@@ -182,25 +182,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
     mutation.mutate(data);
   };
 
-  // Adicionar nova disponibilidade
-  const adicionarDisponibilidade = () => {
-    const disponibilidades = form.getValues("disponibilidade");
-    form.setValue("disponibilidade", [
-      ...disponibilidades, 
-      { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false }
-    ]);
-  };
-
-  // Remover disponibilidade
-  const removerDisponibilidade = (index: number) => {
-    const disponibilidades = form.getValues("disponibilidade");
-    if (disponibilidades.length > 1) {
-      form.setValue(
-        "disponibilidade", 
-        disponibilidades.filter((_, i) => i !== index)
-      );
-    }
-  };
+  // As funções adicionarDisponibilidade e removerDisponibilidade foram movidas para o componente DisponibilidadeHorarios
 
   // Avançar para próxima aba
   const goToNextTab = () => {
