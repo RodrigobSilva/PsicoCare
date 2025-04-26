@@ -76,6 +76,7 @@ export const disponibilidadePsicologos = pgTable("disponibilidade_psicologos", {
   diaSemana: integer("dia_semana").notNull(), // 0-6 (domingo-sábado)
   horaInicio: time("hora_inicio").notNull(),
   horaFim: time("hora_fim").notNull(),
+  ativo: boolean("ativo").default(true),
 });
 
 // Bloqueios de Horários (férias, feriados, etc)
