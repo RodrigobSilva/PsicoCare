@@ -43,6 +43,7 @@ const disponibilidadeSchema = z.array(
     diaSemana: z.number().min(0).max(6),
     horaInicio: z.string(),
     horaFim: z.string(),
+    remoto: z.boolean().default(false),
   })
 );
 
@@ -102,7 +103,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
         formacao: "",
       },
       disponibilidade: [
-        { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00" },
+        { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false },
       ],
     },
   });
@@ -128,8 +129,9 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
               diaSemana: d.diaSemana,
               horaInicio: d.horaInicio,
               horaFim: d.horaFim,
+              remoto: d.remoto || false,
             }))
-          : [{ diaSemana: 1, horaInicio: "08:00", horaFim: "17:00" }],
+          : [{ diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false }],
       });
     }
   }, [psicologo, psicologoId, form]);
@@ -184,7 +186,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
     const disponibilidades = form.getValues("disponibilidade");
     form.setValue("disponibilidade", [
       ...disponibilidades, 
-      { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00" }
+      { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false }
     ]);
   };
 
