@@ -626,7 +626,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem disabled value="">
+                            <SelectItem disabled value="indisponivel">
                               Não há horários disponíveis neste dia
                             </SelectItem>
                           )}
@@ -876,7 +876,7 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem disabled value="">
+                            <SelectItem disabled value="nenhum_plano">
                               Nenhum plano encontrado
                             </SelectItem>
                           )}
