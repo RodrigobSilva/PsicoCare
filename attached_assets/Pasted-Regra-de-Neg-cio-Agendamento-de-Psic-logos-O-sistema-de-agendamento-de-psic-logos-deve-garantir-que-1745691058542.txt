@@ -1,0 +1,25 @@
+Regra de Negócio: Agendamento de Psicólogos
+O sistema de agendamento de psicólogos deve garantir que a alocação de um paciente a um psicólogo respeite a disponibilidade de horários definida para cada profissional, dentro do horário de funcionamento da clínica.
+Especificação Detalhada:
+ * Horário de Funcionamento da Clínica:
+   * Segunda a Sexta-feira: 8h00 às 21h00
+   * Sábado: 8h00 às 15h00
+   * Restrição de Agendamento: O último horário de agendamento possível deve permitir que a sessão termine dentro do horário de funcionamento. Portanto, o último agendamento pode ser:
+     * Segunda a Sexta: até 20h30 (para sessões com duração padrão de 30 minutos) ou horários anteriores que permitam o término até 21h00.
+     * Sábado: até 14h30 (para sessões com duração padrão de 30 minutos) ou horários anteriores que permitam o término até 15h00.
+ * Cadastro de Psicólogos e Horários de Atendimento:
+   * Ao cadastrar um novo psicólogo no sistema, é obrigatório informar seus horários de atendimento disponíveis.
+   * Os horários de atendimento devem especificar os dias da semana e os intervalos de tempo em que o psicólogo está disponível para realizar sessões.
+   * Exemplo: A psicóloga Juliana tem os seguintes horários de atendimento cadastrados:
+     * Terça-feira: 14h00 às 20h00
+     * Quarta-feira: 14h00 às 20h00
+     * Quinta-feira: 14h00 às 20h00
+ * Validação de Agendamento:
+   * Ao tentar agendar uma sessão para um determinado psicólogo em um horário específico, o sistema deve realizar as seguintes validações:
+     * Dia da Semana: O dia da semana do agendamento deve corresponder a um dos dias de atendimento cadastrados para o psicólogo.
+     * Horário de Início: O horário de início da sessão deve estar dentro do intervalo de tempo de atendimento cadastrado para o psicólogo naquele dia.
+     * Horário de Término: O horário de término da sessão (calculado com base na duração padrão da sessão ou duração definida) não pode ultrapassar o horário de término do atendimento cadastrado para o psicólogo naquele dia, nem o horário de funcionamento da clínica (considerando a restrição de último agendamento).
+ * Restrição de Alocação:
+   * O sistema não deve permitir a alocação de um paciente a um psicólogo em horários que não estejam dentro dos horários de atendimento cadastrados para aquele profissional.
+   * Qualquer tentativa de agendamento fora dos horários definidos para o psicólogo resultará em uma mensagem de erro ou indisponibilidade.
+Em resumo, a regra de negócio garante que os agendamentos sejam realizados apenas dentro da janela de disponibilidade de cada psicólogo, a qual deve estar contida dentro do horário de funcionamento da clínica, respeitando o limite para o último agendamento do dia.
