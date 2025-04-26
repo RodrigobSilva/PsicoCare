@@ -12,6 +12,8 @@ import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import { emailService, EmailConfig } from "./services/email";
+import { parse, parseISO } from "date-fns";
+import { validarAgendamento, HORARIO_CLINICA } from "./utils/agendamento-validation";
 
 // Inicializar cliente OpenAI
 const openai = new OpenAI({
@@ -954,9 +956,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para validar a disponibilidade do horário de agendamento
+  app.post("/api/agendamentos/validar", verificarAutenticacao, async (req, res) => {
+    try {
+      const { data, horaInicio, horaFim, psicologoId, agendamentoId } = req.body;
+      
+      if (!data || !horaInicio || !horaFim || !psicologoId) {
+        return res.status(400).json({ 
+          valido: false, 
+          mensagem: "Todos os campos (data, horaInicio, horaFim, psicologoId) são obrigatórios" 
+        });
+      }
+      
+      // Converter a data para o formato correto
+      let dataObj: Date;
+      try {
+        if (typeof data === 'string') {
+          dataObj = parseISO(data);
+        } else if (data instanceof Date) {
+          dataObj = data;
+        } else {
+          throw new Error("Formato de data inválido");
+        }
+      } catch (err) {
+        return res.status(400).json({ 
+          valido: false, 
+          mensagem: "Formato de data inválido" 
+        });
+      }
+      
+      // Buscar disponibilidades do psicólogo
+      const disponibilidades = await storage.getDisponibilidadesByPsicologo(psicologoId);
+      
+      // Buscar bloqueios de horário do psicólogo
+      const bloqueios = await storage.getBloqueiosByPsicologo(psicologoId);
+      
+      // Buscar agendamentos existentes do psicólogo
+      const agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
+      
+      // Validar o agendamento
+      const resultado = await validarAgendamento(
+        dataObj,
+        horaInicio,
+        horaFim,
+        psicologoId,
+        disponibilidades,
+        bloqueios,
+        agendamentos,
+        agendamentoId ? parseInt(agendamentoId) : undefined
+      );
+      
+      res.json(resultado);
+    } catch (error) {
+      console.error("Erro ao validar agendamento:", error);
+      res.status(500).json({ 
+        valido: false, 
+        mensagem: "Erro ao validar agendamento: " + error.message 
+      });
+    }
+  });
+
   app.post("/api/agendamentos", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria", "psicologo"]), async (req, res) => {
     try {
       const validatedData = insertAgendamentoSchema.parse(req.body);
+      
+      // Validar disponibilidade antes de criar o agendamento
+      const dataObj = parseISO(validatedData.data);
+      const psicologoId = validatedData.psicologoId;
+      
+      // Buscar disponibilidades do psicólogo
+      const disponibilidades = await storage.getDisponibilidadesByPsicologo(psicologoId);
+      
+      // Buscar bloqueios de horário do psicólogo
+      const bloqueios = await storage.getBloqueiosByPsicologo(psicologoId);
+      
+      // Buscar agendamentos existentes do psicólogo
+      const agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
+      
+      // Validar o agendamento
+      const resultado = await validarAgendamento(
+        dataObj,
+        validatedData.horaInicio,
+        validatedData.horaFim,
+        psicologoId,
+        disponibilidades,
+        bloqueios,
+        agendamentos
+      );
+      
+      if (!resultado.valido) {
+        return res.status(400).json({ mensagem: resultado.mensagem });
+      }
+      
+      // Se válido, criar o agendamento
       const novoAgendamento = await storage.createAgendamento(validatedData);
       
       // Obter dados completos do agendamento para notificação
@@ -998,9 +1090,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!agendamentoExistente) {
         return res.status(404).json({ mensagem: "Agendamento não encontrado" });
       }
+      
+      // Se o status for 'cancelado', não precisa validar disponibilidade
+      if (req.body.status === "cancelado") {
+        const agendamentoAtualizado = await storage.updateAgendamento(id, req.body);
+        return res.json(agendamentoAtualizado);
+      }
+      
+      // Validar disponibilidade antes de atualizar o agendamento
+      const dataStr = req.body.data || agendamentoExistente.data;
+      const horaInicio = req.body.horaInicio || agendamentoExistente.horaInicio;
+      const horaFim = req.body.horaFim || agendamentoExistente.horaFim;
+      const psicologoId = req.body.psicologoId || agendamentoExistente.psicologoId;
+      
+      // Converter a data para objeto Date
+      const dataObj = parseISO(dataStr);
+      
+      // Buscar disponibilidades do psicólogo
+      const disponibilidades = await storage.getDisponibilidadesByPsicologo(psicologoId);
+      
+      // Buscar bloqueios de horário do psicólogo
+      const bloqueios = await storage.getBloqueiosByPsicologo(psicologoId);
+      
+      // Buscar agendamentos existentes do psicólogo
+      const agendamentos = await storage.getAgendamentosByPsicologo(psicologoId);
+      
+      // Validar o agendamento
+      const resultado = await validarAgendamento(
+        dataObj,
+        horaInicio,
+        horaFim,
+        psicologoId,
+        disponibilidades,
+        bloqueios,
+        agendamentos,
+        id // Passar o ID do agendamento atual para ignorá-lo na validação
+      );
+      
+      if (!resultado.valido) {
+        return res.status(400).json({ mensagem: resultado.mensagem });
+      }
 
+      // Se válido, atualizar o agendamento
       const agendamentoAtualizado = await storage.updateAgendamento(id, req.body);
-
       res.json(agendamentoAtualizado);
     } catch (error) {
       res.status(400).json({ mensagem: "Erro ao atualizar agendamento", erro: error });
