@@ -1007,11 +1007,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       res.json(resultado);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao validar agendamento:", error);
       res.status(500).json({ 
         valido: false, 
-        mensagem: "Erro ao validar agendamento: " + error.message 
+        mensagem: "Erro ao validar agendamento: " + (error.message || "Erro desconhecido") 
       });
     }
   });
@@ -1077,8 +1077,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(201).json(novoAgendamento);
-    } catch (error) {
-      res.status(400).json({ mensagem: "Erro ao criar agendamento", erro: error });
+    } catch (error: any) {
+      res.status(400).json({ 
+        mensagem: "Erro ao criar agendamento", 
+        erro: error.message || "Erro desconhecido" 
+      });
     }
   });
 
@@ -1134,8 +1137,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se válido, atualizar o agendamento
       const agendamentoAtualizado = await storage.updateAgendamento(id, req.body);
       res.json(agendamentoAtualizado);
-    } catch (error) {
-      res.status(400).json({ mensagem: "Erro ao atualizar agendamento", erro: error });
+    } catch (error: any) {
+      res.status(400).json({ 
+        mensagem: "Erro ao atualizar agendamento", 
+        erro: error.message || "Erro desconhecido" 
+      });
     }
   });
 
