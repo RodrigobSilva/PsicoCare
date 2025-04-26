@@ -26,16 +26,16 @@ import { DisponibilidadeHorarios } from "./disponibilidade-horarios";
 const dadosPessoaisSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("Email inválido"),
-  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  telefone: z.string().min(10, "Telefone inválido").optional().default(""),
-  cpf: z.string().min(11, "CPF inválido").optional().default(""),
+  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").or(z.literal("")),
+  telefone: z.string().min(10, "Telefone inválido").default(""),
+  cpf: z.string().min(11, "CPF inválido").default(""),
 });
 
 // Esquema de validação para informações profissionais
 const informacoesProfissionaisSchema = z.object({
   crp: z.string().min(4, "CRP inválido"),
-  especialidade: z.string().optional().default(""),
-  formacao: z.string().optional().default(""),
+  especialidade: z.string().default(""),
+  formacao: z.string().default(""),
 });
 
 // Esquema de validação para disponibilidade
@@ -55,7 +55,27 @@ const psicologoFormSchema = z.object({
   disponibilidade: disponibilidadeSchema,
 });
 
-type PsicologoFormValues = z.infer<typeof psicologoFormSchema>;
+// Define o tipo 
+type PsicologoFormValues = {
+  dadosPessoais: {
+    nome: string;
+    email: string; 
+    senha: string;
+    telefone: string;
+    cpf: string;
+  },
+  informacoesProfissionais: {
+    crp: string;
+    especialidade: string;
+    formacao: string;
+  },
+  disponibilidade: Array<{
+    diaSemana: number;
+    horaInicio: string;
+    horaFim: string;
+    remoto: boolean;
+  }>
+};
 
 // Dias da semana para uso no formulário
 const diasSemana = [
@@ -89,7 +109,6 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
 
   // Inicializar formulário
   const form = useForm<PsicologoFormValues>({
-    resolver: zodResolver(psicologoFormSchema),
     defaultValues: {
       dadosPessoais: {
         nome: "",
@@ -140,11 +159,13 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
   // Mutation para criar ou atualizar psicólogo
   const mutation = useMutation({
     mutationFn: async (data: PsicologoFormValues) => {
+      console.log("Enviando dados:", data); // Debugging
+      
       const payload = {
         usuario: {
           nome: data.dadosPessoais.nome,
           email: data.dadosPessoais.email,
-          senha: data.dadosPessoais.senha,
+          senha: data.dadosPessoais.senha || undefined, // Enviar undefined se senha vazia
           telefone: data.dadosPessoais.telefone,
           cpf: data.dadosPessoais.cpf,
           tipo: "psicologo"
@@ -154,7 +175,13 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
           especialidade: data.informacoesProfissionais.especialidade,
           formacao: data.informacoesProfissionais.formacao
         },
-        disponibilidades: data.disponibilidade
+        disponibilidades: data.disponibilidade.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => ({
+          diaSemana: d.diaSemana,
+          horaInicio: d.horaInicio,
+          horaFim: d.horaFim,
+          remoto: d.remoto || false,
+          ativo: true // Garantir que todos os horários estejam ativos
+        }))
       };
 
       // Se for edição, use PUT, senão use POST

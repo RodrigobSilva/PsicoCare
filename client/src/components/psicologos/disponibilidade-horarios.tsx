@@ -27,7 +27,7 @@ import { Clock, Plus, X, Calendar } from "lucide-react";
 
 // Constantes para horário de funcionamento da clínica
 const HORARIO_CLINICA_INICIO = "08:00";
-const HORARIO_CLINICA_FIM = "19:00";
+const HORARIO_CLINICA_FIM = "21:00";
 
 // Dias da semana para uso no formulário
 const diasSemana = [
