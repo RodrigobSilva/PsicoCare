@@ -374,7 +374,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
               <CardHeader>
                 <CardTitle>Horários de Atendimento</CardTitle>
                 <CardDescription>
-                  Configure os dias e horários em que o profissional estará disponível.
+                  Configure os dias, horários e o tipo de atendimento (presencial ou remoto) em que o profissional estará disponível.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -436,15 +436,35 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                       )}
                     />
 
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      size="icon"
-                      onClick={() => removerDisponibilidade(index)}
-                      disabled={form.getValues("disponibilidade").length <= 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`disponibilidade.${index}.remoto`}
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox 
+                                checked={field.value} 
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal">
+                              Atendimento Remoto
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        size="icon"
+                        onClick={() => removerDisponibilidade(index)}
+                        disabled={form.getValues("disponibilidade").length <= 1}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </CardContent>
