@@ -20,6 +20,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Loader2, Plus, X } from "lucide-react";
+import { DisponibilidadeHorarios } from "./disponibilidade-horarios";
 
 // Esquema de validação para dados pessoais
 const dadosPessoaisSchema = z.object({
@@ -45,7 +46,7 @@ const disponibilidadeSchema = z.array(
     horaFim: z.string(),
     remoto: z.boolean().default(false),
   })
-);
+).min(1, "Adicione pelo menos um horário de disponibilidade");
 
 // Combine os esquemas
 const psicologoFormSchema = z.object({
@@ -377,116 +378,21 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                   Configure os dias, horários e o tipo de atendimento (presencial ou remoto) em que o profissional estará disponível.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {form.getValues("disponibilidade").map((_, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end border p-4 rounded-md relative">
-                    <FormField
-                      control={form.control}
-                      name={`disponibilidade.${index}.diaSemana`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Dia da Semana</FormLabel>
-                          <Select
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                            defaultValue={field.value.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione um dia" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {diasSemana.map((dia) => (
-                                <SelectItem key={dia.value} value={dia.value.toString()}>
-                                  {dia.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`disponibilidade.${index}.horaInicio`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Horário Inicial</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`disponibilidade.${index}.horaFim`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Horário Final</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex items-center gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`disponibilidade.${index}.remoto`}
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <Checkbox 
-                                checked={field.value} 
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
-                              Atendimento Remoto
-                            </FormLabel>
-                          </FormItem>
-                        )}
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="disponibilidade"
+                  render={({ field }) => (
+                    <FormItem>
+                      <DisponibilidadeHorarios 
+                        value={field.value} 
+                        onChange={field.onChange} 
                       />
-                      
-                      <Button 
-                        type="button" 
-                        variant="destructive" 
-                        size="icon"
-                        onClick={() => removerDisponibilidade(index)}
-                        disabled={form.getValues("disponibilidade").length <= 1}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
-              <CardFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    const novoHorario = {
-                      diaSemana: 1, // Segunda-feira como padrão
-                      horaInicio: "08:00",
-                      horaFim: "17:00",
-                      ativo: true
-                    };
-                    const disponibilidadeAtual = form.getValues("disponibilidade");
-                    form.setValue("disponibilidade", [...disponibilidadeAtual, novoHorario]);
-                  }}
-                  className="w-full"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Adicionar Horário
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
