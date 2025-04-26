@@ -70,15 +70,58 @@ const statusAgendamento = [
   { value: "realizado", label: "Realizado" }
 ];
 
-// Opções de horário para agendamento (de 30 em 30 minutos)
-const horariosDisponiveis: string[] = [];
-for (let hours = 8; hours < 20; hours++) {
-  for (let minutes = 0; minutes < 60; minutes += 30) {
-    const hour = hours.toString().padStart(2, '0');
-    const minute = minutes.toString().padStart(2, '0');
-    horariosDisponiveis.push(`${hour}:${minute}`);
+// Configurações de horário da clínica baseadas no servidor
+const HORARIO_CLINICA = {
+  // Segunda a Sexta (1-5)
+  SEMANA: {
+    abertura: "08:00",
+    fechamento: "21:00",
+    ultimoAgendamento: "20:30" // Para sessões de 30 minutos
+  },
+  // Sábado (6)
+  SABADO: {
+    abertura: "08:00",
+    fechamento: "15:00",
+    ultimoAgendamento: "14:30" // Para sessões de 30 minutos
   }
+};
+
+// Função para gerar horários baseados no dia da semana
+function gerarHorariosDisponiveis(data: Date): string[] {
+  const diaSemana = data.getDay(); // 0 = Domingo, 1-5 = Segunda a Sexta, 6 = Sábado
+  
+  // Se for domingo, não há horários disponíveis
+  if (diaSemana === 0) {
+    return [];
+  }
+  
+  // Definir horários com base no dia da semana
+  const horarios = diaSemana === 6 ? HORARIO_CLINICA.SABADO : HORARIO_CLINICA.SEMANA;
+  
+  // Extrair horas e minutos de inicio e fim
+  const [horaInicio, minInicio] = horarios.abertura.split(':').map(Number);
+  const [horaUltimo, minUltimo] = horarios.ultimoAgendamento.split(':').map(Number);
+  
+  const horariosDisponiveis: string[] = [];
+  
+  // Gerar horários de 30 em 30 minutos dentro do intervalo de funcionamento
+  for (let hora = horaInicio; hora <= horaUltimo; hora++) {
+    for (let minuto = 0; minuto < 60; minuto += 30) {
+      // Verificar se não excede o último horário permitido
+      if (hora === horaUltimo && minuto > minUltimo) {
+        continue;
+      }
+      
+      const horaStr = hora.toString().padStart(2, '0');
+      const minutoStr = minuto.toString().padStart(2, '0');
+      horariosDisponiveis.push(`${horaStr}:${minutoStr}`);
+    }
+  }
+  
+  return horariosDisponiveis;
 }
+
+// Os horários serão gerados dinamicamente com base na data selecionada
 
 // Schema com validações adicionais para o formulário
 const agendamentoFormSchema = insertAgendamentoSchema.extend({
@@ -125,6 +168,7 @@ interface AgendamentoFormProps {
 export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess, onCanceled }: AgendamentoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [pacientePlanos, setPacientePlanos] = useState<any[]>([]);
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
 
   // Configuração do formulário com valores padrão
   const form = useForm<z.infer<typeof agendamentoFormSchema>>({
@@ -298,6 +342,29 @@ export default function AgendamentoForm({ agendamentoId, defaultDate, onSuccess,
 
     fetchPacientePlanos();
   }, [form.watch("pacienteId")]);
+
+  // Atualizar os horários disponíveis baseados na data selecionada
+  useEffect(() => {
+    const dataSelecionada = form.watch("data");
+    if (dataSelecionada) {
+      // Gerar novos horários com base na data
+      const novosHorarios = gerarHorariosDisponiveis(dataSelecionada);
+      setHorariosDisponiveis(novosHorarios);
+      
+      // Se não houver horários disponíveis ou o horário selecionado não estiver disponível,
+      // selecionar o primeiro horário disponível ou limpar
+      const horaInicioAtual = form.watch("horaInicio");
+      if (novosHorarios.length > 0) {
+        if (!novosHorarios.includes(horaInicioAtual)) {
+          form.setValue("horaInicio", novosHorarios[0]);
+        }
+      } else {
+        // Se não há horários disponíveis, limpar
+        form.setValue("horaInicio", "");
+        form.setValue("horaFim", "");
+      }
+    }
+  }, [form.watch("data"), form]);
 
   // Atualizar hora de término automaticamente (+30 minutos após hora de início)
   useEffect(() => {
