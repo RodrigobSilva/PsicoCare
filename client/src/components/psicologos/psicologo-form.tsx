@@ -472,7 +472,16 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={adicionarDisponibilidade}
+                  onClick={() => {
+                    const novoHorario = {
+                      diaSemana: 1, // Segunda-feira como padrão
+                      horaInicio: "08:00",
+                      horaFim: "17:00",
+                      ativo: true
+                    };
+                    const disponibilidadeAtual = form.getValues("disponibilidade");
+                    form.setValue("disponibilidade", [...disponibilidadeAtual, novoHorario]);
+                  }}
                   className="w-full"
                 >
                   <Plus className="mr-2 h-4 w-4" /> Adicionar Horário
