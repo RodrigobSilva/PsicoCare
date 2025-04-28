@@ -20,7 +20,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Loader2, Plus, X } from "lucide-react";
-import { DisponibilidadeHorarios } from "./disponibilidade-horarios";
+import DisponibilidadeHorarios from "./disponibilidade-horarios";
 
 // Esquema de validação para dados pessoais
 const dadosPessoaisSchema = z.object({

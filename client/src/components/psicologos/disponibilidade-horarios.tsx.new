@@ -71,7 +71,7 @@ interface DisponibilidadeHorariosProps {
 // Função para gerar ID único temporário para os horários
 const gerarTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-export default function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHorariosProps) {
+export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHorariosProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [tempIdEditando, setTempIdEditando] = useState<string | null>(null);
   
@@ -80,15 +80,12 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
   
   // Inicializar horários com IDs temporários
   useEffect(() => {
-    // Atualizar os IDs quando o valor externo mudar
     const novoArray = value.map((h) => ({
       ...h,
       _tempId: gerarTempId(),
     }));
     setHorariosComId(novoArray);
-    
-    console.log("Horários atualizados:", novoArray);
-  }, [value]);
+  }, []);
 
   // Inicializar formulário
   const form = useForm<Horario>({
