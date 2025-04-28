@@ -83,7 +83,7 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
   });
 
   // Lidar com adição/edição de disponibilidade
-  const onSubmit = (data: Horario) => {
+  const onSubmit = async (data: Horario) => {
     try {
       // Verificar se já existe um horário igual para o mesmo dia
       const horarioExistente = value.some((horario, idx) => {
@@ -128,7 +128,23 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
         return a.horaInicio.localeCompare(b.horaInicio);
       });
 
+      // Atualizar o estado local primeiro
       onChange(novosHorarios);
+      
+      // Fechar o diálogo e limpar o formulário apenas após a atualização ser bem sucedida
+      setDialogOpen(false);
+      setEditingIndex(null);
+      form.reset({
+        diaSemana: 1,
+        horaInicio: "08:00",
+        horaFim: "17:00",
+        remoto: false,
+      });
+
+      toast({
+        title: "Sucesso",
+        description: editingIndex !== null ? "Horário atualizado com sucesso" : "Horário adicionado com sucesso",
+      });
       
       toast({
         title: "Sucesso",
@@ -181,11 +197,13 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
   };
 
   // Remover horário
-  const handleRemoveHorario = (index: number) => {
+  const handleRemoveHorario = async (index: number) => {
     try {
-      const newValue = [...value];
-      newValue.splice(index, 1);
-      onChange(newValue);
+      // Criar uma cópia do array atual
+      const novosHorarios = value.filter((_, idx) => idx !== index);
+      
+      // Atualizar o estado
+      onChange(novosHorarios);
       
       toast({
         title: "Sucesso",
