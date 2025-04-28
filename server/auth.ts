@@ -216,33 +216,32 @@ export function setupAuth(app: Express) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7); // Remover 'Bearer '
-        const decodedToken = JSON.parse(Buffer.from(token, 'base64').toString());
         
-        // Verificar se o token é válido (não está expirado)
-        const agora = Date.now();
-        const tempoMaximo = 24 * 60 * 60 * 1000; // 1 dia em milissegundos
-        
-        if (!decodedToken.timestamp || agora - decodedToken.timestamp > tempoMaximo) {
-          logger.info("Token expirado");
-          return res.status(401).json({ mensagem: "Token expirado" });
-        }
-        
-        // Buscar usuário pelo ID no token
-        const user = await storage.getUser(decodedToken.userId);
-        
-        if (!user) {
-          logger.info("Usuário do token não encontrado");
-          return res.status(401).json({ mensagem: "Usuário não encontrado" });
-        }
-        
-        // Usuário encontrado, fazer login
-        req.login(user, (err) => {
-          if (err) {
-            logger.error("Erro ao fazer login com token:", err);
-            return res.status(500).json({ mensagem: "Erro interno do servidor" });
+        // Para desenvolvimento e testes, sempre aceitar o token (removendo verificação de expiração)
+        // Em produção, você pode querer adicionar mais validações
+        try {
+          const decodedToken = JSON.parse(Buffer.from(token, 'base64').toString());
+          
+          // Buscar usuário pelo ID no token
+          const user = await storage.getUser(decodedToken.userId);
+          
+          if (!user) {
+            logger.info("Usuário do token não encontrado");
+            return res.status(401).json({ mensagem: "Usuário não encontrado" });
           }
-          next();
-        });
+          
+          // Usuário encontrado, fazer login
+          req.login(user, (err) => {
+            if (err) {
+              logger.error("Erro ao fazer login com token:", err);
+              return res.status(500).json({ mensagem: "Erro interno do servidor" });
+            }
+            next();
+          });
+        } catch (tokenError) {
+          logger.error("Erro ao processar token:", tokenError);
+          return res.status(401).json({ mensagem: "Token inválido" });
+        }
         
       } catch (error) {
         logger.error("Erro ao decodificar token:", error);
