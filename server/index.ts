@@ -4,10 +4,26 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Configuração CORS manual
+// Configuração CORS manual - atualizada para permitir netfly explicitamente
 app.use((req, res, next) => {
-  // Permitir todas as origens por enquanto
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  // Lista de domínios permitidos
+  const allowedOrigins = [
+    'https://psicocare.netlify.app',
+    'http://localhost:5000',
+    'http://localhost:3000',
+    'https://api-clinica-psicologia.onrender.com'
+  ];
+  
+  const origin = req.headers.origin;
+  
+  // Verificar se a origem da requisição está na lista de permitidos
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // Para desenvolvimento, podemos permitir qualquer origem
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Credentials', 'true');

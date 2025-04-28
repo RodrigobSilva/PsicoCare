@@ -1,0 +1,33 @@
+index-C3i921IS.js:472 Página carregada em: /
+index-C3i921IS.js:428 Executando query para: https://api-clinica-psicologia.onrender.com/api/user
+psicocare.netlify.app/:1 Access to fetch at 'https://api-clinica-psicologia.onrender.com/api/user' from origin 'https://psicocare.netlify.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+api-clinica-psicologia.onrender.com/api/user:1 
+            
+            
+           Failed to load resource: net::ERR_FAILED
+index-C3i921IS.js:428 Query failed: TypeError: Failed to fetch
+    at index-C3i921IS.js:428:65897
+    at Object.i [as fn] (index-C3i921IS.js:428:36458)
+    at g (index-C3i921IS.js:428:32051)
+    at Object.start (index-C3i921IS.js:428:32510)
+    at nS.fetch (index-C3i921IS.js:428:37794)
+    at aS.yc (index-C3i921IS.js:428:58190)
+    at aS.onSubscribe (index-C3i921IS.js:428:52724)
+    at aS.subscribe (index-C3i921IS.js:428:26410)
+    at index-C3i921IS.js:428:63714
+    at mT (index-C3i921IS.js:38:19708)
+(anonymous) @ index-C3i921IS.js:428
+index-C3i921IS.js:428 Enviando requisição para: https://api-clinica-psicologia.onrender.com/api/login (POST)
+auth:1 Access to fetch at 'https://api-clinica-psicologia.onrender.com/api/login' from origin 'https://psicocare.netlify.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+api-clinica-psicologia.onrender.com/api/login:1 
+            
+            
+           Failed to load resource: net::ERR_FAILED
+index-C3i921IS.js:428 API request failed: TypeError: Failed to fetch
+    at be (index-C3i921IS.js:428:65245)
+    at Object.mutationFn (index-C3i921IS.js:428:66796)
+    at Object.fn (index-C3i921IS.js:428:41625)
+    at g (index-C3i921IS.js:428:32051)
+    at Object.start (index-C3i921IS.js:428:32510)
+    at sS.execute (index-C3i921IS.js:428:42430)
+be @ index-C3i921IS.js:428
