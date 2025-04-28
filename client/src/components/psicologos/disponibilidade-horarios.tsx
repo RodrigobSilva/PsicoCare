@@ -142,12 +142,15 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
       return;
     }
 
-    let novosHorarios;
+    // Crie uma nova cópia de horariosComId para modificação
+    let novosHorarios: (Horario & { _tempId: string })[] = [...horariosComId];
+    
     if (tempIdEditando) {
       // Atualizar horário existente
-      novosHorarios = horariosComId.map((h) => 
+      novosHorarios = novosHorarios.map((h) => 
         h._tempId === tempIdEditando ? { ...data, _tempId: h._tempId } : h
       );
+      
       toast({
         title: "Horário atualizado",
         description: "O horário foi atualizado com sucesso"
@@ -155,19 +158,24 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
     } else {
       // Adicionar novo horário
       const novoHorario = { ...data, _tempId: gerarTempId() };
-      novosHorarios = [...horariosComId, novoHorario];
+      novosHorarios.push(novoHorario);
+      
       toast({
         title: "Horário adicionado",
         description: "O horário foi adicionado com sucesso"
       });
     }
 
-    // Atualizar estados e propagar mudanças para o componente pai
-    const horariosSemId = novosHorarios.map(({ _tempId, ...rest }) => rest);
+    // Atualizar o estado local
     setHorariosComId(novosHorarios);
+
+    // Converter para o formato sem IDs temporários e enviar para o componente pai
+    const horariosSemId: Omit<Horario, "_tempId">[] = novosHorarios.map(({ _tempId, ...rest }) => rest);
     onChange(horariosSemId);
     
+    // Log para debugging
     console.log("Horários após adição/atualização:", horariosSemId);
+    console.log("Total de horários após adicionar/atualizar:", horariosSemId.length);
 
     // Limpar o formulário e fechar o diálogo
     setDialogOpen(false);
@@ -232,6 +240,13 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
       description: "O horário foi removido com sucesso"
     });
   };
+
+  // Log de verificação para depuração
+  useEffect(() => {
+    if (horariosComId.length > 0) {
+      console.log("DisponibilidadeHorarios - Estado interno atual:", horariosComId);
+    }
+  }, [horariosComId]);
 
   // Ordenar horários por dia da semana e hora de início
   const horariosSorted = [...horariosComId].sort((a, b) => {

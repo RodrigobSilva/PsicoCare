@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -95,6 +96,7 @@ interface PsicologoFormProps {
 
 export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormProps) {
   const [activeTab, setActiveTab] = useState<string>("dadosPessoais");
+  const { toast } = useToast();
 
   // Carregar dados do psicólogo para edição
   const { data: psicologo, isLoading: isLoadingPsicologo } = useQuery({
@@ -214,6 +216,19 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
 
   // Lidar com envio do formulário
   const onSubmit = (data: PsicologoFormValues) => {
+    // Verificar se há disponibilidades
+    if (!data.disponibilidade || data.disponibilidade.length === 0) {
+      toast({
+        title: "Erro ao salvar",
+        description: "É necessário definir pelo menos um horário de disponibilidade",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Debug antes de enviar ao servidor
+    console.log("FORM FINAL - Disponibilidades a enviar:", data.disponibilidade);
+    
     mutation.mutate(data);
   };
 
