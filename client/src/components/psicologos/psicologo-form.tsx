@@ -175,13 +175,16 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
           especialidade: data.informacoesProfissionais.especialidade,
           formacao: data.informacoesProfissionais.formacao
         },
-        disponibilidades: data.disponibilidade.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => ({
-          diaSemana: d.diaSemana,
-          horaInicio: d.horaInicio,
-          horaFim: d.horaFim,
-          remoto: d.remoto || false,
-          ativo: true // Garantir que todos os horários estejam ativos
-        }))
+        disponibilidades: data.disponibilidade.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => {
+          console.log("Enviando disponibilidade:", d);
+          return {
+            diaSemana: d.diaSemana,
+            horaInicio: d.horaInicio,
+            horaFim: d.horaFim,
+            remoto: d.remoto || false,
+            ativo: true // Garantir que todos os horários estejam ativos
+          }
+        })
       };
 
       // Se for edição, use PUT, senão use POST

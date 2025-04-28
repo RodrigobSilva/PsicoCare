@@ -83,97 +83,62 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
   });
 
   // Lidar com adição/edição de disponibilidade
-  const onSubmit = async (data: Horario) => {
-    try {
-      // Verificar se já existe um horário igual para o mesmo dia
-      const horarioExistente = value.some((horario, idx) => {
-        // Ignorar o próprio horário quando estiver editando
-        if (editingIndex !== null && idx === editingIndex) return false;
-        
-        return (
-          horario.diaSemana === data.diaSemana &&
-          ((horario.horaInicio <= data.horaInicio && data.horaInicio < horario.horaFim) ||
-           (horario.horaInicio < data.horaFim && data.horaFim <= horario.horaFim) ||
-           (data.horaInicio <= horario.horaInicio && horario.horaFim <= data.horaFim))
-        );
-      });
+  const onSubmit = (data: Horario) => {
+    console.log("Submetendo horário:", data);
 
-      if (horarioExistente) {
-        toast({
-          title: "Conflito de horário",
-          description: "Já existe um horário cadastrado que se sobrepõe a este.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const novoHorario = {...data, ativo: true};
-      let novosHorarios;
-
-      if (editingIndex !== null) {
-        // Atualizar horário existente
-        novosHorarios = value.map((h, idx) => 
-          idx === editingIndex ? novoHorario : h
-        );
-      } else {
-        // Adicionar novo horário
-        novosHorarios = [...value, novoHorario];
-      }
-
-      // Ordenar horários por dia e hora
-      novosHorarios.sort((a, b) => {
-        if (a.diaSemana !== b.diaSemana) {
-          return a.diaSemana - b.diaSemana;
-        }
-        return a.horaInicio.localeCompare(b.horaInicio);
-      });
-
-      // Atualizar o estado local primeiro
-      onChange(novosHorarios);
+    // Verificar se já existe um horário igual para o mesmo dia
+    const horarioExistente = value.some((horario, idx) => {
+      // Ignorar o próprio horário quando estiver editando
+      if (editingIndex !== null && idx === editingIndex) return false;
       
-      // Fechar o diálogo e limpar o formulário apenas após a atualização ser bem sucedida
-      setDialogOpen(false);
-      setEditingIndex(null);
-      form.reset({
-        diaSemana: 1,
-        horaInicio: "08:00",
-        horaFim: "17:00",
-        remoto: false,
-      });
+      return (
+        horario.diaSemana === data.diaSemana &&
+        ((horario.horaInicio <= data.horaInicio && data.horaInicio < horario.horaFim) ||
+         (horario.horaInicio < data.horaFim && data.horaFim <= horario.horaFim) ||
+         (data.horaInicio <= horario.horaInicio && horario.horaFim <= data.horaFim))
+      );
+    });
 
+    if (horarioExistente) {
       toast({
-        title: "Sucesso",
-        description: editingIndex !== null ? "Horário atualizado com sucesso" : "Horário adicionado com sucesso",
-      });
-      
-      toast({
-        title: "Sucesso",
-        description: editingIndex !== null ? "Horário atualizado com sucesso" : "Horário adicionado com sucesso",
-      });
-
-      // Feedback e limpeza do formulário
-      toast({
-        title: editingIndex !== null ? "Horário atualizado" : "Horário adicionado",
-        description: "As alterações foram salvas com sucesso.",
-      });
-
-      // Resetar formulário e fechar diálogo
-      form.reset({
-        diaSemana: 1,
-        horaInicio: "08:00",
-        horaFim: "17:00",
-        remoto: false,
-      });
-      setDialogOpen(false);
-      setEditingIndex(null);
-    } catch (error) {
-      console.error("Erro ao salvar horário:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar o horário",
+        title: "Conflito de horário",
+        description: "Já existe um horário cadastrado que se sobrepõe a este.",
         variant: "destructive",
       });
+      return;
     }
+
+    // Criar uma cópia do valor atual para evitar mutações
+    let novosHorarios = [...value];
+
+    if (editingIndex !== null) {
+      // Atualizar horário existente
+      novosHorarios[editingIndex] = { ...data };
+    } else {
+      // Adicionar novo horário
+      novosHorarios.push({ ...data });
+    }
+
+    // Atualizar os horários
+    onChange(novosHorarios);
+
+    // Feedback após salvar com sucesso
+    toast({
+      title: editingIndex !== null ? "Horário atualizado" : "Horário adicionado",
+      description: "As alterações foram salvas com sucesso."
+    });
+
+    // Limpar o formulário e fechar o diálogo
+    setDialogOpen(false);
+    setEditingIndex(null);
+    
+    // Reset do formulário para valores padrão para a próxima adição
+    form.reset({
+      diaSemana: 1,
+      horaInicio: "08:00",
+      horaFim: "09:00",
+      remoto: false,
+    });
   };
 
   // Abrir diálogo para adicionar novo horário
@@ -190,33 +155,66 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
 
   // Abrir diálogo para editar horário existente
   const handleEditHorario = (index: number) => {
-    const horario = value[index];
+    console.log("Editando horário no índice:", index);
+    
+    // Encontrar o índice correto no array original (não ordenado)
+    const horarioParaEditar = horariosSorted[index];
+    const indexNoArrayOriginal = value.findIndex(h => 
+      h.diaSemana === horarioParaEditar.diaSemana && 
+      h.horaInicio === horarioParaEditar.horaInicio && 
+      h.horaFim === horarioParaEditar.horaFim
+    );
+    
+    if (indexNoArrayOriginal === -1) {
+      console.error("Horário não encontrado no array original");
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar o horário para editar",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Usar o horário original e configurar o índice correto
+    const horario = value[indexNoArrayOriginal];
     form.reset(horario);
-    setEditingIndex(index);
+    setEditingIndex(indexNoArrayOriginal);
     setDialogOpen(true);
   };
 
   // Remover horário
-  const handleRemoveHorario = async (index: number) => {
-    try {
-      // Criar uma cópia do array atual
-      const novosHorarios = value.filter((_, idx) => idx !== index);
-      
-      // Atualizar o estado
-      onChange(novosHorarios);
-      
-      toast({
-        title: "Sucesso",
-        description: "Horário removido com sucesso",
-      });
-    } catch (error) {
-      console.error("Erro ao remover horário:", error);
+  const handleRemoveHorario = (index: number) => {
+    console.log("Removendo horário no índice:", index);
+    
+    // Encontrar o índice correto no array original (não ordenado)
+    const horarioParaRemover = horariosSorted[index];
+    const indexNoArrayOriginal = value.findIndex(h => 
+      h.diaSemana === horarioParaRemover.diaSemana && 
+      h.horaInicio === horarioParaRemover.horaInicio && 
+      h.horaFim === horarioParaRemover.horaFim
+    );
+    
+    if (indexNoArrayOriginal === -1) {
+      console.error("Horário não encontrado no array original");
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao remover o horário",
+        description: "Não foi possível encontrar o horário para remover",
         variant: "destructive",
       });
+      return;
     }
+    
+    // Criar uma cópia do array e remover o item
+    const novosHorarios = [...value];
+    novosHorarios.splice(indexNoArrayOriginal, 1);
+    
+    // Atualizar o estado
+    onChange(novosHorarios);
+    
+    toast({
+      title: "Horário removido",
+      description: "O horário foi removido com sucesso"
+    });
   };
 
   // Ordenar horários por dia da semana e hora de início
@@ -296,7 +294,25 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
         )}
       </ScrollArea>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog 
+        open={dialogOpen} 
+        onOpenChange={(open) => {
+          // Se estiver fechando o diálogo
+          if (!open) {
+            setDialogOpen(false);
+            setEditingIndex(null);
+            // Reset do formulário para o próximo uso
+            form.reset({
+              diaSemana: 1,
+              horaInicio: "08:00",
+              horaFim: "09:00",
+              remoto: false,
+            });
+          } else {
+            setDialogOpen(open);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingIndex !== null ? "Editar Horário" : "Adicionar Horário"}</DialogTitle>
@@ -311,7 +327,7 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
                     <FormLabel>Dia da Semana</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
+                      value={field.value.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -385,7 +401,10 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setDialogOpen(false)}
+                  onClick={() => {
+                    setDialogOpen(false);
+                    setEditingIndex(null);
+                  }}
                 >
                   Cancelar
                 </Button>
