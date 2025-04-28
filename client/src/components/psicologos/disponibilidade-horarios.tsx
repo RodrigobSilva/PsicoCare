@@ -162,12 +162,12 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
       });
     }
 
-    // Atualizar estado local
-    setHorariosComId(novosHorarios);
-    
-    // Propagar mudanças para o componente pai, removendo os IDs temporários
+    // Atualizar estados e propagar mudanças para o componente pai
     const horariosSemId = novosHorarios.map(({ _tempId, ...rest }) => rest);
+    setHorariosComId(novosHorarios);
     onChange(horariosSemId);
+    
+    console.log("Horários após adição/atualização:", horariosSemId);
 
     // Limpar o formulário e fechar o diálogo
     setDialogOpen(false);
@@ -219,11 +219,13 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
     console.log("Removendo horário com tempId:", tempId);
     
     const novosHorarios = horariosComId.filter(h => h._tempId !== tempId);
-    setHorariosComId(novosHorarios);
     
-    // Propagar mudanças para o componente pai
+    // Atualizar estados e propagar mudanças para o componente pai
     const horariosSemId = novosHorarios.map(({ _tempId, ...rest }) => rest);
+    setHorariosComId(novosHorarios);
     onChange(horariosSemId);
+    
+    console.log("Horários após remoção:", horariosSemId);
     
     toast({
       title: "Horário removido",
