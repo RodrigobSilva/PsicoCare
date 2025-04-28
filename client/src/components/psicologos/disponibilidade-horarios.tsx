@@ -84,42 +84,66 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
 
   // Lidar com adição/edição de disponibilidade
   const onSubmit = (data: Horario) => {
-    // Verificar se já existe um horário igual para o mesmo dia
-    const horarioExistente = value.some((horario, idx) => {
-      // Ignorar o próprio horário quando estiver editando
-      if (editingIndex !== null && idx === editingIndex) return false;
-      
-      return (
-        horario.diaSemana === data.diaSemana &&
-        ((horario.horaInicio <= data.horaInicio && data.horaInicio < horario.horaFim) ||
-         (horario.horaInicio < data.horaFim && data.horaFim <= horario.horaFim) ||
-         (data.horaInicio <= horario.horaInicio && horario.horaFim <= data.horaFim))
-      );
-    });
+    try {
+      // Verificar se já existe um horário igual para o mesmo dia
+      const horarioExistente = value.some((horario, idx) => {
+        // Ignorar o próprio horário quando estiver editando
+        if (editingIndex !== null && idx === editingIndex) return false;
+        
+        return (
+          horario.diaSemana === data.diaSemana &&
+          ((horario.horaInicio <= data.horaInicio && data.horaInicio < horario.horaFim) ||
+           (horario.horaInicio < data.horaFim && data.horaFim <= horario.horaFim) ||
+           (data.horaInicio <= horario.horaInicio && horario.horaFim <= data.horaFim))
+        );
+      });
 
-    if (horarioExistente) {
+      if (horarioExistente) {
+        toast({
+          title: "Conflito de horário",
+          description: "Já existe um horário cadastrado que se sobrepõe a este.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let newValue;
+      if (editingIndex !== null) {
+        // Atualizar horário existente
+        newValue = [...value];
+        newValue[editingIndex] = {...data, ativo: true};
+      } else {
+        // Adicionar novo horário
+        newValue = [...value, {...data, ativo: true}];
+      }
+
+      // Ordenar horários por dia e hora
+      newValue.sort((a, b) => {
+        if (a.diaSemana !== b.diaSemana) {
+          return a.diaSemana - b.diaSemana;
+        }
+        return a.horaInicio.localeCompare(b.horaInicio);
+      });
+
+      onChange(newValue);
+      
       toast({
-        title: "Conflito de horário",
-        description: "Já existe um horário cadastrado que se sobrepõe a este.",
+        title: "Sucesso",
+        description: editingIndex !== null ? "Horário atualizado com sucesso" : "Horário adicionado com sucesso",
+      });
+
+      // Resetar formulário e fechar diálogo
+      form.reset();
+      setDialogOpen(false);
+      setEditingIndex(null);
+    } catch (error) {
+      console.error("Erro ao salvar horário:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o horário",
         variant: "destructive",
       });
-      return;
     }
-
-    if (editingIndex !== null) {
-      // Atualizar horário existente
-      const newValue = [...value];
-      newValue[editingIndex] = data;
-      onChange(newValue);
-    } else {
-      // Adicionar novo horário
-      onChange([...value, data]);
-    }
-
-    // Resetar formulário e fechar diálogo
-    form.reset();
-    setDialogOpen(false);
-    setEditingIndex(null);
   };
 
   // Abrir diálogo para adicionar novo horário
@@ -144,9 +168,23 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
 
   // Remover horário
   const handleRemoveHorario = (index: number) => {
-    const newValue = [...value];
-    newValue.splice(index, 1);
-    onChange(newValue);
+    try {
+      const newValue = [...value];
+      newValue.splice(index, 1);
+      onChange(newValue);
+      
+      toast({
+        title: "Sucesso",
+        description: "Horário removido com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao remover horário:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao remover o horário",
+        variant: "destructive",
+      });
+    }
   };
 
   // Ordenar horários por dia da semana e hora de início
