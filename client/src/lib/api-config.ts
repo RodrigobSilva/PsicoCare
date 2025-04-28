@@ -4,8 +4,8 @@
 const DEV_API_URL = '';  // URL vazia significa que a API está no mesmo host
 
 // URL da API em produção (quando deployado no Netlify)
-// Esta URL será sobrescrita pelo Netlify via variável de ambiente VITE_API_URL
-const PROD_API_URL = import.meta.env.VITE_API_URL || 'https://api-clinica-psicologia.onrender.com';
+// Usamos URL relativa para aproveitar o proxy do Netlify
+const PROD_API_URL = '';
 
 // Determina se estamos em produção
 const isProduction = import.meta.env.MODE === 'production';
