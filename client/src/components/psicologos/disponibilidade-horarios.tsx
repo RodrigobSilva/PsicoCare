@@ -78,17 +78,32 @@ export default function DisponibilidadeHorarios({ value, onChange }: Disponibili
   // Horários com IDs temporários
   const [horariosComId, setHorariosComId] = useState<(Horario & { _tempId: string })[]>([]);
   
-  // Inicializar horários com IDs temporários
+  // Inicializar e atualizar os horários com IDs temporários quando o valor externo mudar
+  // Inicializar com os valores iniciais
   useEffect(() => {
-    // Atualizar os IDs quando o valor externo mudar
-    const novoArray = value.map((h) => ({
-      ...h,
-      _tempId: gerarTempId(),
-    }));
-    setHorariosComId(novoArray);
-    
-    console.log("Horários atualizados:", novoArray);
-  }, [value]);
+    if (value && value.length > 0) {
+      const novoArray = value.map((h) => ({
+        ...h,
+        _tempId: gerarTempId(),
+      }));
+      setHorariosComId(novoArray);
+      
+      console.log("Horários inicializados:", novoArray);
+    }
+  }, []);
+  
+  // Função para atualizar horários no estado
+  const atualizarHorarios = (horarios: Omit<Horario, "_tempId">[]) => {
+    if (horarios && horarios.length > 0) {
+      const novoArray = horarios.map((h) => ({
+        ...h,
+        _tempId: gerarTempId(),
+      }));
+      setHorariosComId(novoArray);
+      onChange(horarios);
+      console.log("Horários atualizados:", novoArray);
+    }
+  };
 
   // Inicializar formulário
   const form = useForm<Horario>({
