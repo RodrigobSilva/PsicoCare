@@ -20,15 +20,23 @@ export async function apiRequest(
   try {
     console.log(`Enviando requisição para: ${fullUrl} (${method})`);
     
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+    
+    // Adicionar token de autenticação se disponível
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    
     const options: RequestInit = {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
+      headers,
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include", // Isso permite enviar cookies entre domínios
-      mode: "cors" // Explicitamente usar CORS
+      credentials: "include", // Mantém para compatibilidade com desenvolvimento local
+      mode: "cors"
     };
     
     const res = await fetch(fullUrl, options);
@@ -61,12 +69,21 @@ export const getQueryFn: <T>(options: {
     try {
       console.log(`Executando query para: ${fullUrl}`);
       
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      };
+      
+      // Adicionar token de autenticação se disponível
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        console.log("Token encontrado no localStorage, aplicando a todas as requisições");
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
       const res = await fetch(fullUrl, {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        credentials: "include", // Mantém para compatibilidade com desenvolvimento local
+        headers,
         mode: "cors"
       });
 

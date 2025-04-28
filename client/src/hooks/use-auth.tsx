@@ -38,23 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
   
-  // Aplicar o token de autenticação se disponível (execute apenas uma vez na inicialização)
+  // Verificamos o token a cada renderização, mas não sobrescrevemos o fetch
+  // pois as funções apiRequest e getQueryFn já cuidam de adicionar o token
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    
     if (token) {
-      console.log("Token encontrado no localStorage, aplicando a todas as requisições");
-      
-      // Adicionar o token ao header para todas as requisições
-      const originalFetch = window.fetch;
-      window.fetch = function(url: RequestInfo | URL, options: RequestInit = {}) {
-        const newOptions = { ...options };
-        newOptions.headers = {
-          ...newOptions.headers,
-          'Authorization': `Bearer ${token}`
-        };
-        return originalFetch(url, newOptions);
-      };
+      console.log("Token encontrado no localStorage");
     }
   }, []);
 
@@ -74,19 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.token) {
         console.log("Token recebido e armazenado");
         localStorage.setItem('authToken', response.token);
-        
-        // Adicionar o token ao header para futuras requisições
-        const originalFetch = window.fetch;
-        window.fetch = function(url, options = {}) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            options.headers = {
-              ...options.headers,
-              'Authorization': `Bearer ${token}`
-            };
-          }
-          return originalFetch(url, options);
-        };
+        // Não precisamos sobrescrever o fetch, as funções apiRequest e getQueryFn já cuidam disso
       }
       
       queryClient.setQueryData(["/api/user"], user);
