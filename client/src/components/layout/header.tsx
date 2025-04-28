@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, Database } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { 
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SupabaseStatus } from "@/components/supabase-status";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -54,6 +55,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        {/* Status do Supabase - Visível apenas no modo admin */}
+        {user?.tipo === 'admin' && (
+          <div className="hidden md:flex items-center mr-2">
+            <SupabaseStatus />
+          </div>
+        )}
+        
         {/* Notificações temporariamente removidas 
         <button className="relative text-neutral-600">
           <Bell size={20} />
@@ -81,6 +89,16 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                   <span>Perfil</span>
                 </DropdownMenuItem>
               </Link>
+              
+              {/* Opção visível apenas para administradores */}
+              {user?.tipo === 'admin' && (
+                <Link href="/configuracoes">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Database className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                  </DropdownMenuItem>
+                </Link>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
