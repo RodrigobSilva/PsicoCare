@@ -159,7 +159,12 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
   // Mutation para criar ou atualizar psicólogo
   const mutation = useMutation({
     mutationFn: async (data: PsicologoFormValues) => {
-      console.log("Enviando dados:", data); // Debugging
+      // Logging para depuração
+      console.log("Dados recebidos para enviar:", data);
+      
+      // Usar diretamente a disponibilidade dos dados do formulário
+      // (os dados já estão atualizados neste ponto pelo componente DisponibilidadeHorarios)
+      const disponibilidadesAtualizadas = data.disponibilidade;
       
       const payload = {
         usuario: {
@@ -175,7 +180,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
           especialidade: data.informacoesProfissionais.especialidade,
           formacao: data.informacoesProfissionais.formacao
         },
-        disponibilidades: data.disponibilidade.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => {
+        disponibilidades: disponibilidadesAtualizadas.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => {
           console.log("Enviando disponibilidade:", d);
           return {
             diaSemana: d.diaSemana,
