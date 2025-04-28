@@ -107,33 +107,47 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
         return;
       }
 
-      let newValue;
+      const novoHorario = {...data, ativo: true};
+      let novosHorarios;
+
       if (editingIndex !== null) {
         // Atualizar horário existente
-        newValue = [...value];
-        newValue[editingIndex] = {...data, ativo: true};
+        novosHorarios = value.map((h, idx) => 
+          idx === editingIndex ? novoHorario : h
+        );
       } else {
         // Adicionar novo horário
-        newValue = [...value, {...data, ativo: true}];
+        novosHorarios = [...value, novoHorario];
       }
 
       // Ordenar horários por dia e hora
-      newValue.sort((a, b) => {
+      novosHorarios.sort((a, b) => {
         if (a.diaSemana !== b.diaSemana) {
           return a.diaSemana - b.diaSemana;
         }
         return a.horaInicio.localeCompare(b.horaInicio);
       });
 
-      onChange(newValue);
+      onChange(novosHorarios);
       
       toast({
         title: "Sucesso",
         description: editingIndex !== null ? "Horário atualizado com sucesso" : "Horário adicionado com sucesso",
       });
 
+      // Feedback e limpeza do formulário
+      toast({
+        title: editingIndex !== null ? "Horário atualizado" : "Horário adicionado",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
       // Resetar formulário e fechar diálogo
-      form.reset();
+      form.reset({
+        diaSemana: 1,
+        horaInicio: "08:00",
+        horaFim: "17:00",
+        remoto: false,
+      });
       setDialogOpen(false);
       setEditingIndex(null);
     } catch (error) {
