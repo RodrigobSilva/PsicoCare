@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/psicologos/:id", verificarAutenticacao, verificarNivelAcesso(["admin", "secretaria"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { usuario, psicologo } = req.body;
+      const { usuario, psicologo, disponibilidades } = req.body;
 
       const psicologoExistente = await storage.getPsicologo(id);
       if (!psicologoExistente) {
@@ -500,8 +500,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUser(psicologoExistente.usuarioId, usuario);
       const psicologoAtualizado = await storage.updatePsicologo(id, psicologo);
 
-      res.json(psicologoAtualizado);
+      // Tratamento das disponibilidades
+      if (disponibilidades && Array.isArray(disponibilidades)) {
+        // 1. Recuperar disponibilidades atuais
+        const disponibilidadesAtuais = await storage.getDisponibilidadesByPsicologo(id);
+        
+        // 2. Excluir todas as disponibilidades existentes
+        for (const disp of disponibilidadesAtuais) {
+          await storage.deleteDisponibilidade(disp.id);
+        }
+        
+        // 3. Criar as novas disponibilidades
+        for (const disp of disponibilidades) {
+          await storage.createDisponibilidade({
+            ...disp,
+            psicologoId: id,
+            ativo: true
+          });
+        }
+        
+        console.log(`Atualizadas ${disponibilidades.length} disponibilidades para o psicólogo ID ${id}`);
+      }
+
+      // Buscar dados atualizados para retornar na resposta
+      const disponibilidadesAtualizadas = await storage.getDisponibilidadesByPsicologo(id);
+      const usuarioAtualizado = await storage.getUser(psicologoExistente.usuarioId);
+
+      res.json({
+        ...psicologoAtualizado,
+        usuario: usuarioAtualizado,
+        disponibilidades: disponibilidadesAtualizadas
+      });
     } catch (error) {
+      console.error("Erro ao atualizar psicólogo:", error);
       res.status(400).json({ mensagem: "Erro ao atualizar psicólogo", erro: error });
     }
   });

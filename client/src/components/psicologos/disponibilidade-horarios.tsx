@@ -162,7 +162,8 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
     const indexNoArrayOriginal = value.findIndex(h => 
       h.diaSemana === horarioParaEditar.diaSemana && 
       h.horaInicio === horarioParaEditar.horaInicio && 
-      h.horaFim === horarioParaEditar.horaFim
+      h.horaFim === horarioParaEditar.horaFim &&
+      h.remoto === horarioParaEditar.remoto
     );
     
     if (indexNoArrayOriginal === -1) {
@@ -174,6 +175,8 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
       });
       return;
     }
+    
+    console.log("Editando horário do índice original:", indexNoArrayOriginal);
     
     // Usar o horário original e configurar o índice correto
     const horario = value[indexNoArrayOriginal];
@@ -191,7 +194,8 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
     const indexNoArrayOriginal = value.findIndex(h => 
       h.diaSemana === horarioParaRemover.diaSemana && 
       h.horaInicio === horarioParaRemover.horaInicio && 
-      h.horaFim === horarioParaRemover.horaFim
+      h.horaFim === horarioParaRemover.horaFim &&
+      h.remoto === horarioParaRemover.remoto
     );
     
     if (indexNoArrayOriginal === -1) {
@@ -203,6 +207,8 @@ export function DisponibilidadeHorarios({ value, onChange }: DisponibilidadeHora
       });
       return;
     }
+    
+    console.log("Removendo horário do índice original:", indexNoArrayOriginal);
     
     // Criar uma cópia do array e remover o item
     const novosHorarios = [...value];
