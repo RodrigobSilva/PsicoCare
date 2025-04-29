@@ -20,7 +20,7 @@ import AIAssistant from "@/pages/ai-assistant";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { OnboardingProvider } from "./hooks/use-onboarding";
-import PsicologoForm from "@/pages/psicologo-form"; // Added import
+import PsicologoForm from "@/components/psicologos/psicologo-form"; // Fixed import path
 
 
 function Router() {
