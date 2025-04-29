@@ -40,6 +40,21 @@ function Router() {
         component={Psicologos}
         allowedRoles={["admin", "secretaria"]}
       />
+      <ProtectedRoute 
+        path="/psicologos/novo" 
+        component={() => <PsicologoForm onSuccess={() => navigate('/psicologos')} />}
+        allowedRoles={["admin", "secretaria"]}
+      />
+      <ProtectedRoute 
+        path="/psicologos/:id/editar" 
+        component={({ match }) => (
+          <PsicologoForm 
+            psicologoId={match.params.id} 
+            onSuccess={() => navigate('/psicologos')} 
+          />
+        )}
+        allowedRoles={["admin", "secretaria"]}
+      />
       
       <ProtectedRoute path="/agenda" component={Agenda} />
       
