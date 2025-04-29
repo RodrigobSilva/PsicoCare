@@ -1,0 +1,40 @@
+Cadastro de Psicólogos:
+1.	Informações Obrigatórias:
+o	Nome completo do psicólogo.
+o	Número de registro profissional (CRP). Este deve ser único e validado em algum momento (idealmente, com uma máscara de entrada).
+o	Especialidades (o psicólogo pode ter uma ou mais).
+o	Informações de contato (telefone e/ou e-mail).
+o	Endereço completo do consultório (se aplicável).
+2.	Informações Opcionais:
+o	Breve currículo ou descrição profissional.
+o	Link para página pessoal ou redes sociais.
+o	Foto do psicólogo.
+3.	Validação de Dados:
+o	Verificar se o CRP possui o formato correto.
+o	Garantir que o nome completo não esteja vazio.
+o	Certificar-se de que ao menos uma forma de contato válida seja fornecida.
+4.	Unicidade do CRP: O sistema deve impedir o cadastro de um psicólogo com um CRP já existente no banco de dados.
+Cadastro de Horários de Atendimento:
+1.	Associação com o Psicólogo: Cada horário de atendimento deve estar explicitamente vinculado a um psicólogo cadastrado.
+2.	Definição de Dias da Semana: O sistema deve permitir a seleção de um ou mais dias da semana para o horário de atendimento (e.g., segunda-feira, quarta-feira, sexta-feira).
+3.	Definição de Horário de Início e Fim: Para cada dia selecionado, deve ser possível definir um horário de início e um horário de fim para o atendimento.
+4.	Duração Mínima da Consulta (Opcional, mas recomendável): Pode ser interessante definir uma duração mínima padrão para as consultas (e.g., 50 minutos). Isso pode ser usado como sugestão ou validação.
+5.	Intervalos (Opcional): Permitir a definição de intervalos entre as consultas (e.g., 10 minutos) para descanso ou organização.
+6.	Disponibilidade Recorrente: A tela deve permitir marcar se o horário definido é recorrente para todas as semanas ou se é um horário específico para uma data.
+7.	Validação de Horários:
+o	O horário de início deve ser anterior ao horário de fim.
+o	Evitar sobreposição de horários para o mesmo psicólogo no mesmo dia. O sistema deve alertar ou impedir o cadastro de horários conflitantes.
+Edição de Horários de Atendimento:
+1.	Seleção do Psicólogo: A tela de edição deve permitir selecionar o psicólogo cujos horários serão visualizados e editados.
+2.	Visualização Clara dos Horários Existentes: Os horários de atendimento cadastrados para o psicólogo selecionado devem ser exibidos de forma clara (por dia da semana e horário).
+3.	Opções de Edição:
+o	Modificar os dias da semana de um horário existente.
+o	Alterar o horário de início e fim de um horário existente.
+o	Remover um horário de atendimento.
+4.	Adição de Novos Horários: A tela de edição também deve permitir adicionar novos horários de atendimento para o psicólogo selecionado, seguindo as mesmas regras de validação do cadastro de horários.
+5.	Conflitos de Horário na Edição: Ao editar um horário, o sistema deve verificar se a alteração gera conflitos com outros horários já cadastrados para o mesmo psicólogo no mesmo dia.
+Outras Considerações:
+•	Interface Amigável: A interface da tela deve ser intuitiva e fácil de usar, tanto para o cadastro inicial quanto para a edição dos horários.
+•	Feedback ao Usuário: O sistema deve fornecer feedback claro sobre as ações realizadas (cadastro bem-sucedido, erro de validação, conflito de horário, etc.).
+•	Persistência dos Dados: As informações cadastradas devem ser armazenadas de forma segura e persistente em um banco de dados.
+
