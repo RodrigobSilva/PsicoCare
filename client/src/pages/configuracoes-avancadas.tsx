@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import Layout from "@/components/layout";
+import Layout from "@/components/layout/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
