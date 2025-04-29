@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 
 export default function Psicologos() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -47,7 +47,7 @@ export default function Psicologos() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Psicólogos</h1>
         {isAdmin && (
-          <Button onClick={() => navigate("/psicologos/novo")}>
+          <Button onClick={() => setLocation("/psicologos/novo")}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Psicólogo
           </Button>
