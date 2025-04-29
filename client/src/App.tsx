@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -20,21 +20,23 @@ import AIAssistant from "@/pages/ai-assistant";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { OnboardingProvider } from "./hooks/use-onboarding";
+import PsicologoForm from "@/pages/psicologo-form"; // Added import
+
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      
+
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
-      
+
       <ProtectedRoute 
         path="/pacientes"
         component={Pacientes} 
         allowedRoles={["admin", "secretaria", "psicologo"]}
       />
-      
+
       <ProtectedRoute 
         path="/psicologos" 
         component={Psicologos}
@@ -42,7 +44,10 @@ function Router() {
       />
       <ProtectedRoute 
         path="/psicologos/novo" 
-        component={() => <PsicologoForm onSuccess={() => navigate('/psicologos')} />}
+        component={() => {
+          const [, setLocation] = useLocation();
+          return <PsicologoForm onSuccess={() => setLocation('/psicologos')} />;
+        }}
         allowedRoles={["admin", "secretaria"]}
       />
       <ProtectedRoute 
@@ -50,66 +55,69 @@ function Router() {
         component={({ match }) => (
           <PsicologoForm 
             psicologoId={match.params.id} 
-            onSuccess={() => navigate('/psicologos')} 
+            onSuccess={() => {
+              const [, setLocation] = useLocation();
+              setLocation('/psicologos');
+            }} 
           />
         )}
         allowedRoles={["admin", "secretaria"]}
       />
-      
+
       <ProtectedRoute path="/agenda" component={Agenda} />
-      
+
       <ProtectedRoute 
         path="/salas" 
         component={Salas}
         allowedRoles={["admin", "secretaria"]}
       />
-      
+
       <ProtectedRoute 
         path="/financeiro" 
         component={Financeiro}
         allowedRoles={["admin", "secretaria"]}
       />
-      
+
       <ProtectedRoute 
         path="/planos-saude" 
         component={PlanosSaude}
         allowedRoles={["admin", "secretaria"]}
       />
-      
+
       <ProtectedRoute 
         path="/relatorios" 
         component={Relatorios}
         allowedRoles={["admin", "secretaria"]}
       />
-      
+
       <ProtectedRoute 
         path="/configuracoes" 
         component={Configuracoes}
         allowedRoles={["admin"]}
       />
-      
+
       <ProtectedRoute 
         path="/configuracoes-avancadas" 
         component={ConfiguracoesAvancadas}
         allowedRoles={["admin"]}
       />
-      
+
       <ProtectedRoute
         path="/teleconsulta/:id"
         component={Teleconsulta}
       />
-      
+
       <ProtectedRoute
         path="/perfil"
         component={Perfil}
       />
-      
+
       <ProtectedRoute
         path="/assistente-ia"
         component={AIAssistant}
         allowedRoles={["admin", "secretaria", "psicologo"]}
       />
-      
+
       <Route component={NotFound} />
     </Switch>
   );
