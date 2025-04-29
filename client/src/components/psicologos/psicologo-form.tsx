@@ -2,115 +2,63 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Plus, X } from "lucide-react";
 import DisponibilidadeHorarios from "./disponibilidade-horarios";
 
-// Esquema de validação para dados pessoais
-const dadosPessoaisSchema = z.object({
-  nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
-  email: z.string().email("Email inválido"),
-  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").or(z.literal("")),
-  telefone: z.string().min(10, "Telefone inválido").default(""),
-  cpf: z.string().min(11, "CPF inválido").default(""),
-});
+const crpRegex = /^\d{2}\/\d{4}$/;
 
-// Esquema de validação para informações profissionais
-const informacoesProfissionaisSchema = z.object({
-  crp: z.string().min(4, "CRP inválido"),
-  especialidade: z.string().default(""),
-  formacao: z.string().default(""),
-});
-
-// Esquema de validação para disponibilidade
-const disponibilidadeSchema = z.array(
-  z.object({
+const psicologoFormSchema = z.object({
+  dadosPessoais: z.object({
+    nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
+    email: z.string().email("Email inválido"),
+    senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").or(z.literal("")),
+    telefone: z.string().min(10, "Telefone inválido"),
+    cpf: z.string().min(11, "CPF inválido"),
+    foto: z.string().optional(),
+  }),
+  informacoesProfissionais: z.object({
+    crp: z.string().regex(crpRegex, "CRP deve estar no formato XX/XXXX"),
+    especialidades: z.array(z.string()).min(1, "Selecione pelo menos uma especialidade"),
+    formacao: z.string().optional(),
+    curriculo: z.string().optional(),
+    redesSociais: z.string().optional(),
+    enderecoConsultorio: z.string().optional(),
+  }),
+  disponibilidade: z.array(z.object({
     diaSemana: z.number().min(0).max(6),
     horaInicio: z.string(),
     horaFim: z.string(),
-    remoto: z.boolean().default(false),
-  })
-).min(1, "Adicione pelo menos um horário de disponibilidade");
-
-// Combine os esquemas
-const psicologoFormSchema = z.object({
-  dadosPessoais: dadosPessoaisSchema,
-  informacoesProfissionais: informacoesProfissionaisSchema,
-  disponibilidade: disponibilidadeSchema,
+    recorrente: z.boolean().default(true),
+    intervalo: z.number().min(0).max(60).default(10),
+    duracaoConsulta: z.number().min(30).max(120).default(50),
+  })).min(1, "Adicione pelo menos um horário"),
 });
 
-// Define o tipo 
-type PsicologoFormValues = {
-  dadosPessoais: {
-    nome: string;
-    email: string; 
-    senha: string;
-    telefone: string;
-    cpf: string;
-  },
-  informacoesProfissionais: {
-    crp: string;
-    especialidade: string;
-    formacao: string;
-  },
-  disponibilidade: Array<{
-    diaSemana: number;
-    horaInicio: string;
-    horaFim: string;
-    remoto: boolean;
-  }>
-};
+type PsicologoFormValues = z.infer<typeof psicologoFormSchema>;
 
-// Dias da semana para uso no formulário
-const diasSemana = [
-  { value: 0, label: "Domingo" },
-  { value: 1, label: "Segunda-feira" },
-  { value: 2, label: "Terça-feira" },
-  { value: 3, label: "Quarta-feira" },
-  { value: 4, label: "Quinta-feira" },
-  { value: 5, label: "Sexta-feira" },
-  { value: 6, label: "Sábado" },
+const ESPECIALIDADES = [
+  "Psicologia Clínica",
+  "Psicologia Infantil",
+  "Neuropsicologia",
+  "Psicologia Organizacional",
+  "Psicologia Escolar",
+  "Psicologia do Esporte",
+  "Psicologia Hospitalar",
 ];
 
-interface PsicologoFormProps {
-  psicologoId?: number | null;
-  onSuccess: () => void;
-}
-
-export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormProps) {
-  const [activeTab, setActiveTab] = useState<string>("dadosPessoais");
+export default function PsicologoForm({ psicologoId, onSuccess }) {
+  const [activeTab, setActiveTab] = useState("dadosPessoais");
   const { toast } = useToast();
-
-  // Carregar dados do psicólogo para edição
-  const { data: psicologo, isLoading: isLoadingPsicologo } = useQuery({
-    queryKey: ["/api/psicologos", psicologoId],
-    queryFn: async () => {
-      if (!psicologoId) return null;
-      const res = await apiRequest("GET", `/api/psicologos/${psicologoId}`);
-      return res.json();
-    },
-    enabled: !!psicologoId,
-  });
-
-  // Inicializar formulário
   const form = useForm<PsicologoFormValues>({
+    resolver: zodResolver(psicologoFormSchema),
     defaultValues: {
       dadosPessoais: {
         nome: "",
@@ -118,185 +66,76 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
         senha: "",
         telefone: "",
         cpf: "",
+        foto: "",
       },
       informacoesProfissionais: {
         crp: "",
-        especialidade: "",
+        especialidades: [],
         formacao: "",
+        curriculo: "",
+        redesSociais: "",
+        enderecoConsultorio: "",
       },
-      disponibilidade: [
-        { diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false },
-      ],
+      disponibilidade: [{
+        diaSemana: 1,
+        horaInicio: "08:00",
+        horaFim: "17:00",
+        recorrente: true,
+        intervalo: 10,
+        duracaoConsulta: 50,
+      }],
     },
   });
 
-  // Preencher formulário com dados do psicólogo se estiver editando
-  React.useEffect(() => {
-    if (psicologo && psicologoId) {
-      form.reset({
-        dadosPessoais: {
-          nome: psicologo.usuario?.nome || "",
-          email: psicologo.usuario?.email || "",
-          senha: "", // Não exibir senha atual
-          telefone: psicologo.usuario?.telefone || "",
-          cpf: psicologo.usuario?.cpf || "",
-        },
-        informacoesProfissionais: {
-          crp: psicologo.crp || "",
-          especialidade: psicologo.especialidade || "",
-          formacao: psicologo.formacao || "",
-        },
-        disponibilidade: psicologo.disponibilidades?.length
-          ? psicologo.disponibilidades.map((d: any) => ({
-              diaSemana: d.diaSemana,
-              horaInicio: d.horaInicio,
-              horaFim: d.horaFim,
-              remoto: d.remoto || false,
-            }))
-          : [{ diaSemana: 1, horaInicio: "08:00", horaFim: "17:00", remoto: false }],
-      });
-    }
-  }, [psicologo, psicologoId, form]);
-
-  // Mutation para criar ou atualizar psicólogo
   const mutation = useMutation({
     mutationFn: async (data: PsicologoFormValues) => {
-      // Logging para depuração
-      console.log("Dados recebidos para enviar:", data);
-      
-      // Usar diretamente a disponibilidade dos dados do formulário
-      // (os dados já estão atualizados neste ponto pelo componente DisponibilidadeHorarios)
-      const disponibilidadesAtualizadas = data.disponibilidade;
-      
-      const payload = {
-        usuario: {
-          nome: data.dadosPessoais.nome,
-          email: data.dadosPessoais.email,
-          senha: data.dadosPessoais.senha || undefined, // Enviar undefined se senha vazia
-          telefone: data.dadosPessoais.telefone,
-          cpf: data.dadosPessoais.cpf,
-          tipo: "psicologo"
-        },
-        psicologo: {
-          crp: data.informacoesProfissionais.crp,
-          especialidade: data.informacoesProfissionais.especialidade,
-          formacao: data.informacoesProfissionais.formacao
-        },
-        disponibilidades: disponibilidadesAtualizadas.map((d: {diaSemana: number; horaInicio: string; horaFim: string; remoto: boolean}) => {
-          console.log("Enviando disponibilidade:", d);
-          return {
-            diaSemana: d.diaSemana,
-            horaInicio: d.horaInicio,
-            horaFim: d.horaFim,
-            remoto: d.remoto || false,
-            ativo: true // Garantir que todos os horários estejam ativos
-          }
-        })
-      };
-
-      // Se for edição, use PUT, senão use POST
-      const method = psicologoId ? "PUT" : "POST";
-      const endpoint = psicologoId ? `/api/psicologos/${psicologoId}` : "/api/psicologos";
-      
-      const psicologoResponse = await apiRequest(
-        method,
-        endpoint,
-        payload
+      const response = await apiRequest(
+        psicologoId ? "PUT" : "POST",
+        `/api/psicologos${psicologoId ? `/${psicologoId}` : ''}`,
+        data
       );
 
-      if (!psicologoResponse.ok) {
+      if (!response.ok) {
+        const error = await response.json();
+        if (error.code === "CRP_DUPLICATE") {
+          throw new Error("CRP já cadastrado no sistema");
+        }
         throw new Error("Erro ao salvar psicólogo");
       }
-      return psicologoResponse.json();
+
+      return response.json();
     },
     onSuccess: () => {
+      toast({
+        title: psicologoId ? "Psicólogo atualizado" : "Psicólogo cadastrado",
+        description: "Dados salvos com sucesso",
+      });
       onSuccess();
     },
-  });
-
-  // Lidar com envio do formulário
-  const onSubmit = (data: PsicologoFormValues) => {
-    // Verificar se há disponibilidades
-    if (!data.disponibilidade || data.disponibilidade.length === 0) {
+    onError: (error) => {
       toast({
         title: "Erro ao salvar",
-        description: "É necessário definir pelo menos um horário de disponibilidade",
+        description: error.message,
         variant: "destructive",
       });
-      return;
     }
-    
-    // Debug antes de enviar ao servidor
-    console.log("FORM FINAL - Disponibilidades a enviar:", data.disponibilidade);
-    
-    mutation.mutate(data);
-  };
-
-  // As funções adicionarDisponibilidade e removerDisponibilidade foram movidas para o componente DisponibilidadeHorarios
-
-  // Avançar para próxima aba
-  const goToNextTab = () => {
-    if (activeTab === "dadosPessoais") {
-      setActiveTab("informacoesProfissionais");
-    } else if (activeTab === "informacoesProfissionais") {
-      setActiveTab("disponibilidade");
-    } else if (activeTab === "disponibilidade") {
-      form.handleSubmit(onSubmit)();
-    }
-  };
-
-  // Voltar para aba anterior
-  const goToPreviousTab = () => {
-    if (activeTab === "disponibilidade") {
-      setActiveTab("informacoesProfissionais");
-    } else if (activeTab === "informacoesProfissionais") {
-      setActiveTab("dadosPessoais");
-    }
-  };
-
-  if (isLoadingPsicologo && psicologoId) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dadosPessoais">Dados Pessoais</TabsTrigger>
-            <TabsTrigger value="informacoesProfissionais">Informações Profissionais</TabsTrigger>
-            <TabsTrigger value="disponibilidade">Disponibilidade</TabsTrigger>
-          </TabsList>
-
-          {/* Aba de Dados Pessoais */}
-          <TabsContent value="dadosPessoais" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(mutation.mutate)} className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            {/* Dados Pessoais */}
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="dadosPessoais.nome"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel>Nome Completo*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="dadosPessoais.cpf"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CPF</FormLabel>
-                    <FormControl>
-                      <Input placeholder="000.000.000-00" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -308,9 +147,9 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                 name="dadosPessoais.email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email*</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="email@exemplo.com" {...field} />
+                      <Input type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -322,9 +161,9 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
                 name="dadosPessoais.telefone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone</FormLabel>
+                    <FormLabel>Telefone*</FormLabel>
                     <FormControl>
-                      <Input placeholder="(00) 00000-0000" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -333,128 +172,123 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
 
               <FormField
                 control={form.control}
-                name="dadosPessoais.senha"
+                name="dadosPessoais.cpf"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{psicologoId ? 'Nova Senha (opcional)' : 'Senha'}</FormLabel>
+                    <FormLabel>CPF*</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder={psicologoId ? "Digite para alterar a senha" : "******"} 
-                        {...field} 
-                        required={!psicologoId}
-                      />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-          </TabsContent>
 
-          {/* Aba de Informações Profissionais */}
-          <TabsContent value="informacoesProfissionais" className="space-y-4">
-            <FormField
-              control={form.control}
-              name="informacoesProfissionais.crp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CRP</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Número do CRP" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Informações Profissionais */}
+            <div className="mt-6">
+              <FormField
+                control={form.control}
+                name="informacoesProfissionais.crp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CRP* (XX/XXXX)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="informacoesProfissionais.especialidade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Especialidade</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Especialidade" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="informacoesProfissionais.especialidades"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Especialidades*</FormLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {ESPECIALIDADES.map((esp) => (
+                        <Button
+                          key={esp}
+                          type="button"
+                          variant={field.value.includes(esp) ? "default" : "outline"}
+                          onClick={() => {
+                            const newValue = field.value.includes(esp)
+                              ? field.value.filter((v) => v !== esp)
+                              : [...field.value, esp];
+                            field.onChange(newValue);
+                          }}
+                        >
+                          {esp}
+                        </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="informacoesProfissionais.formacao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Formação</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detalhes sobre a formação acadêmica" 
-                      {...field} 
-                      className="min-h-[150px]"
+              <FormField
+                control={form.control}
+                name="informacoesProfissionais.enderecoConsultorio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço do Consultório</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="informacoesProfissionais.curriculo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currículo/Descrição Profissional</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Disponibilidade */}
+            <div className="mt-6">
+              <FormField
+                control={form.control}
+                name="disponibilidade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Horários de Atendimento*</FormLabel>
+                    <DisponibilidadeHorarios
+                      value={field.value}
+                      onChange={field.onChange}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </TabsContent>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Aba de Disponibilidade */}
-          <TabsContent value="disponibilidade" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Horários de Atendimento</CardTitle>
-                <CardDescription>
-                  Configure os dias, horários e o tipo de atendimento (presencial ou remoto) em que o profissional estará disponível.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="disponibilidade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <DisponibilidadeHorarios 
-                        value={field.value} 
-                        onChange={field.onChange} 
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-between pt-4 border-t border-neutral-200">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={goToPreviousTab}
-            disabled={activeTab === "dadosPessoais"}
-          >
-            Voltar
+        <div className="flex justify-end">
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Salvar'
+            )}
           </Button>
-
-          {activeTab === "disponibilidade" ? (
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>Salvar</>
-              )}
-            </Button>
-          ) : (
-            <Button type="button" onClick={goToNextTab}>
-              Próximo
-            </Button>
-          )}
         </div>
       </form>
     </Form>

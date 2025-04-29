@@ -44,8 +44,12 @@ export const psicologos = pgTable("psicologos", {
   id: serial("id").primaryKey(),
   usuarioId: integer("usuario_id").references(() => usuarios.id).notNull(),
   crp: text("crp").notNull(),
-  especialidade: text("especialidade"),
+  especialidades: text("especialidades").array(),
   formacao: text("formacao"),
+  curriculo: text("curriculo"),
+  redesSociais: text("redes_sociais"),
+  enderecoConsultorio: text("endereco_consultorio"),
+  fotoUrl: text("foto_url"),
 });
 
 // Filiais
