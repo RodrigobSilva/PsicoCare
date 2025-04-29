@@ -13,6 +13,7 @@ import Financeiro from "@/pages/financeiro";
 import PlanosSaude from "@/pages/planos-saude";
 import Relatorios from "@/pages/relatorios";
 import Configuracoes from "@/pages/configuracoes";
+import ConfiguracoesAvancadas from "@/pages/configuracoes-avancadas";
 import Teleconsulta from "@/pages/teleconsulta";
 import Perfil from "@/pages/perfil";
 import AIAssistant from "@/pages/ai-assistant";
@@ -69,6 +70,12 @@ function Router() {
       <ProtectedRoute 
         path="/configuracoes" 
         component={Configuracoes}
+        allowedRoles={["admin"]}
+      />
+      
+      <ProtectedRoute 
+        path="/configuracoes-avancadas" 
+        component={ConfiguracoesAvancadas}
         allowedRoles={["admin"]}
       />
       
