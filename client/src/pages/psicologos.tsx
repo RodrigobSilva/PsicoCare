@@ -8,6 +8,8 @@ import { Plus, Loader2 } from "lucide-react";
 import PsicologoForm from "@/components/psicologos/psicologo-form";
 import Layout from "@/components/layout/layout";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
 
 export default function Psicologos() {
