@@ -155,13 +155,16 @@ export default function Calendar({
   }, [filialId]);
 
   // Consultas para obter dados
-  const { data: psicologos, isLoading: isLoadingPsicologos } = useQuery({
+  const { data: psicologosData, isLoading: isLoadingPsicologos } = useQuery({
     queryKey: ["/api/psicologos"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/psicologos");
       return res.json();
     },
   });
+  
+  // Garantir que psicologos seja sempre um array
+  const psicologos = Array.isArray(psicologosData) ? psicologosData : [];
 
   const { data: filiais, isLoading: isLoadingFiliais } = useQuery({
     queryKey: ["/api/filiais"],
