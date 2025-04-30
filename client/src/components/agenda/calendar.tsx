@@ -18,7 +18,7 @@ import {
   Calendar as CalendarIcon 
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { cn, ensureArray } from "@/lib/utils";
+import { cn, ensureArray, asArrayOfType } from "@/lib/utils";
 
 // Interfaces para tipagem dos objetos
 interface Psicologo {
@@ -788,7 +788,7 @@ export default function Calendar({
             <div className="text-sm text-neutral-500 mt-1">
               {selectedPsicologo !== "todos" && psicologos ? (
                 <span className="inline-flex items-center mr-2">
-                  Psicólogo: {ensureArray(psicologos).find((p: any) => p.id.toString() === selectedPsicologo)?.usuario?.nome || "Carregando..."}
+                  Psicólogo: {asArrayOfType<Psicologo>(psicologos).find(p => p.id.toString() === selectedPsicologo)?.usuario?.nome || "Carregando..."}
                 </span>
               ) : !isPsicologo ? (
                 <span className="inline-flex items-center mr-2">Psicólogo: Todos</span>
@@ -796,7 +796,7 @@ export default function Calendar({
               
               {selectedFilial !== "todas" && filiais ? (
                 <span className="inline-flex items-center">
-                  Filial: {ensureArray(filiais).find((f: any) => f.id.toString() === selectedFilial)?.nome || "Carregando..."}
+                  Filial: {asArrayOfType<Filial>(filiais).find(f => f.id.toString() === selectedFilial)?.nome || "Carregando..."}
                 </span>
               ) : (
                 <span className="inline-flex items-center">Filial: Todas</span>
@@ -889,7 +889,7 @@ export default function Calendar({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos os psicólogos</SelectItem>
-                    {ensureArray(psicologos).map((psicologo: any) => (
+                    {ensureArray(psicologos).map((psicologo: Psicologo) => (
                       <SelectItem 
                         key={psicologo.id} 
                         value={psicologo.id.toString()}
@@ -919,7 +919,7 @@ export default function Calendar({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas as filiais</SelectItem>
-                  {ensureArray(filiais).map((filial: any) => (
+                  {ensureArray(filiais).map((filial: Filial) => (
                     <SelectItem 
                       key={filial.id} 
                       value={filial.id.toString()}

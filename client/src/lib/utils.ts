@@ -16,3 +16,15 @@ export function ensureArray<T>(value: T[] | null | undefined): T[] {
   }
   return [];
 }
+
+/**
+ * Força um tipo específico para os elementos do array
+ * @param value Valor a ser convertido para array
+ * @returns Um array com o tipo especificado
+ */
+export function asArrayOfType<T>(value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+  return [];
+}
