@@ -18,7 +18,7 @@ import {
   Calendar as CalendarIcon 
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { cn } from "@/lib/utils";
+import { cn, ensureArray } from "@/lib/utils";
 import { 
   format, 
   parseISO, 

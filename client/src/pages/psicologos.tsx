@@ -9,6 +9,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import PsicologoForm from "@/components/psicologos/psicologo-form";
 import Layout from "@/components/layout/layout";
 import { useAuth } from "@/hooks/use-auth";
+import { ensureArray } from "@/lib/utils";
 
 export default function Psicologos() {
   const [, setLocation] = useLocation();
@@ -23,7 +24,7 @@ export default function Psicologos() {
   });
   
   // Garantir que psicologos seja sempre um array, mesmo quando a API retorna null ou undefined
-  const psicologos = Array.isArray(data) ? data : [];
+  const psicologos = ensureArray(data);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Tem certeza que deseja excluir este psicólogo?')) return;

@@ -28,6 +28,7 @@ import PatientForm from "@/components/pacientes/patient-form";
 import ImportPatients from "@/components/pacientes/import-patients";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { ensureArray } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -70,10 +71,10 @@ export default function Pacientes() {
   });
   
   // Garantir que pacientes seja sempre um array
-  const pacientes = Array.isArray(pacientesData) ? pacientesData : [];
+  const pacientes = ensureArray(pacientesData);
   
   // Buscar planos de saúde para importação
-  const { data: planosSaude = [] } = useQuery({
+  const { data: planosSaudeData } = useQuery({
     queryKey: ["/api/planos-saude"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/planos-saude");
@@ -309,7 +310,7 @@ export default function Pacientes() {
         <ImportPatients
           open={importOpen}
           onOpenChange={setImportOpen}
-          planosSaude={planosSaude}
+          planosSaude={ensureArray(planosSaudeData)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["/api/pacientes"] });
             toast({
