@@ -61,13 +61,16 @@ export default function Pacientes() {
   const isAdminOrSecretaria = user?.tipo === "admin" || user?.tipo === "secretaria";
 
   // Buscar pacientes
-  const { data: pacientes, isLoading } = useQuery({
+  const { data: pacientesData, isLoading } = useQuery({
     queryKey: ["/api/pacientes"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/pacientes");
       return res.json();
     },
   });
+  
+  // Garantir que pacientes seja sempre um array
+  const pacientes = Array.isArray(pacientesData) ? pacientesData : [];
   
   // Buscar planos de saúde para importação
   const { data: planosSaude = [] } = useQuery({
@@ -79,10 +82,10 @@ export default function Pacientes() {
   });
 
   // Filtrar pacientes com base na pesquisa
-  const filteredPacientes = pacientes?.filter((paciente: any) => 
-    paciente.usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    paciente.usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (paciente.usuario.cpf && paciente.usuario.cpf.includes(searchTerm))
+  const filteredPacientes = pacientes.filter((paciente: any) => 
+    paciente.usuario?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    paciente.usuario?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (paciente.usuario?.cpf && paciente.usuario.cpf.includes(searchTerm))
   );
   
   // Mutation para alternar status ativo/inativo
@@ -211,20 +214,20 @@ export default function Pacientes() {
                     filteredPacientes.map((paciente: any) => (
                       <TableRow 
                         key={paciente.id} 
-                        className={!paciente.usuario.ativo ? "bg-neutral-50" : undefined}
+                        className={paciente.usuario?.ativo === false ? "bg-neutral-50" : undefined}
                       >
                         <TableCell className="font-medium">
-                          {paciente.usuario.nome}
+                          {paciente.usuario?.nome || 'Nome não disponível'}
                         </TableCell>
-                        <TableCell>{paciente.usuario.email}</TableCell>
-                        <TableCell>{paciente.usuario.telefone || "Não informado"}</TableCell>
-                        <TableCell>{paciente.usuario.cpf || "Não informado"}</TableCell>
+                        <TableCell>{paciente.usuario?.email || 'Email não disponível'}</TableCell>
+                        <TableCell>{paciente.usuario?.telefone || "Não informado"}</TableCell>
+                        <TableCell>{paciente.usuario?.cpf || "Não informado"}</TableCell>
                         <TableCell>
                           <Badge 
-                            variant={paciente.usuario.ativo ? "default" : "outline"} 
-                            className={paciente.usuario.ativo ? "bg-success" : "text-neutral-500"}
+                            variant={paciente.usuario?.ativo ? "default" : "outline"} 
+                            className={paciente.usuario?.ativo ? "bg-success" : "text-neutral-500"}
                           >
-                            {paciente.usuario.ativo ? "Ativo" : "Inativo"}
+                            {paciente.usuario?.ativo ? "Ativo" : "Inativo"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -245,11 +248,11 @@ export default function Pacientes() {
                                   <DropdownMenuItem 
                                     onClick={() => toggleAtivoMutation.mutate({
                                       id: paciente.id, 
-                                      ativo: !paciente.usuario.ativo
+                                      ativo: !paciente.usuario?.ativo
                                     })}
                                   >
                                     <PowerOff className="mr-2 h-4 w-4" />
-                                    {paciente.usuario.ativo ? "Desativar" : "Ativar"}
+                                    {paciente.usuario?.ativo ? "Desativar" : "Ativar"}
                                   </DropdownMenuItem>
                                 </>
                               ) : (

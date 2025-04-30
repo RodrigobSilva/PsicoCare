@@ -17,10 +17,13 @@ export default function Psicologos() {
   const { user } = useAuth();
   const isAdmin = user?.tipo === "admin";
 
-  const { data: psicologos, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["/api/psicologos"],
     queryFn: () => apiRequest("GET", "/api/psicologos"),
   });
+  
+  // Garantir que psicologos seja sempre um array, mesmo quando a API retorna null ou undefined
+  const psicologos = Array.isArray(data) ? data : [];
 
   const handleDelete = async (id: number) => {
     if (!confirm('Tem certeza que deseja excluir este psicólogo?')) return;
@@ -59,13 +62,13 @@ export default function Psicologos() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {psicologos?.map((psicologo) => (
+            {psicologos.map((psicologo) => (
               <div
                 key={psicologo.id}
                 className="p-4 border rounded-lg cursor-pointer hover:bg-accent"
                 onClick={() => setLocation(`/psicologos/${psicologo.id}/editar`)}
               >
-                <h3 className="font-medium">{psicologo.usuario.nome}</h3>
+                <h3 className="font-medium">{psicologo.usuario?.nome || 'Nome não disponível'}</h3>
                 <p className="text-sm text-muted-foreground">CRP: {psicologo.crp}</p>
                 {isAdmin && (
                   <Button 
