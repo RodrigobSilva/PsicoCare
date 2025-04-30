@@ -4,11 +4,11 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Configuração CORS manual - atualizada para permitir netfly explicitamente
+// Configuração CORS manual - atualizada para permitir Vercel explicitamente
 app.use((req, res, next) => {
   // Lista de domínios permitidos
   const allowedOrigins = [
-    'https://psicocare.netlify.app',
+    'https://psicocare.vercel.app',
     'http://localhost:5000',
     'http://localhost:3000',
     'https://api-clinica-psicologia.onrender.com'
