@@ -46,10 +46,6 @@ export const psicologos = pgTable("psicologos", {
   crp: text("crp").notNull(),
   especialidade: text("especialidade"),
   formacao: text("formacao"),
-  curriculo: text("curriculo"),
-  redesSociais: text("redes_sociais"),
-  enderecoConsultorio: text("endereco_consultorio"),
-  fotoUrl: text("foto_url"),
 });
 
 // Filiais
