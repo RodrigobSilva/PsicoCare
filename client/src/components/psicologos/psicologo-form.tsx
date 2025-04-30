@@ -126,9 +126,13 @@ export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormP
     }
   });
 
+  const onSubmit = (data: PsicologoFormValues) => {
+    mutation.mutate(data);
+  };
+    
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(mutation.mutate)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardContent className="pt-6">
             {/* Dados Pessoais */}
