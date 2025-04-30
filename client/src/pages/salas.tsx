@@ -49,6 +49,7 @@ import { useToast } from "@/hooks/use-toast";
 import SalaForm from "@/components/salas/sala-form";
 import FilialForm from "@/components/salas/filial-form";
 import { Badge } from "@/components/ui/badge";
+import { ensureArray } from "@/lib/utils";
 
 export default function Salas() {
   const [activeTab, setActiveTab] = useState("filiais");
@@ -94,14 +95,16 @@ export default function Salas() {
   });
 
   // Filtrar filiais baseado na busca
-  const filteredFiliais = filiais?.filter((filial: any) => 
+  const safeFiliais = ensureArray(filiais);
+  const filteredFiliais = safeFiliais.filter((filial: any) => 
     filial.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     filial.cidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
     filial.estado.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Filtrar salas baseado na busca
-  const filteredSalas = salas?.filter((sala: any) => 
+  const safeSalas = ensureArray(salas);
+  const filteredSalas = safeSalas.filter((sala: any) => 
     sala.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sala.filial?.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -192,7 +195,7 @@ export default function Salas() {
                       </div>
                     ) : (
                       <div className="divide-y divide-neutral-100">
-                        {filteredFiliais && filteredFiliais.length > 0 ? (
+                        {filteredFiliais.length > 0 ? (
                           filteredFiliais.map((filial: any) => (
                             <div 
                               key={filial.id} 
@@ -278,9 +281,9 @@ export default function Salas() {
                           
                           <div>
                             <h3 className="text-sm font-medium text-neutral-500 mb-2">Salas</h3>
-                            {filialDetalhes?.salas && filialDetalhes.salas.length > 0 ? (
+                            {ensureArray(filialDetalhes?.salas).length > 0 ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {filialDetalhes.salas.map((sala: any) => (
+                                {ensureArray(filialDetalhes?.salas).map((sala: any) => (
                                   <Card key={sala.id} className="border border-neutral-200">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
@@ -380,7 +383,7 @@ export default function Salas() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredSalas && filteredSalas.length > 0 ? (
+                      {filteredSalas.length > 0 ? (
                         filteredSalas.map((sala: any) => (
                           <TableRow key={sala.id}>
                             <TableCell className="font-medium">{sala.nome}</TableCell>
