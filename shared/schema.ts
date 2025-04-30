@@ -44,7 +44,7 @@ export const psicologos = pgTable("psicologos", {
   id: serial("id").primaryKey(),
   usuarioId: integer("usuario_id").references(() => usuarios.id).notNull(),
   crp: text("crp").notNull(),
-  especialidades: text("especialidades").array(),
+  especialidade: text("especialidade"),
   formacao: text("formacao"),
   curriculo: text("curriculo"),
   redesSociais: text("redes_sociais"),

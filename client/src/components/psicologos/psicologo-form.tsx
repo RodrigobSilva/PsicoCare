@@ -26,7 +26,7 @@ const psicologoFormSchema = z.object({
   }),
   informacoesProfissionais: z.object({
     crp: z.string().regex(crpRegex, "CRP deve estar no formato XX/XXXX"),
-    especialidades: z.array(z.string()).min(1, "Selecione pelo menos uma especialidade"),
+    especialidade: z.string().min(1, "Selecione uma especialidade"),
     formacao: z.string().optional(),
     curriculo: z.string().optional(),
     redesSociais: z.string().optional(),
@@ -54,7 +54,12 @@ const ESPECIALIDADES = [
   "Psicologia Hospitalar",
 ];
 
-export default function PsicologoForm({ psicologoId, onSuccess }) {
+interface PsicologoFormProps {
+  psicologoId?: number;
+  onSuccess: () => void;
+}
+
+export default function PsicologoForm({ psicologoId, onSuccess }: PsicologoFormProps) {
   const [activeTab, setActiveTab] = useState("dadosPessoais");
   const { toast } = useToast();
   const form = useForm<PsicologoFormValues>({
@@ -70,7 +75,7 @@ export default function PsicologoForm({ psicologoId, onSuccess }) {
       },
       informacoesProfissionais: {
         crp: "",
-        especialidades: [],
+        especialidade: "",
         formacao: "",
         curriculo: "",
         redesSociais: "",
@@ -203,21 +208,18 @@ export default function PsicologoForm({ psicologoId, onSuccess }) {
 
               <FormField
                 control={form.control}
-                name="informacoesProfissionais.especialidades"
+                name="informacoesProfissionais.especialidade"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Especialidades*</FormLabel>
+                    <FormLabel>Especialidade*</FormLabel>
                     <div className="flex flex-wrap gap-2">
                       {ESPECIALIDADES.map((esp) => (
                         <Button
                           key={esp}
                           type="button"
-                          variant={field.value.includes(esp) ? "default" : "outline"}
+                          variant={field.value === esp ? "default" : "outline"}
                           onClick={() => {
-                            const newValue = field.value.includes(esp)
-                              ? field.value.filter((v) => v !== esp)
-                              : [...field.value, esp];
-                            field.onChange(newValue);
+                            field.onChange(field.value === esp ? "" : esp);
                           }}
                         >
                           {esp}
