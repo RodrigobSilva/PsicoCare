@@ -206,8 +206,8 @@ export class MemStorage implements IStorage {
     // Criar dados de exemplo para admin
     this.createUser({
       nome: "Administrador",
-      email: "admin@psisystem.com",
-      senha: "$2b$10$XVRnRZ8UI/W3CzXmxl0DheXcECVCgDqZPSaVVNYyNWKNv0i.MozlO", // senha123
+      email: "admin@clinica.com",
+      senha: "8936a1ff1421a5c51f2af451ad18ce875ec6c5c9ba5f1359ad9249be9a576b7ff60a40d08c5c28daaa59ac4a2ce6af1e80ea49a52211bfd6101a79d6214871c6.e96c91d39e1c91da", // "123456"
       telefone: "(11) 99999-9999",
       cpf: "123.456.789-00",
       tipo: "admin",
@@ -722,7 +722,5 @@ export class MemStorage implements IStorage {
 import { DatabaseStorage } from "./db-storage";
 
 // Escolhe entre armazenamento em memória ou banco de dados com base em uma variável de ambiente
-// Por padrão, usa o banco de dados
-export const storage = process.env.USE_MEMORY_STORAGE === "true" 
-  ? new MemStorage() 
-  : new DatabaseStorage();
+// Como estamos tendo problemas com o Supabase, vamos usar o armazenamento em memória por padrão
+export const storage = new MemStorage();
