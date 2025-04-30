@@ -20,11 +20,27 @@ export default function Psicologos() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["/api/psicologos"],
-    queryFn: () => apiRequest("GET", "/api/psicologos"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/psicologos");
+      return response.json();
+    },
   });
   
   // Garantir que psicologos seja sempre um array, mesmo quando a API retorna null ou undefined
   const psicologos = ensureArray(data);
+  
+  // Interface para tipagem
+  interface Psicologo {
+    id: number;
+    usuario?: {
+      id: number;
+      nome: string;
+      email?: string;
+    };
+    crp: string;
+    especialidade?: string[];
+    formacao?: string;
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('Tem certeza que deseja excluir este psicólogo?')) return;
@@ -63,7 +79,7 @@ export default function Psicologos() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {psicologos.map((psicologo) => (
+            {psicologos.map((psicologo: Psicologo) => (
               <div
                 key={psicologo.id}
                 className="p-4 border rounded-lg cursor-pointer hover:bg-accent"
