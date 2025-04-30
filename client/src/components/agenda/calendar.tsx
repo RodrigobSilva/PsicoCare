@@ -889,7 +889,7 @@ export default function Calendar({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos os psicólogos</SelectItem>
-                    {ensureArray(psicologos).map((psicologo: Psicologo) => (
+                    {asArrayOfType<Psicologo>(psicologos).map(psicologo => (
                       <SelectItem 
                         key={psicologo.id} 
                         value={psicologo.id.toString()}
@@ -919,7 +919,7 @@ export default function Calendar({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas as filiais</SelectItem>
-                  {ensureArray(filiais).map((filial: Filial) => (
+                  {asArrayOfType<Filial>(filiais).map(filial => (
                     <SelectItem 
                       key={filial.id} 
                       value={filial.id.toString()}

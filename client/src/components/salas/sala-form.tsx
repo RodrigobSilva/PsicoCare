@@ -41,10 +41,11 @@ type SalaFormValues = z.infer<typeof salaFormSchema>;
 
 interface SalaFormProps {
   salaId?: number | null;
+  defaultFilialId?: number | null;
   onSuccess: () => void;
 }
 
-export default function SalaForm({ salaId, onSuccess }: SalaFormProps) {
+export default function SalaForm({ salaId, defaultFilialId, onSuccess }: SalaFormProps) {
   // Buscar dados da sala se estiver editando
   const { data: sala, isLoading } = useQuery({
     queryKey: ["/api/salas", salaId],
@@ -70,7 +71,7 @@ export default function SalaForm({ salaId, onSuccess }: SalaFormProps) {
     resolver: zodResolver(salaFormSchema),
     defaultValues: {
       nome: "",
-      filialId: 0,
+      filialId: defaultFilialId || 0,
       capacidade: 1,
       descricao: "",
       recursos: "",

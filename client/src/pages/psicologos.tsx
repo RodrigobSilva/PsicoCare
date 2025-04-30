@@ -9,7 +9,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import PsicologoForm from "@/components/psicologos/psicologo-form";
 import Layout from "@/components/layout/layout";
 import { useAuth } from "@/hooks/use-auth";
-import { ensureArray } from "@/lib/utils";
+import { ensureArray, asArrayOfType } from "@/lib/utils";
 
 export default function Psicologos() {
   const [, setLocation] = useLocation();
@@ -79,7 +79,7 @@ export default function Psicologos() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {psicologos.map((psicologo: Psicologo) => (
+            {asArrayOfType<Psicologo>(psicologos).map(psicologo => (
               <div
                 key={psicologo.id}
                 className="p-4 border rounded-lg cursor-pointer hover:bg-accent"
