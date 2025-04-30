@@ -3,8 +3,8 @@
 // URL da API em desenvolvimento (desenvolvimento local ou Replit)
 const DEV_API_URL = '';  // URL vazia significa que a API está no mesmo host
 
-// URL da API em produção (quando deployado no Netlify)
-// Usamos URL relativa para aproveitar o proxy do Netlify
+// URL da API em produção (quando deployado na Vercel)
+// Usamos URL relativa para aproveitar o proxy da Vercel
 const PROD_API_URL = '';
 
 // Determina se estamos em produção

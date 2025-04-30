@@ -28,7 +28,14 @@ export async function apiRequest(
     // Adicionar token de autenticação se disponível
     const token = localStorage.getItem('authToken');
     if (token) {
+      console.log("Token encontrado no localStorage");
       headers["Authorization"] = `Bearer ${token}`;
+    }
+    
+    // Garantir que requisições POST e PUT tenham os headers corretos
+    if (method === 'POST' || method === 'PUT') {
+      console.log(`Configurando headers para requisição ${method}`);
+      headers["Content-Type"] = "application/json";
     }
     
     const options: RequestInit = {

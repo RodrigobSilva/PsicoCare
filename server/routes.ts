@@ -8,6 +8,7 @@ import path from "path";
 import { WebSocketServer } from "ws";
 import { logger } from "./logger";
 import OpenAI from "openai";
+import { noCache } from "./utils/vercel-cache";
 import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import * as schema from "@shared/schema";
@@ -59,6 +60,9 @@ const verificarNivelAcesso = (tiposPermitidos: string[]) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configura a autenticação
   setupAuth(app);
+  
+  // Aplica a política de não-cache para todas as rotas de API
+  app.use('/api', noCache);
 
   // Rotas de configuração de email
   app.get("/api/config/email", verificarAutenticacao, verificarNivelAcesso(["admin"]), async (req, res) => {

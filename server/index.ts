@@ -9,6 +9,7 @@ app.use((req, res, next) => {
   // Lista de domínios permitidos
   const allowedOrigins = [
     'https://psicocare.vercel.app',
+    'https://psico-care.vercel.app',
     'http://localhost:5000',
     'http://localhost:3000',
     'https://api-clinica-psicologia.onrender.com'
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
   }
   
+  // Expandindo headers permitidos
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Credentials', 'true');
