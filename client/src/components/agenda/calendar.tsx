@@ -163,8 +163,8 @@ export default function Calendar({
     },
   });
   
-  // Garantir que psicologos seja sempre um array
-  const psicologos = Array.isArray(psicologosData) ? psicologosData : [];
+  // Usar a função de utilidade para garantir que psicologos seja sempre um array
+  const psicologos = ensureArray(psicologosData);
 
   const { data: filiais, isLoading: isLoadingFiliais } = useQuery({
     queryKey: ["/api/filiais"],
