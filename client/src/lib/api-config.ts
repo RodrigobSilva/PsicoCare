@@ -1,18 +1,11 @@
-// Configuração da API para diferentes ambientes (desenvolvimento e produção)
+// Configuração da API
 
-// URL da API em desenvolvimento (desenvolvimento local ou Replit)
-const DEV_API_URL = '';  // URL vazia significa que a API está no mesmo host
+// URL da API - URL vazia significa que a API está no mesmo host
+const API_URL = '';
 
-// URL da API em produção (quando deployado na Vercel)
-// Usamos URL relativa para aproveitar o proxy da Vercel
-const PROD_API_URL = '';
-
-// Determina se estamos em produção
-const isProduction = import.meta.env.MODE === 'production';
-
-// Função para obter a URL base da API com base no ambiente
+// Função para obter a URL base da API
 export function getApiBaseUrl(): string {
-  return isProduction ? PROD_API_URL : DEV_API_URL;
+  return API_URL;
 }
 
 // Função para construir uma URL completa da API
