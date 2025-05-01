@@ -56,8 +56,10 @@ export async function apiRequest(
     
     // Log de resposta para diagnóstico
     const headerObj: Record<string, string> = {};
-    res.headers.forEach((value, key) => {
-      headerObj[key] = value;
+    // Usar uma abordagem mais compatível com TypeScript
+    const headerKeys = Array.from(res.headers.keys());
+    headerKeys.forEach(key => {
+      headerObj[key] = res.headers.get(key) || '';
     });
     
     console.log(`Resposta da requisição ${method} (${res.status}):`, {
@@ -120,13 +122,17 @@ export const getQueryFn: <T>(options: {
       const res = await fetch(fullUrl, fetchOptions);
       
       // Log de resposta para diagnóstico
+      const headerObj: Record<string, string> = {};
+      // Usar uma abordagem mais compatível com TypeScript
+      const headerKeys = Array.from(res.headers.keys());
+      headerKeys.forEach(key => {
+        headerObj[key] = res.headers.get(key) || '';
+      });
+      
       console.log(`Resposta da requisição GET (${res.status}):`, {
         status: res.status,
         statusText: res.statusText,
-        headers: [...res.headers.entries()].reduce((obj, [key, val]) => {
-          obj[key] = val;
-          return obj;
-        }, {} as Record<string, string>)
+        headers: headerObj
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {

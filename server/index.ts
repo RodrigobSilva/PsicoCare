@@ -31,9 +31,13 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Expose-Headers', 'set-cookie');
   
-  // Pré-voo CORS OPTIONS
+  // Log de diagnóstico para todas as requisições (especialmente útil para depurar problemas na Vercel)
+  console.log(`[CORS] ${req.method} ${req.path} - Origin: ${origin || 'não especificada'}`);
+  
+  // Tratar pré-voo OPTIONS - importante para solicitações POST
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    console.log(`[CORS] Respondendo ao pré-voo OPTIONS para ${req.path}`);
+    return res.status(204).header('Content-Length', '0').end();
   }
   
   next();
