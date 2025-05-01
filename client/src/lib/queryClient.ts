@@ -32,10 +32,10 @@ export async function apiRequest(
       headers["Authorization"] = `Bearer ${token}`;
     }
     
-    // Garantir que requisições POST e PUT tenham os headers corretos
-    if (method === 'POST' || method === 'PUT') {
-      console.log(`Configurando headers para requisição ${method}`);
-      headers["Content-Type"] = "application/json";
+    // Verificar se é uma requisição OPTIONS para pre-flight CORS
+    if (method === 'OPTIONS') {
+      headers["Access-Control-Request-Method"] = "POST, GET, OPTIONS, PUT, DELETE, PATCH";
+      headers["Access-Control-Request-Headers"] = "Content-Type, Authorization";
     }
     
     const options: RequestInit = {
@@ -46,7 +46,25 @@ export async function apiRequest(
       mode: "cors"
     };
     
+    // Log detalhado para depuração
+    console.log(`Configuração da requisição ${method} para ${fullUrl}:`, {
+      headers: JSON.stringify(headers),
+      hasBody: !!data
+    });
+    
     const res = await fetch(fullUrl, options);
+    
+    // Log de resposta para diagnóstico
+    const headerObj: Record<string, string> = {};
+    res.headers.forEach((value, key) => {
+      headerObj[key] = value;
+    });
+    
+    console.log(`Resposta da requisição ${method} (${res.status}):`, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: headerObj
+    });
     
     if (!res.ok) {
       // Log detalhado para depuração
@@ -88,15 +106,38 @@ export const getQueryFn: <T>(options: {
         headers["Authorization"] = `Bearer ${token}`;
       }
       
-      const res = await fetch(fullUrl, {
+      console.log(`Configuração da requisição GET para ${fullUrl}:`, {
+        headers: JSON.stringify(headers)
+      });
+      
+      const fetchOptions: RequestInit = {
+        method: 'GET',
         credentials: "include", // Mantém para compatibilidade com desenvolvimento local
         headers,
         mode: "cors"
+      };
+      
+      const res = await fetch(fullUrl, fetchOptions);
+      
+      // Log de resposta para diagnóstico
+      console.log(`Resposta da requisição GET (${res.status}):`, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: [...res.headers.entries()].reduce((obj, [key, val]) => {
+          obj[key] = val;
+          return obj;
+        }, {} as Record<string, string>)
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
         console.log("Retornando null devido a erro 401 (não autenticado)");
         return null;
+      }
+
+      if (res.status === 405) {
+        console.error(`Erro 405 Method Not Allowed na query: ${fullUrl}`);
+        console.error(`Verifique se a rota está configurada corretamente no servidor para aceitar método GET.`);
+        throw new Error(`405: Método não permitido para esta rota (${fullUrl}).`);
       }
 
       if (!res.ok) {
@@ -108,7 +149,7 @@ export const getQueryFn: <T>(options: {
       
       return await res.json();
     } catch (error) {
-      console.error("Query failed:", error);
+      console.error(`Query failed for ${fullUrl}:`, error);
       throw error;
     }
   };

@@ -14,4 +14,8 @@ export NODE_ENV=production
 echo "Executando build..."
 npm run build
 
+# Verificar permissões do arquivo server/index.ts
+echo "Verificando permissões do server/index.ts..."
+chmod +x server/index.ts
+
 echo "Build concluído com sucesso!"
