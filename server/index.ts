@@ -4,15 +4,12 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Configuração CORS manual - atualizada para permitir Vercel explicitamente
+// Configuração CORS
 app.use((req, res, next) => {
   // Lista de domínios permitidos
   const allowedOrigins = [
-    'https://psicocare.vercel.app',
-    'https://psico-care.vercel.app',
     'http://localhost:5000',
-    'http://localhost:3000',
-    'https://api-clinica-psicologia.onrender.com'
+    'http://localhost:3000'
   ];
   
   const origin = req.headers.origin;
@@ -25,19 +22,14 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
   }
   
-  // Expandindo headers permitidos
+  // Headers permitidos
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Expose-Headers', 'set-cookie');
   
-  // Log de diagnóstico para todas as requisições (especialmente útil para depurar problemas na Vercel)
-  console.log(`[CORS] ${req.method} ${req.path} - Origin: ${origin || 'não especificada'}`);
-  
-  // Tratar pré-voo OPTIONS - importante para solicitações POST
+  // Tratar pré-voo OPTIONS
   if (req.method === 'OPTIONS') {
-    console.log(`[CORS] Respondendo ao pré-voo OPTIONS para ${req.path}`);
-    return res.status(204).header('Content-Length', '0').end();
+    return res.status(200).end();
   }
   
   next();
