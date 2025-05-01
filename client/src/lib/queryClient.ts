@@ -42,7 +42,7 @@ export async function apiRequest(
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include", // Mantém para compatibilidade com desenvolvimento local
+      credentials: "include",
       mode: "cors"
     };
     
@@ -114,7 +114,7 @@ export const getQueryFn: <T>(options: {
       
       const fetchOptions: RequestInit = {
         method: 'GET',
-        credentials: "include", // Mantém para compatibilidade com desenvolvimento local
+        credentials: "include",
         headers,
         mode: "cors"
       };
